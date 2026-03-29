@@ -25,6 +25,7 @@ export interface SanityComment {
   date: string;
   text: string;
   likes: number;
+  parentCommentId?: string;
 }
 
 export interface SanitySiteConfig {

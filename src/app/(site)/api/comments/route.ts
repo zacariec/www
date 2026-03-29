@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const body: unknown = await request.json();
-    const { text, postSlug } = commentRequestSchema.parse(body);
+    const { text, postSlug, parentCommentId } = commentRequestSchema.parse(body);
 
     const writeClient = getWriteClient();
     if (!writeClient || !process.env.SANITY_API_TOKEN) {
@@ -45,6 +45,9 @@ export async function POST(request: Request) {
     const comment = await writeClient.create({
       _type: "comment",
       post: { _type: "reference", _ref: post.data._id },
+      ...(parentCommentId && {
+        parentComment: { _type: "reference", _ref: parentCommentId },
+      }),
       author: session.user.name || "Anonymous",
       authorEmail: session.user.email,
       authorImage: session.user.image,

@@ -10,7 +10,6 @@
     "format": "prettier --write 'src/**/*.{ts,tsx}'"
   },
   "dependencies": {
-    "@builder.io/partytown": "^0.10.3",
     "@cloudflare/containers": "^0.2.0",
     "@portabletext/react": "^3.2.0",
     "@sanity/client": "^7.3.0",

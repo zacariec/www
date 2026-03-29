@@ -49,6 +49,7 @@ export const BlogPostContent = ({ post }: BlogPostContentProps) => {
     date: c.date,
     text: c.text,
     likes: c.likes || 0,
+    parentCommentId: c.parentCommentId,
   }));
 
   return (

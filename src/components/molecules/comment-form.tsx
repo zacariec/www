@@ -9,9 +9,13 @@ import { AuthButton } from "@/components/molecules/auth-button";
 
 interface CommentFormProps {
   onSubmit: (author: string, text: string, authorImage?: string) => void;
+  placeholder?: string;
 }
 
-export const CommentForm = ({ onSubmit }: CommentFormProps) => {
+export const CommentForm = ({
+  onSubmit,
+  placeholder = "Share your thoughts...",
+}: CommentFormProps) => {
   const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
 
@@ -38,7 +42,7 @@ export const CommentForm = ({ onSubmit }: CommentFormProps) => {
       <textarea
         className="w-full border-b border-[rgba(0,0,0,0.08)] bg-transparent py-3 text-[13px] text-[#000000] placeholder-[#c6c6c6] focus:outline-none focus:border-[#000000] transition-colors duration-500 resize-none font-[family-name:var(--font-inter)]"
         onChange={(e) => setNewComment(e.target.value)}
-        placeholder="Share your thoughts..."
+        placeholder={placeholder}
         rows={3}
         value={newComment}
       />

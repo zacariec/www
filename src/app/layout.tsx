@@ -1,13 +1,17 @@
-import { Partytown } from "@builder.io/partytown/react";
-
 import { inter, spaceGrotesk } from "@/lib/fonts";
 import { getSiteConfig } from "@/lib/sanity/fetch";
 
 import "./globals.css";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();
@@ -82,11 +86,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html className={`${spaceGrotesk.variable} ${inter.variable}`} lang="en">
       <head>
-        <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
         <meta content="yes" name="apple-mobile-web-app-capable" />
         <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
         <meta content="ZC" name="apple-mobile-web-app-title" />
-        <Partytown forward={["dataLayer.push", "gtag"]} />
       </head>
       <body className="min-h-screen bg-[#f9f9f7] font-[family-name:var(--font-space-grotesk)]">
         {children}

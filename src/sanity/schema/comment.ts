@@ -45,6 +45,13 @@ export const commentType = defineType({
       type: "number",
       initialValue: 0,
     }),
+    defineField({
+      name: "parentComment",
+      title: "Parent Comment",
+      type: "reference",
+      to: [{ type: "comment" }],
+      description: "If this is a reply, reference the parent comment",
+    }),
   ],
   preview: {
     select: {

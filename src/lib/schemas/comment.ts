@@ -3,6 +3,7 @@ import { z } from "zod";
 export const commentRequestSchema = z.object({
   text: z.string().min(1, "Comment text is required"),
   postSlug: z.string().min(1, "Post slug is required"),
+  parentCommentId: z.string().optional(),
 });
 
 export type CommentRequest = z.infer<typeof commentRequestSchema>;

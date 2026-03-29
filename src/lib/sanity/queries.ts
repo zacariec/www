@@ -29,7 +29,8 @@ export const postBySlugQuery = groq`
       authorImage,
       "date": publishedAt,
       text,
-      likes
+      likes,
+      "parentCommentId": parentComment._ref
     }
   }
 `;
