@@ -72,11 +72,18 @@ export const NavList = ({
           </BlobLink>
         );
       })}
-      <BlobLink color="#777777" size={blobSize} visible={false}>
+      <BlobLink
+        color="#777777"
+        size={blobSize}
+        visible={blobTarget === "linkedin"}
+        position="left"
+      >
         <a
           href={linkedInUrl}
           rel="noopener noreferrer"
           target="_blank"
+          onMouseEnter={onHover ? () => onHover("linkedin") : undefined}
+          onMouseLeave={onHover ? () => onHover(null) : undefined}
           className={`${textSize} uppercase text-[#777777] ${
             isHeader ? "hover:text-black" : "hover:text-[#c6c6c6]"
           } no-underline transition-colors duration-300 flex items-center gap-1 py-2 px-3 -my-2 -mx-3 ${fontFamily}`}

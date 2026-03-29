@@ -58,7 +58,7 @@ export const TimelineFeed = ({ entries }: TimelineFeedProps) => {
 
       {/* Timeline */}
       <div className="max-w-[720px]">
-        <StaggerChildren>
+        <StaggerChildren key={filter}>
           {filtered.map((entry, i) => {
             const date = new Date(entry.date);
             const prevDate = i > 0 ? new Date(filtered[i - 1].date) : null;
