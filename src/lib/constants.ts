@@ -1,11 +1,19 @@
 export const siteConfig = {
-  name: "ZC Journal",
+  name: "zcarr.dev",
   description:
-    "A personal archive of ideas, reflections, and long-form writing on design, technology, and the quiet spaces in between.",
+    "A space for long-form thinking on design, engineering, and the details most people skip.",
   author: "ZC",
   linkedIn: "https://www.linkedin.com/in/zacariecarr",
+  github: "https://github.com/zacariec",
+  twitter: "https://x.com/zacariec",
   timezone: "Australia/Sydney",
 } as const;
+
+export const socialLinks = [
+  { label: "Li", href: "https://www.linkedin.com/in/zacariecarr" },
+  { label: "GH", href: "https://github.com/zacariec" },
+  { label: "X", href: "https://x.com/zacariec" },
+] as const;
 
 export const navItems = [
   { href: "/", label: "Index" },

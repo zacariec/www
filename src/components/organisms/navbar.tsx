@@ -49,8 +49,8 @@ export const Navbar = ({ navItems = defaultNavItems }: NavbarProps) => {
           hideNav ? "opacity-0 -translate-y-full pointer-events-none" : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="flex items-center justify-between px-8 lg:px-16 py-5">
-          <Link className="no-underline flex items-center gap-3 group" href="/">
+        <div className="flex items-center justify-between px-8 lg:px-16">
+          <Link className="no-underline flex items-center gap-3 group py-5" href="/">
             <BlobLogo size={32} textSize="10px" />
             <span className="text-[10px] tracking-[3px] uppercase transition-opacity duration-300 opacity-0">
               Journal
@@ -60,7 +60,6 @@ export const Navbar = ({ navItems = defaultNavItems }: NavbarProps) => {
           <div className="flex items-center gap-10">
             <NavList
               hoveredHref={hoveredHref}
-              linkedInUrl={siteConfig.linkedIn}
               navItems={navItems}
               onHover={setHoveredHref}
               variant="header"

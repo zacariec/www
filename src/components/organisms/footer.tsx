@@ -9,7 +9,6 @@ import { BlobLogo } from "@/components/atoms/blob-logo";
 import { NavList } from "@/components/molecules/nav-list";
 import { NowPlaying } from "@/components/molecules/now-playing";
 import { blobState } from "@/lib/blob-state";
-import { siteConfig } from "@/lib/constants";
 
 interface FooterProps {
   navItems?: { label: string; href: string }[];
@@ -106,7 +105,6 @@ export const Footer = ({
           <NowPlaying variant="footer" />
           <NavList
             hoveredHref={hoveredHref}
-            linkedInUrl={siteConfig.linkedIn}
             navItems={navItems}
             onHover={setHoveredHref}
             variant="footer"

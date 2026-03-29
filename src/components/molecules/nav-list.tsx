@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { BlobLink } from "@/components/atoms/blob-link";
+import { SocialFlipper } from "@/components/molecules/social-flipper";
 
 interface NavListProps {
   navItems: readonly { label: string; href: string }[];
-  linkedInUrl: string;
   variant: "header" | "footer";
   hoveredHref?: string | null;
   onHover?: (href: string | null) => void;
@@ -23,7 +22,6 @@ function getNavLinkColor(isHeader: boolean, active: boolean): string {
 
 export const NavList = ({
   navItems,
-  linkedInUrl,
   variant,
   hoveredHref = null,
   onHover,
@@ -62,7 +60,7 @@ export const NavList = ({
               href={item.href}
               onMouseEnter={onHover ? () => onHover(item.href) : undefined}
               onMouseLeave={onHover ? () => onHover(null) : undefined}
-              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-2 px-3 -my-2 -mx-3 ${fontFamily} ${getNavLinkColor(
+              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-5 px-3 -mx-3 ${fontFamily} ${getNavLinkColor(
                 isHeader,
                 active,
               )}`}
@@ -75,21 +73,15 @@ export const NavList = ({
       <BlobLink
         color="#777777"
         size={blobSize}
-        visible={blobTarget === "linkedin"}
+        visible={blobTarget === "social"}
         position="left"
       >
-        <a
-          href={linkedInUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-          onMouseEnter={onHover ? () => onHover("linkedin") : undefined}
+        <span
+          onMouseEnter={onHover ? () => onHover("social") : undefined}
           onMouseLeave={onHover ? () => onHover(null) : undefined}
-          className={`${textSize} uppercase text-[#777777] ${
-            isHeader ? "hover:text-black" : "hover:text-[#c6c6c6]"
-          } no-underline transition-colors duration-300 flex items-center gap-1 py-2 px-3 -my-2 -mx-3 ${fontFamily}`}
         >
-          Li <ArrowUpRight className="w-2.5 h-2.5" />
-        </a>
+          <SocialFlipper variant={variant} />
+        </span>
       </BlobLink>
     </div>
   );
