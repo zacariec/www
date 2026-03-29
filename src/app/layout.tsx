@@ -1,10 +1,5 @@
 import { Partytown } from "@builder.io/partytown/react";
 
-import { ClientBlobCursor } from "@/components/organisms/client-blob-cursor";
-import { Footer } from "@/components/organisms/footer";
-import { Navbar } from "@/components/organisms/navbar";
-import { PageTransition } from "@/components/organisms/page-transition";
-import { PageShell } from "@/components/templates/page-shell";
 import { inter, spaceGrotesk } from "@/lib/fonts";
 import { getSiteConfig } from "@/lib/sanity/fetch";
 
@@ -83,9 +78,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const config = await getSiteConfig();
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html className={`${spaceGrotesk.variable} ${inter.variable}`} lang="en">
       <head>
@@ -95,17 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Partytown forward={["dataLayer.push", "gtag"]} />
       </head>
       <body className="min-h-screen bg-[#f9f9f7] font-[family-name:var(--font-space-grotesk)]">
-        <ClientBlobCursor />
-        <PageTransition />
-        <Navbar navItems={config.navItems} />
-        <main className="pt-[56px] md:pt-[72px] pb-[64px] md:pb-0 max-w-[1440px] mx-auto">
-          <PageShell>{children}</PageShell>
-        </main>
-        <Footer
-          heading={config.footerHeading}
-          navItems={config.navItems}
-          subtitle={config.footerSubtitle}
-        />
+        {children}
       </body>
     </html>
   );

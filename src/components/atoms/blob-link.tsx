@@ -159,7 +159,7 @@ export const BlobLink = ({
   }, [animate]);
 
   return (
-    <div ref={containerRef} className={`relative inline-flex items-center z-[10000] ${className}`}>
+    <div ref={containerRef} className={`relative inline-flex items-center z-[10000] active:scale-95 transition-transform duration-75 ${className}`}>
       {visible ? (
         <svg
           ref={svgRef}

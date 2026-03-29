@@ -8,6 +8,19 @@
   cursor: none !important;
 }
 
+/* Studio: restore default cursor */
+.studio-layout,
+.studio-layout * {
+  cursor: auto !important;
+}
+
+/* Click feedback */
+a:active,
+button:active {
+  opacity: 0.7;
+  transition: opacity 50ms ease;
+}
+
 /* Scrolling text for now playing */
 @keyframes scrollText {
   0% { transform: translateX(0); }
