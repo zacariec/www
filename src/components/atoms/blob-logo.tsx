@@ -98,6 +98,7 @@ export const BlobLogo = ({
       registerLogo({
         id: logoId,
         getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        getElement: () => containerRef.current,
         visualRadius: size / 2,
         type: "logo",
       }),

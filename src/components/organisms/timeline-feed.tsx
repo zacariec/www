@@ -78,7 +78,16 @@ export const TimelineFeed = ({ entries }: TimelineFeedProps) => {
                     </span>
                   </div>
                 ) : null}
-                <TimelineEntryCard {...entry} />
+                <div id={entry.id}>
+                  <TimelineEntryCard
+                    comments={entry.comments}
+                    date={entry.date}
+                    likes={entry.likes}
+                    text={entry.text}
+                    type={entry.type}
+                    url={entry.url}
+                  />
+                </div>
               </StaggerItem>
             );
           })}

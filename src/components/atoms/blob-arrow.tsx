@@ -87,6 +87,7 @@ export const BlobArrow = ({
       registerLogo({
         id: arrowId,
         getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        getElement: () => containerRef.current,
         visualRadius: size / 2,
         type: "arrow",
       }),

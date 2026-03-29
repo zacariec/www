@@ -97,6 +97,7 @@ export const BlobLink = ({
       registerLogo({
         id: blobId,
         getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        getElement: () => containerRef.current,
         visualRadius: size / 2,
         type: "nav",
       }),

@@ -62,6 +62,14 @@ export const HomeThoughts = ({ entries }: HomeThoughtsProps) => (
                 style={{ lineHeight: 1.8 }}
               >
                 {entry.text.length > 280 ? `${entry.text.slice(0, 280)}...` : entry.text}
+                {entry.text.length > 280 && (
+                  <Link
+                    className="text-[#777777] hover:text-[#000000] transition-colors duration-300 no-underline ml-1 text-[13px] font-[family-name:var(--font-space-grotesk)]"
+                    href={`/timeline#${entry._id}`}
+                  >
+                    Read more
+                  </Link>
+                )}
               </p>
               <div className="flex gap-5 mt-4">
                 <span className="text-[10px] text-[#c6c6c6] font-[family-name:var(--font-space-grotesk)]">

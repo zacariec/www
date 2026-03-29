@@ -7,6 +7,7 @@
 export interface LogoRegistration {
   id: string;
   getRect: () => DOMRect | null;
+  getElement: () => HTMLElement | null;
   visualRadius: number;
   type: "logo" | "arrow" | "nav";
 }

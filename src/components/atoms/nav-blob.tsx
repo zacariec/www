@@ -79,6 +79,7 @@ export const NavBlob = ({ size = 6, color = "#000000", className = "" }: NavBlob
       registerLogo({
         id: blobId,
         getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        getElement: () => containerRef.current,
         visualRadius: size / 2,
         type: "nav",
       }),

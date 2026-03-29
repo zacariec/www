@@ -234,12 +234,25 @@ export const BlobCursor = () => {
       frameRef.current = requestAnimationFrame(animate);
     };
 
+    const onClick = () => {
+      if (blobState.attachedTo) {
+        const target = blobState.logos.find((l) => l.id === blobState.attachedTo);
+        if (target) {
+          const el = target.getElement();
+          const clickable = el?.querySelector("a, button") as HTMLElement | null;
+          if (clickable) clickable.click();
+        }
+      }
+    };
+
     window.addEventListener("mousemove", onMove);
+    window.addEventListener("click", onClick);
     frameRef.current = requestAnimationFrame(animate);
     document.documentElement.classList.add("blob-cursor-active");
 
     return () => {
       window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("click", onClick);
       cancelAnimationFrame(frameRef.current);
       document.documentElement.classList.remove("blob-cursor-active");
     };
