@@ -105,9 +105,7 @@ export default defineConfig([
     rules: {
       "import-x/prefer-default-export": "off",
       "react/require-default-props": "off",
-      "react/jsx-props-no-spreading": "off",
       "react/react-in-jsx-scope": "off",
-      "no-console": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "warn",
