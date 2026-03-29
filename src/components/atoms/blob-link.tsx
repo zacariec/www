@@ -68,6 +68,9 @@ interface BlobLinkProps {
   visible?: boolean;
   /** Position of the blob relative to children */
   position?: "center" | "left";
+  /** Hover handlers on the snap target container */
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 /**
@@ -83,6 +86,8 @@ export const BlobLink = ({
   className = "",
   visible = true,
   position = "center",
+  onMouseEnter,
+  onMouseLeave,
 }: BlobLinkProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -160,7 +165,7 @@ export const BlobLink = ({
   }, [animate]);
 
   return (
-    <div ref={containerRef} className={`relative inline-flex items-center z-[10000] active:scale-95 transition-transform duration-75 ${className}`}>
+    <div ref={containerRef} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className={`relative inline-flex items-center z-[10000] active:scale-95 transition-transform duration-75 ${className}`}>
       {visible ? (
         <svg
           ref={svgRef}

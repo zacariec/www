@@ -6,6 +6,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import { motion } from "motion/react";
 
 import { BlobArrow } from "@/components/atoms/blob-arrow";
+import { BlobLink } from "@/components/atoms/blob-link";
 import { TypeBadge } from "@/components/atoms/type-badge";
 
 const TRUNCATE_LENGTH = 280;
@@ -61,22 +62,26 @@ export const TimelineEntryCard = ({
       >
         {renderTextWithBreaks(displayText)}
         {isLong && !expanded && (
-          <button
-            className="text-[#777777] hover:text-[#000000] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 ml-1 text-[13px] font-[family-name:var(--font-space-grotesk)]"
-            onClick={() => setExpanded(true)}
-            type="button"
-          >
-            Read more
-          </button>
+          <BlobLink className="ml-1 inline-flex" color="#c6c6c6" size={10} visible={false}>
+            <button
+              className="text-[#777777] hover:text-[#000000] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 text-[13px] font-[family-name:var(--font-space-grotesk)]"
+              onClick={() => setExpanded(true)}
+              type="button"
+            >
+              Read more
+            </button>
+          </BlobLink>
         )}
         {isLong && expanded && (
-          <button
-            className="text-[#c6c6c6] hover:text-[#777777] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 ml-1 text-[13px] font-[family-name:var(--font-space-grotesk)]"
-            onClick={() => setExpanded(false)}
-            type="button"
-          >
-            Show less
-          </button>
+          <BlobLink className="ml-1 inline-flex" color="#c6c6c6" size={10} visible={false}>
+            <button
+              className="text-[#c6c6c6] hover:text-[#777777] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 text-[13px] font-[family-name:var(--font-space-grotesk)]"
+              onClick={() => setExpanded(false)}
+              type="button"
+            >
+              Show less
+            </button>
+          </BlobLink>
         )}
       </p>
       <div className="flex items-center gap-5 mt-4">

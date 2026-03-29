@@ -55,11 +55,11 @@ export const NavList = ({
             position="left"
             size={blobSize}
             visible={showBlob}
+            onMouseEnter={onHover ? () => onHover(item.href) : undefined}
+            onMouseLeave={onHover ? () => onHover(null) : undefined}
           >
             <Link
               href={item.href}
-              onMouseEnter={onHover ? () => onHover(item.href) : undefined}
-              onMouseLeave={onHover ? () => onHover(null) : undefined}
               className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-5 px-3 -mx-3 ${fontFamily} ${getNavLinkColor(
                 isHeader,
                 active || showBlob,
@@ -75,13 +75,10 @@ export const NavList = ({
         size={blobSize}
         visible={blobTarget === "social"}
         position="left"
+        onMouseEnter={onHover ? () => onHover("social") : undefined}
+        onMouseLeave={onHover ? () => onHover(null) : undefined}
       >
-        <span
-          onMouseEnter={onHover ? () => onHover("social") : undefined}
-          onMouseLeave={onHover ? () => onHover(null) : undefined}
-        >
-          <SocialFlipper variant={variant} />
-        </span>
+        <SocialFlipper variant={variant} />
       </BlobLink>
     </div>
   );
