@@ -74,15 +74,15 @@ export const CommentCard = ({
       </p>
       <div className="flex items-center gap-4 mt-3">
         <button
+          onClick={handleLike}
+          type="button"
           className={`flex items-center gap-1.5 text-[10px] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)] ${
             liked ? "text-[#000000]" : "text-[#c6c6c6] hover:text-[#000000]"
           }`}
-          onClick={handleLike}
-          type="button"
         >
           <Heart className={`w-3 h-3 ${liked ? "fill-current" : ""}`} /> {likes}
         </button>
-        {onReply && !isReply && (
+        {onReply && !isReply ? (
           <button
             className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]"
             onClick={() => onReply(id)}
@@ -90,7 +90,7 @@ export const CommentCard = ({
           >
             <MessageCircle className="w-3 h-3" /> Reply
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );

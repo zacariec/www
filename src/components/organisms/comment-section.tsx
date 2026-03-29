@@ -58,8 +58,7 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
   };
 
   const topLevel = comments.filter((c) => !c.parentCommentId);
-  const getReplies = (parentId: string) =>
-    comments.filter((c) => c.parentCommentId === parentId);
+  const getReplies = (parentId: string) => comments.filter((c) => c.parentCommentId === parentId);
 
   return (
     <SessionProvider>
@@ -97,12 +96,12 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
                   {getReplies(comment.id).map((reply, j) => (
                     <CommentCard
                       key={reply.id}
+                      isReply
                       author={reply.author}
                       authorImage={reply.authorImage}
                       date={reply.date}
                       id={reply.id}
                       isLast={j === getReplies(comment.id).length - 1}
-                      isReply
                       likes={reply.likes}
                       text={reply.text}
                     />
@@ -111,10 +110,10 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
                   {replyingTo === comment.id && (
                     <div className="ml-8 border-l-2 border-[rgba(0,0,0,0.04)] pl-6 pb-4">
                       <CommentForm
-                        onSubmit={(author, text, authorImage) =>
+                        placeholder="Write a reply..."
+                        onSubmit={async (author, text, authorImage) =>
                           handleSubmit(author, text, authorImage, comment.id)
                         }
-                        placeholder="Write a reply..."
                       />
                       <button
                         className="text-[10px] text-[#c6c6c6] hover:text-[#777777] transition-colors bg-transparent border-none cursor-pointer p-0 mt-2 font-[family-name:var(--font-space-grotesk)]"
