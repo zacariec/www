@@ -91,7 +91,7 @@ export const Navbar = ({ navItems = defaultNavItems }: NavbarProps) => {
           hideNav ? "opacity-0 translate-y-full pointer-events-none" : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="bg-[#f9f9f7]/95 backdrop-blur-md">
+        <div className="bg-[#f9f9f7]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-between px-2">
             {navItems.map((item) => {
               const active = isActive(item.href);

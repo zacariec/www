@@ -82,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html className={`${spaceGrotesk.variable} ${inter.variable}`} lang="en">
       <head>
+        <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
         <meta content="yes" name="apple-mobile-web-app-capable" />
         <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
         <meta content="ZC" name="apple-mobile-web-app-title" />
