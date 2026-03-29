@@ -1,0 +1,39 @@
+{
+  "name": "zc-www",
+  "main": "worker.ts",
+  "compatibility_date": "2026-03-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "zcarr.dev", "custom_domain": true }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_SANITY_PROJECT_ID": "mrobamxo",
+    "NEXT_PUBLIC_SANITY_DATASET": "production",
+    "NEXT_PUBLIC_SANITY_API_VERSION": "2026-03-26"
+  },
+
+  "containers": [
+    {
+      "class_name": "NextApp",
+      "image": "./Dockerfile",
+      "max_instances": 3,
+      "instance_type": "basic"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_APP",
+        "class_name": "NextApp"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["NextApp"]
+    }
+  ]
+}
