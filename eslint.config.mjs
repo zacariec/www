@@ -110,6 +110,8 @@ export default defineConfig([
       "no-await-in-loop": "off",
       "react/function-component-definition": "off",
       "react/jsx-no-useless-fragment": "off",
+      "react/jsx-fragments": "off",
+      "no-plusplus": "off",
     },
   },
 ]);

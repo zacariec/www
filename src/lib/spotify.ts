@@ -1,3 +1,11 @@
+import {
+  spotifyCurrentlyPlayingSchema,
+  spotifyRecentlyPlayedSchema,
+  spotifyTokenSchema,
+} from "@/lib/schemas/spotify";
+
+import type { NowPlayingData } from "@/lib/schemas/spotify";
+
 const TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
 const NOW_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-playing";
 const RECENTLY_PLAYED_ENDPOINT = "https://api.spotify.com/v1/me/player/recently-played?limit=1";
@@ -8,11 +16,6 @@ async function getAccessToken(): Promise<string | null> {
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
-    console.error("[Spotify] Missing env vars:", {
-      hasClientId: !!clientId,
-      hasClientSecret: !!clientSecret,
-      hasRefreshToken: !!refreshToken,
-    });
     return null;
   }
 
@@ -32,23 +35,17 @@ async function getAccessToken(): Promise<string | null> {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("[Spotify] Token exchange failed:", res.status, text);
     return null;
   }
 
-  const data = await res.json();
-  return data.access_token;
+  const data: unknown = await res.json();
+  const parsed = spotifyTokenSchema.safeParse(data);
+  if (!parsed.success) return null;
+
+  return parsed.data.access_token;
 }
 
-export interface NowPlayingData {
-  isPlaying: boolean;
-  title?: string;
-  artist?: string;
-  albumArt?: string;
-  songUrl?: string;
-  error?: string;
-}
+export type { NowPlayingData };
 
 export async function getNowPlaying(): Promise<NowPlayingData> {
   const token = await getAccessToken();
@@ -61,14 +58,17 @@ export async function getNowPlaying(): Promise<NowPlayingData> {
   });
 
   if (res.status === 200) {
-    const data = await res.json();
-    if (data.is_playing && data.item) {
+    const data: unknown = await res.json();
+    const parsed = spotifyCurrentlyPlayingSchema.safeParse(data);
+
+    if (parsed.success && parsed.data.is_playing && parsed.data.item) {
+      const { item } = parsed.data;
       return {
         isPlaying: true,
-        title: data.item.name,
-        artist: data.item.artists.map((a: { name: string }) => a.name).join(", "),
-        albumArt: data.item.album.images?.[2]?.url || data.item.album.images?.[0]?.url,
-        songUrl: data.item.external_urls.spotify,
+        title: item.name,
+        artist: item.artists.map((a) => a.name).join(", "),
+        albumArt: item.album.images[2]?.url || item.album.images[0]?.url,
+        songUrl: item.external_urls.spotify,
       };
     }
   }
@@ -80,16 +80,20 @@ export async function getNowPlaying(): Promise<NowPlayingData> {
   });
 
   if (recentRes.status === 200) {
-    const data = await recentRes.json();
-    const track = data.items?.[0]?.track;
-    if (track) {
-      return {
-        isPlaying: false,
-        title: track.name,
-        artist: track.artists.map((a: { name: string }) => a.name).join(", "),
-        albumArt: track.album.images?.[2]?.url || track.album.images?.[0]?.url,
-        songUrl: track.external_urls.spotify,
-      };
+    const data: unknown = await recentRes.json();
+    const parsed = spotifyRecentlyPlayedSchema.safeParse(data);
+
+    if (parsed.success) {
+      const track = parsed.data.items[0]?.track;
+      if (track) {
+        return {
+          isPlaying: false,
+          title: track.name,
+          artist: track.artists.map((a) => a.name).join(", "),
+          albumArt: track.album.images[2]?.url || track.album.images[0]?.url,
+          songUrl: track.external_urls.spotify,
+        };
+      }
     }
   }
 

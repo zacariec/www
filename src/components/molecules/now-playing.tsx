@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import type { NowPlayingData } from "@/lib/spotify";
+import { nowPlayingResponseSchema } from "@/lib/schemas/spotify";
+
+import type { NowPlayingData } from "@/lib/schemas/spotify";
 
 const SpotifyIcon = ({ size = 14, color = "#777777" }: { size?: number; color?: string }) => (
   <svg
@@ -41,7 +43,11 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
     const fetchData = async () => {
       try {
         const res = await fetch("/api/spotify");
-        if (res.ok && mounted) setData(await res.json());
+        if (res.ok && mounted) {
+          const json: unknown = await res.json();
+          const parsed = nowPlayingResponseSchema.safeParse(json);
+          if (parsed.success) setData(parsed.data);
+        }
       } catch {
         /* silent */
       }

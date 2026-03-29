@@ -35,10 +35,12 @@ interface BlogPostContentProps {
   post: SanityBlogPost;
 }
 
+function isStringArray(content: unknown): content is string[] {
+  return Array.isArray(content) && content.length > 0 && typeof content[0] === "string";
+}
+
 export const BlogPostContent = ({ post }: BlogPostContentProps) => {
-  const firstItem = Array.isArray(post.content) && post.content.length > 0 ? post.content[0] : null;
-  const isPortableText =
-    firstItem !== null && typeof firstItem === "object" && "_type" in firstItem;
+  const isPortableText = !isStringArray(post.content);
 
   const comments = (post.comments || []).map((c, i) => ({
     id: c._id || String(i),
@@ -161,7 +163,8 @@ export const BlogPostContent = ({ post }: BlogPostContentProps) => {
                   <PortableText components={ptComponents} value={post.content} />
                 </div>
               ) : (
-                (post.content as unknown as string[]).map((paragraph: string, i: number) => (
+                isStringArray(post.content) &&
+                post.content.map((paragraph: string, i: number) => (
                   <FadeIn key={i} delay={0.1 * i}>
                     <p
                       className={`text-[#1a1c1b] font-[family-name:var(--font-inter)] ${i === 0 ? "text-[18px] md:text-[22px]" : "text-[15px] md:text-[17px]"}`}
