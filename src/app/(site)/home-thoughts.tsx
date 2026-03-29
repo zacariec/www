@@ -61,14 +61,24 @@ export const HomeThoughts = ({ entries }: HomeThoughtsProps) => (
                 className="text-[15px] md:text-[16px] text-[#1a1c1b] font-[family-name:var(--font-inter)]"
                 style={{ lineHeight: 1.8 }}
               >
-                {entry.text.length > 280 ? `${entry.text.slice(0, 280)}...` : entry.text}
+                {(entry.text.length > 280 ? `${entry.text.slice(0, 280)}...` : entry.text)
+                  .split("\n")
+                  .map((line, j) => (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <span key={j}>
+                      {line}
+                      {j < entry.text.split("\n").length - 1 && <br />}
+                    </span>
+                  ))}
                 {entry.text.length > 280 && (
-                  <Link
-                    className="text-[#777777] hover:text-[#000000] transition-colors duration-300 no-underline ml-1 text-[13px] font-[family-name:var(--font-space-grotesk)]"
-                    href={`/timeline#${entry._id}`}
-                  >
-                    Read more
-                  </Link>
+                  <BlobLink className="ml-1 inline-flex" color="#c6c6c6" size={10} visible={false}>
+                    <Link
+                      className="text-[#777777] hover:text-[#000000] transition-colors duration-300 no-underline text-[13px] font-[family-name:var(--font-space-grotesk)]"
+                      href={`/timeline#${entry._id}`}
+                    >
+                      Read more
+                    </Link>
+                  </BlobLink>
                 )}
               </p>
               <div className="flex gap-5 mt-4">

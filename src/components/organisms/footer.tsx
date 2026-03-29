@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { motion } from "motion/react";
 
@@ -8,7 +8,6 @@ import { BlobLink } from "@/components/atoms/blob-link";
 import { BlobLogo } from "@/components/atoms/blob-logo";
 import { NavList } from "@/components/molecules/nav-list";
 import { NowPlaying } from "@/components/molecules/now-playing";
-import { blobState } from "@/lib/blob-state";
 
 interface FooterProps {
   navItems?: { label: string; href: string }[];
@@ -25,29 +24,11 @@ export const Footer = ({
   heading = "Thanks for\nreading.",
   subtitle = "\u2014 End",
 }: FooterProps) => {
-  const footerRef = useRef<HTMLElement>(null);
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
   const headingLines = heading.split("\n");
 
-  useEffect(() => {
-    const el = footerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        blobState.inFooter = entry.isIntersecting;
-      },
-      { threshold: 0 },
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      blobState.inFooter = false;
-    };
-  }, []);
-
   return (
     <footer
-      ref={footerRef}
       className="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative"
     >
       <button

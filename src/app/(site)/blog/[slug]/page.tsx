@@ -33,11 +33,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       authors: [config.author],
       section: "Writing",
       ...(url && { url }),
+      ...(post.featuredImage?.url && {
+        images: [{ url: post.featuredImage.url, width: 1200, height: 630 }],
+      }),
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description,
+      ...(post.featuredImage?.url && {
+        images: [post.featuredImage.url],
+      }),
     },
     alternates: {
       canonical: url,

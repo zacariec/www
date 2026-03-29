@@ -139,13 +139,14 @@ export const BlobCursor = () => {
 
       seedRef.current += 0.015;
 
-      // Refine footer detection — only if footer is visible AND cursor is over it
-      if (blobState.inFooter) {
-        const footer = document.querySelector("footer");
-        if (footer) {
-          const fRect = footer.getBoundingClientRect();
-          blobState.inFooter = blobState.mouseY >= fRect.top;
-        }
+      // Footer detection — check if cursor is over the footer element
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const fRect = footer.getBoundingClientRect();
+        blobState.inFooter =
+          blobState.mouseY >= fRect.top && blobState.mouseY <= fRect.bottom;
+      } else {
+        blobState.inFooter = false;
       }
 
       // Position canvas (apply pull offset so cursor visually shifts)
