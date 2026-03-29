@@ -14,6 +14,13 @@ interface NavListProps {
   onHover?: (href: string | null) => void;
 }
 
+function getNavLinkColor(isHeader: boolean, active: boolean): string {
+  if (isHeader) {
+    return active ? "text-[#000000]" : "text-[#777777] hover:text-black";
+  }
+  return active ? "text-[#c6c6c6]" : "text-[#777777] hover:text-[#c6c6c6]";
+}
+
 export const NavList = ({
   navItems,
   linkedInUrl,
@@ -55,15 +62,10 @@ export const NavList = ({
               href={item.href}
               onMouseEnter={onHover ? () => onHover(item.href) : undefined}
               onMouseLeave={onHover ? () => onHover(null) : undefined}
-              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-2 px-3 -my-2 -mx-3 ${fontFamily} ${
-                isHeader
-                  ? active
-                    ? "text-[#000000]"
-                    : "text-[#777777] hover:text-black"
-                  : active
-                    ? "text-[#c6c6c6]"
-                    : "text-[#777777] hover:text-[#c6c6c6]"
-              }`}
+              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-2 px-3 -my-2 -mx-3 ${fontFamily} ${getNavLinkColor(
+                isHeader,
+                active,
+              )}`}
             >
               {item.label}
             </Link>

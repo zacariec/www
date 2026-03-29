@@ -43,6 +43,7 @@ export const TimelineFeed = ({ entries }: TimelineFeedProps) => {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
+              type="button"
               className={`text-[10px] tracking-[2px] uppercase transition-all duration-300 cursor-pointer bg-transparent border px-4 py-2 rounded-full whitespace-nowrap font-[family-name:var(--font-space-grotesk)] ${
                 filter === f.value
                   ? "text-[#e2e2e2] bg-[#000000] border-[#000000]"

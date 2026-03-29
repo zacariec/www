@@ -91,6 +91,14 @@ export default defineConfig([
   ...typescriptConfig,
   // Prettier config
   ...prettierConfig,
+  // Scripts overrides
+  {
+    files: ["scripts/**/*.ts"],
+    rules: {
+      "no-await-in-loop": "off",
+      "no-console": "off",
+    },
+  },
   // Project overrides
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -102,16 +110,16 @@ export default defineConfig([
       "no-console": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/explicit-module-boundary-types": "off",
-      "@typescript-eslint/no-floating-promises": "off",
-      "@typescript-eslint/no-misused-promises": "off",
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "warn",
       "no-underscore-dangle": ["error", { allow: ["_id", "_type", "_key", "_ref"] }],
       "no-restricted-syntax": "off",
-      "no-await-in-loop": "off",
-      "react/function-component-definition": "off",
-      "react/jsx-no-useless-fragment": "off",
-      "react/jsx-fragments": "off",
       "no-plusplus": "off",
+      "no-continue": "off",
+      "consistent-return": "off",
+      "react/jsx-fragments": ["error", "syntax"],
+      "react/jsx-no-useless-fragment": "off",
+      "react/function-component-definition": "off",
+      "react/no-array-index-key": "warn",
     },
   },
 ]);

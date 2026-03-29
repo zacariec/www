@@ -101,6 +101,7 @@ export const BlobLogo = ({
         visualRadius: size / 2,
         type: "logo",
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [logoId],
   );
 
@@ -165,6 +166,7 @@ export const BlobLogo = ({
     }
 
     frameRef.current = requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logoId]);
 
   useEffect(() => {

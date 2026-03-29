@@ -149,6 +149,7 @@ export const BlobArrow = ({
     }
 
     frameRef.current = requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arrowId]);
 
   useEffect(() => {

@@ -75,7 +75,7 @@ export default async function HomePage() {
                 priority
                 alt={heroAlt}
                 className="object-cover mix-blend-multiply opacity-85"
-                src={config.heroImage!.url}
+                src={config.heroImage?.url ?? ""}
               />
               <div className="absolute inset-0 bg-white mix-blend-saturation" />
             </div>

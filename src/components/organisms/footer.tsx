@@ -54,6 +54,7 @@ export const Footer = ({
       <button
         className="w-full bg-transparent border-none cursor-pointer group text-left px-5 md:px-16 py-8 transition-colors duration-500 hover:bg-[#3b3b3b]/20"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        type="button"
       >
         <div className="flex items-center justify-between">
           <span className="text-[10px] tracking-[3px] uppercase text-[#777777] group-hover:text-[#c6c6c6] transition-colors duration-500 font-[family-name:var(--font-space-grotesk)]">

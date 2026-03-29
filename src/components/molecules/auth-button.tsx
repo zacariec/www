@@ -25,6 +25,7 @@ export const AuthButton = () => {
         <button
           className="text-[10px] tracking-[1px] uppercase text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 font-[family-name:var(--font-space-grotesk)]"
           onClick={async () => signOut()}
+          type="button"
         >
           Sign out
         </button>
@@ -40,12 +41,14 @@ export const AuthButton = () => {
       <button
         className="text-[10px] tracking-[2px] uppercase bg-[#000000] text-[#e2e2e2] px-5 py-2.5 border-none cursor-pointer font-[family-name:var(--font-space-grotesk)] hover:bg-[#333] transition-colors duration-300"
         onClick={async () => signIn("github")}
+        type="button"
       >
         GitHub
       </button>
       <button
         className="text-[10px] tracking-[2px] uppercase bg-[#000000] text-[#e2e2e2] px-5 py-2.5 border-none cursor-pointer font-[family-name:var(--font-space-grotesk)] hover:bg-[#333] transition-colors duration-300"
         onClick={async () => signIn("google")}
+        type="button"
       >
         Google
       </button>

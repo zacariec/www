@@ -1,5 +1,3 @@
-import type { Metadata } from "next";
-
 import { Partytown } from "@builder.io/partytown/react";
 
 import { ClientBlobCursor } from "@/components/organisms/client-blob-cursor";
@@ -11,6 +9,8 @@ import { inter, spaceGrotesk } from "@/lib/fonts";
 import { getSiteConfig } from "@/lib/sanity/fetch";
 
 import "./globals.css";
+
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 

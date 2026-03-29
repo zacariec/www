@@ -40,10 +40,16 @@ export const CommentCard = ({
       {text}
     </p>
     <div className="flex items-center gap-4 mt-3">
-      <button className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]">
+      <button
+        className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]"
+        type="button"
+      >
         <Heart className="w-3 h-3" /> {likes}
       </button>
-      <button className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]">
+      <button
+        className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]"
+        type="button"
+      >
         <MessageCircle className="w-3 h-3" /> Reply
       </button>
     </div>

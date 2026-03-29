@@ -75,6 +75,7 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
       onFocus={() => setExpanded(true)}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
+      role="button"
       tabIndex={0}
     >
       <SpotifyIcon color={iconColor} size={14} />
