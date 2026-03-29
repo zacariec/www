@@ -43,6 +43,8 @@ export interface SanitySiteConfig {
   ogImage?: { url: string; alt?: string };
   author: string;
   linkedIn?: string;
+  github?: string;
+  twitter?: string;
   timezone?: string;
 }
 

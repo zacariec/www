@@ -124,6 +124,18 @@ export const siteConfigType = defineType({
       group: "seo",
     }),
     defineField({
+      name: "github",
+      title: "GitHub URL",
+      type: "url",
+      group: "seo",
+    }),
+    defineField({
+      name: "twitter",
+      title: "X / Twitter URL",
+      type: "url",
+      group: "seo",
+    }),
+    defineField({
       name: "timezone",
       title: "Timezone",
       type: "string",

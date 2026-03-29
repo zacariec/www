@@ -90,6 +90,8 @@ export const siteConfigQuery = groq`
     ogImage { "url": asset->url, alt },
     author,
     linkedIn,
+    github,
+    twitter,
     timezone
   }
 `;

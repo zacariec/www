@@ -60,6 +60,8 @@ async function migrate() {
       siteUrl: "https://zcarr.dev",
       author: "ZC",
       linkedIn: "https://www.linkedin.com/in/zacariecarr",
+      github: "https://github.com/zacariec",
+      twitter: "https://x.com/zacariec",
       timezone: "Australia/Sydney",
       navItems: [
         { _type: "object", _key: "nav-index", label: "Index", href: "/" },
