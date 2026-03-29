@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import { BlobLogo } from "@/components/atoms/blob-logo";
 import { TimeDisplay } from "@/components/atoms/time-display";
-import { NowPlaying } from "@/components/molecules/now-playing";
 import { NavList } from "@/components/molecules/nav-list";
-import { siteConfig, navItems as defaultNavItems } from "@/lib/constants";
+import { NowPlaying } from "@/components/molecules/now-playing";
+import { navItems as defaultNavItems, siteConfig } from "@/lib/constants";
 
 interface NavbarProps {
   navItems?: readonly { label: string; href: string }[];
 }
 
-export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
+export const Navbar = ({ navItems = defaultNavItems }: NavbarProps) => {
   const pathname = usePathname();
   const [hideNav, setHideNav] = useState(false);
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
@@ -28,10 +30,9 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
   useEffect(() => {
     const footerNav = document.querySelector("[data-footer-nav]");
     if (!footerNav) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setHideNav(entry.isIntersecting),
-      { threshold: 0 }
-    );
+    const observer = new IntersectionObserver(([entry]) => setHideNav(entry.isIntersecting), {
+      threshold: 0,
+    });
     observer.observe(footerNav);
     return () => observer.disconnect();
   }, []);
@@ -49,7 +50,7 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
         }`}
       >
         <div className="flex items-center justify-between px-8 lg:px-16 py-5">
-          <Link href="/" className="no-underline flex items-center gap-3 group">
+          <Link className="no-underline flex items-center gap-3 group" href="/">
             <BlobLogo size={32} textSize="10px" />
             <span className="text-[10px] tracking-[3px] uppercase transition-opacity duration-300 opacity-0">
               Journal
@@ -58,11 +59,11 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
 
           <div className="flex items-center gap-10">
             <NavList
-              navItems={navItems}
-              linkedInUrl={siteConfig.linkedIn}
-              variant="header"
               hoveredHref={hoveredHref}
+              linkedInUrl={siteConfig.linkedIn}
+              navItems={navItems}
               onHover={setHoveredHref}
+              variant="header"
             />
             <TimeDisplay />
             <NowPlaying variant="header" />
@@ -77,7 +78,7 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4">
-          <Link href="/" className="no-underline">
+          <Link className="no-underline" href="/">
             <BlobLogo size={28} textSize="9px" />
           </Link>
           <TimeDisplay className="text-[9px]" />
@@ -97,21 +98,21 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
                   className="relative flex-1 flex items-center justify-center py-4 no-underline"
+                  href={item.href}
                 >
-                  {active && (
+                  {active ? (
                     <motion.div
-                      layoutId="mobile-nav"
                       className="absolute top-0 left-4 right-4 h-[2px] bg-black"
+                      layoutId="mobile-nav"
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
-                  )}
+                  ) : null}
                   <span
+                    style={{ fontWeight: active ? 600 : 400 }}
                     className={`text-[10px] tracking-[2px] uppercase transition-colors duration-300 ${
                       active ? "text-black" : "text-[#c6c6c6]"
                     }`}
-                    style={{ fontWeight: active ? 600 : 400 }}
                   >
                     {item.label}
                   </span>
@@ -119,10 +120,10 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
               );
             })}
             <a
-              href={siteConfig.linkedIn}
-              target="_blank"
-              rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center py-4 no-underline"
+              href={siteConfig.linkedIn}
+              rel="noopener noreferrer"
+              target="_blank"
             >
               <span className="text-[10px] tracking-[2px] uppercase text-[#c6c6c6] flex items-center gap-1">
                 Li <ArrowUpRight className="w-2.5 h-2.5" />
@@ -133,4 +134,4 @@ export function Navbar({ navItems = defaultNavItems }: NavbarProps) {
       </div>
     </>
   );
-}
+};

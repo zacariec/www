@@ -1,12 +1,14 @@
-import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { HeroSection } from "@/components/organisms/hero-section";
-import { PostList } from "@/components/organisms/post-list";
-import { Marquee } from "@/components/molecules/marquee";
+import Image from "next/image";
+import Link from "next/link";
+
 import { BlobLink } from "@/components/atoms/blob-link";
+import { Marquee } from "@/components/molecules/marquee";
+import { HeroSection } from "@/components/organisms/hero-section";
 import { NeuralBlobNet } from "@/components/organisms/neural-blob-net";
+import { PostList } from "@/components/organisms/post-list";
 import { getLatestPosts, getLatestTimeline, getSiteConfig } from "@/lib/sanity/fetch";
+
 import { HomeThoughts } from "./home-thoughts";
 
 export const dynamic = "force-dynamic";
@@ -52,26 +54,28 @@ export default async function HomePage() {
   return (
     <div>
       <script
-        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        type="application/ld+json"
       />
       <HeroSection
-        subtitle={config.heroSubtitle}
-        heading={config.heroHeading}
         description={config.heroDescription}
+        heading={config.heroHeading}
+        subtitle={config.heroSubtitle}
       />
 
       {/* Featured Image */}
       <section className="md:px-16 pb-16 md:pb-24">
-        <div className={`overflow-hidden h-[60vh] md:h-[80vh] relative ${hasHeroImage ? "bg-[#f4f4f2]" : ""}`}>
+        <div
+          className={`overflow-hidden h-[60vh] md:h-[80vh] relative ${hasHeroImage ? "bg-[#f4f4f2]" : ""}`}
+        >
           {hasHeroImage ? (
             <div className="absolute inset-0">
               <Image
-                src={config.heroImage!.url}
-                alt={heroAlt}
                 fill
-                className="object-cover mix-blend-multiply opacity-85"
                 priority
+                alt={heroAlt}
+                className="object-cover mix-blend-multiply opacity-85"
+                src={config.heroImage!.url}
               />
               <div className="absolute inset-0 bg-white mix-blend-saturation" />
             </div>
@@ -95,11 +99,11 @@ export default async function HomePage() {
               Latest Writing
             </h2>
             <Link
-              href="/blog"
               className="text-[10px] tracking-[2px] uppercase text-[#777777] hover:text-[#000000] no-underline transition-colors duration-300 flex items-center gap-2 font-[family-name:var(--font-space-grotesk)]"
+              href="/blog"
             >
               All
-              <BlobLink size={16} color="#c6c6c6">
+              <BlobLink color="#c6c6c6" size={16}>
                 <ArrowRight className="w-3 h-3" />
               </BlobLink>
             </Link>

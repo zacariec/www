@@ -10,22 +10,22 @@ interface RevealTextProps {
   style?: React.CSSProperties;
 }
 
-export function RevealText({
+export const RevealText = ({
   children,
   className = "",
   delay = 0,
   as = "div",
   style,
-}: RevealTextProps) {
+}: RevealTextProps) => {
   const Tag = motion[as] as React.ComponentType<Record<string, unknown>>;
   return (
     <div className="overflow-hidden">
       <Tag
         className={className}
-        style={style}
         initial={{ y: "100%", opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
+        style={style}
         viewport={{ once: true, margin: "-50px" }}
+        whileInView={{ y: 0, opacity: 1 }}
         transition={{
           duration: 0.7,
           delay,
@@ -36,9 +36,9 @@ export function RevealText({
       </Tag>
     </div>
   );
-}
+};
 
-export function FadeIn({
+export const FadeIn = ({
   children,
   className = "",
   delay = 0,
@@ -48,17 +48,15 @@ export function FadeIn({
   className?: string;
   delay?: number;
   style?: React.CSSProperties;
-}) {
-  return (
-    <motion.div
-      className={className}
-      style={style}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+}) => (
+  <motion.div
+    className={className}
+    initial={{ opacity: 0, y: 20 }}
+    style={style}
+    transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    viewport={{ once: true, margin: "-30px" }}
+    whileInView={{ opacity: 1, y: 0 }}
+  >
+    {children}
+  </motion.div>
+);

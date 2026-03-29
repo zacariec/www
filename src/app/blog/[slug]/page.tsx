@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { getPostBySlug, getSiteConfig } from "@/lib/sanity/fetch";
+
 import { BlogPostContent } from "./blog-post-content";
+
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +17,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const [post, config] = await Promise.all([getPostBySlug(slug), getSiteConfig()]);
   if (!post) return { title: "Post Not Found" };
 
-  const description = post.subtitle || post.excerpt || `${post.title} — a piece of writing by ${config.author}`;
+  const description =
+    post.subtitle || post.excerpt || `${post.title} — a piece of writing by ${config.author}`;
   const url = config.siteUrl ? `${config.siteUrl}/blog/${slug}` : undefined;
 
   return {
@@ -71,8 +75,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   return (
     <>
       <script
-        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        type="application/ld+json"
       />
       <BlogPostContent post={post} />
     </>

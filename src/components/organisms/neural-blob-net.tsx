@@ -44,7 +44,7 @@ interface NeuralBlobNetProps {
   nodeCount?: number;
 }
 
-export function NeuralBlobNet({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetProps) {
+export const NeuralBlobNet = ({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetProps) => {
   const resolvedCount = Math.max(40, nodeCount);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<BlobNode[]>([]);
@@ -130,9 +130,9 @@ export function NeuralBlobNet({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetP
 
       // Project 3D to 2D
       for (const node of nodes) {
-        let x = node.sx * cosY + node.sz * sinY;
+        const x = node.sx * cosY + node.sz * sinY;
         const y = node.sy;
-        let z = -node.sx * sinY + node.sz * cosY;
+        const z = -node.sx * sinY + node.sz * cosY;
 
         const y2 = y * cosX - z * sinX;
         const z2 = y * sinX + z * cosX;
@@ -160,7 +160,10 @@ export function NeuralBlobNet({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetP
           const dy = sorted[i].y - sorted[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECTION_DISTANCE) {
-            const alpha = (1 - dist / CONNECTION_DISTANCE) * 0.06 * Math.min(sorted[i].opacity, sorted[j].opacity);
+            const alpha =
+              (1 - dist / CONNECTION_DISTANCE) *
+              0.06 *
+              Math.min(sorted[i].opacity, sorted[j].opacity);
             ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(sorted[i].x, sorted[i].y);
@@ -191,10 +194,5 @@ export function NeuralBlobNet({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetP
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-    />
-  );
-}
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
+};

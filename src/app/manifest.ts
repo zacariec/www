@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "zcarr.dev",
     short_name: "ZC",
-    description: "A space for long-form thinking on design, engineering, and the details most people skip.",
+    description:
+      "A space for long-form thinking on design, engineering, and the details most people skip.",
     start_url: "/",
     scope: "/",
     display: "standalone",

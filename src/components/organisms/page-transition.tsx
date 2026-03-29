@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
+
 import { usePathname } from "next/navigation";
 
 const ENTER_DURATION = 300;
@@ -10,10 +11,10 @@ const LEAVE_DURATION = 400;
 type Phase = "idle" | "entering" | "holding" | "leaving";
 
 function easeInOut(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-export function PageTransition() {
+export const PageTransition = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pathname = usePathname();
   const prevPathRef = useRef(pathname);
@@ -106,4 +107,4 @@ export function PageTransition() {
       style={{ display: "none" }}
     />
   );
-}
+};

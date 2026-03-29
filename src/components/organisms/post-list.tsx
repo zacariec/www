@@ -18,16 +18,14 @@ interface PostListProps {
   variant?: "compact" | "full";
 }
 
-export function PostList({ posts, variant = "compact" }: PostListProps) {
-  return (
-    <StaggerChildren>
-      {posts.map((post) => (
-        <StaggerItem key={post.slug}>
-          <HorizontalLine />
-          <PostCard {...post} variant={variant} />
-        </StaggerItem>
-      ))}
-      <HorizontalLine />
-    </StaggerChildren>
-  );
-}
+export const PostList = ({ posts, variant = "compact" }: PostListProps) => (
+  <StaggerChildren>
+    {posts.map((post) => (
+      <StaggerItem key={post.slug}>
+        <HorizontalLine />
+        <PostCard {...post} variant={variant} />
+      </StaggerItem>
+    ))}
+    <HorizontalLine />
+  </StaggerChildren>
+);

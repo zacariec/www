@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@sanity/client";
+import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
 import { apiVersion, dataset, projectId } from "@/sanity/env";
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
 
     const post = await writeClient.fetch(
       `*[_type == "blogPost" && slug.current == $slug][0]{ _id }`,
-      { slug: postSlug }
+      { slug: postSlug },
     );
 
     if (!post) {

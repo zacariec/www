@@ -1,8 +1,8 @@
 "use client";
 
+import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 
 interface NavLinkProps {
   href: string;
@@ -11,7 +11,7 @@ interface NavLinkProps {
   className?: string;
 }
 
-export function NavLink({ href, label, layoutId = "nav-indicator", className }: NavLinkProps) {
+export const NavLink = ({ href, label, layoutId = "nav-indicator", className }: NavLinkProps) => {
   const pathname = usePathname();
 
   const isActive = () => {
@@ -29,13 +29,13 @@ export function NavLink({ href, label, layoutId = "nav-indicator", className }: 
       } ${className ?? ""}`}
     >
       {label}
-      {active && (
+      {active ? (
         <motion.div
-          layoutId={layoutId}
           className="absolute -bottom-1.5 left-0 right-0 h-px bg-[#000000]"
+          layoutId={layoutId}
           transition={{ type: "spring", stiffness: 500, damping: 35 }}
         />
-      )}
+      ) : null}
     </Link>
   );
-}
+};

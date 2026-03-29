@@ -4,7 +4,7 @@ interface TypeBadgeProps {
   type: "thought" | "linkedin" | "reflection";
 }
 
-export function TypeBadge({ type }: TypeBadgeProps) {
+export const TypeBadge = ({ type }: TypeBadgeProps) => {
   if (type === "thought") return null;
 
   if (type === "linkedin") {
@@ -20,4 +20,4 @@ export function TypeBadge({ type }: TypeBadgeProps) {
       Reflection
     </span>
   );
-}
+};

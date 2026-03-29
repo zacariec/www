@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useId } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
+
 import { blobState, registerLogo } from "@/lib/blob-state";
 
 function circlePath(cx: number, cy: number, r: number): string {
@@ -8,8 +9,12 @@ function circlePath(cx: number, cy: number, r: number): string {
 }
 
 function generateBlobPath(
-  cx: number, cy: number, radius: number,
-  cursorAngle: number, proximity: number, seed: number,
+  cx: number,
+  cy: number,
+  radius: number,
+  cursorAngle: number,
+  proximity: number,
+  seed: number,
   isMerged: boolean,
 ): string {
   const points = 20;
@@ -71,30 +76,32 @@ interface BlobLinkProps {
  * When visible=true, renders an SVG blob. When false, still registers
  * as a snap target but is invisible.
  */
-export function BlobLink({
+export const BlobLink = ({
   children,
   size = 8,
   color = "#000000",
   className = "",
   visible = true,
   position = "center",
-}: BlobLinkProps) {
+}: BlobLinkProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const proximityRef = useRef(0);
   const seedRef = useRef(Math.random() * 100);
   const cursorAngleRef = useRef(0);
   const blobId = useId();
 
-  useEffect(() => {
-    return registerLogo({
-      id: blobId,
-      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-      visualRadius: size / 2,
-      type: "nav",
-    });
-  }, [blobId, size]);
+  useEffect(
+    () =>
+      registerLogo({
+        id: blobId,
+        getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        visualRadius: size / 2,
+        type: "nav",
+      }),
+    [blobId, size],
+  );
 
   const animate = useCallback(() => {
     seedRef.current += 0.01;
@@ -127,7 +134,18 @@ export function BlobLink({
         if (proximityRef.current < 0.005 && !isMerged) {
           path.setAttribute("d", circlePath(50, 50, 42));
         } else {
-          path.setAttribute("d", generateBlobPath(50, 50, 42, cursorAngleRef.current, proximityRef.current, seedRef.current, isMerged));
+          path.setAttribute(
+            "d",
+            generateBlobPath(
+              50,
+              50,
+              42,
+              cursorAngleRef.current,
+              proximityRef.current,
+              seedRef.current,
+              isMerged,
+            ),
+          );
         }
       }
     }
@@ -142,25 +160,25 @@ export function BlobLink({
 
   return (
     <div ref={containerRef} className={`relative inline-flex items-center z-[10000] ${className}`}>
-      {visible && (
+      {visible ? (
         <svg
           ref={svgRef}
-          width={size}
           height={size}
           viewBox="0 0 100 100"
+          width={size}
           className={`absolute top-1/2 -translate-y-1/2 overflow-visible pointer-events-none ${
             position === "left" ? "-left-2 -translate-x-1/2" : "left-1/2 -translate-x-1/2"
           }`}
         >
           <path d={circlePath(50, 50, 42)} fill={color} />
         </svg>
-      )}
+      ) : null}
       {!visible && (
-        <svg ref={svgRef} width={0} height={0} viewBox="0 0 100 100" className="absolute">
+        <svg ref={svgRef} className="absolute" height={0} viewBox="0 0 100 100" width={0}>
           <path d={circlePath(50, 50, 42)} fill="transparent" />
         </svg>
       )}
       <div className="relative z-10">{children}</div>
     </div>
   );
-}
+};

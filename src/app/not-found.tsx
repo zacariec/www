@@ -13,8 +13,8 @@ export default function NotFound() {
         Page not found.
       </p>
       <Link
-        href="/"
         className="text-[11px] tracking-[2px] uppercase text-[#000000] no-underline font-[family-name:var(--font-space-grotesk)]"
+        href="/"
       >
         &larr; Back to Index
       </Link>

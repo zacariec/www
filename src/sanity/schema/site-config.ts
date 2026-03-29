@@ -109,9 +109,7 @@ export const siteConfigType = defineType({
       type: "image",
       group: "seo",
       description: "Default social sharing image (1200x630 recommended)",
-      fields: [
-        defineField({ name: "alt", title: "Alt Text", type: "string" }),
-      ],
+      fields: [defineField({ name: "alt", title: "Alt Text", type: "string" })],
     }),
     defineField({
       name: "author",

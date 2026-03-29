@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import { siteConfig } from "@/lib/constants";
 
-export function TimeDisplay({ className = "" }: { className?: string }) {
+export const TimeDisplay = ({ className = "" }: { className?: string }) => {
   const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
@@ -14,7 +15,7 @@ export function TimeDisplay({ className = "" }: { className?: string }) {
           minute: "2-digit",
           hour12: false,
           timeZone: siteConfig.timezone,
-        })
+        }),
       );
     };
     update();
@@ -27,4 +28,4 @@ export function TimeDisplay({ className = "" }: { className?: string }) {
       {currentTime} AEST
     </span>
   );
-}
+};

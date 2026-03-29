@@ -8,6 +8,7 @@
  */
 
 import { createClient } from "@sanity/client";
+
 import { blogPosts, timelineEntries } from "../src/lib/fallback-data";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;

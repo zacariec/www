@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { blobState } from "@/lib/blob-state";
 
 const SNAP_DISTANCE = 120;
@@ -9,9 +10,9 @@ const BASE_RADIUS = 7;
 const BLOB_POINTS = 16;
 const CANVAS_SIZE = 120;
 
-export function BlobCursor() {
+export const BlobCursor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const seedRef = useRef(0);
   const prevMouseRef = useRef({ x: -100, y: -100 });
   const [isTouch, setIsTouch] = useState(false);
@@ -44,12 +45,18 @@ export function BlobCursor() {
       prevMouseRef.current.y = blobState.mouseY;
 
       const velocity = Math.sqrt(
-        blobState.velocityX * blobState.velocityX +
-        blobState.velocityY * blobState.velocityY
+        blobState.velocityX * blobState.velocityX + blobState.velocityY * blobState.velocityY,
       );
 
       // Find nearest logo/arrow
-      let nearestLogo: { id: string; cx: number; cy: number; dist: number; visualRadius: number; type: "logo" | "arrow" | "nav" } | null = null;
+      let nearestLogo: {
+        id: string;
+        cx: number;
+        cy: number;
+        dist: number;
+        visualRadius: number;
+        type: "logo" | "arrow" | "nav";
+      } | null = null;
       for (const logo of blobState.logos) {
         const rect = logo.getRect();
         if (!rect) continue;
@@ -59,7 +66,14 @@ export function BlobCursor() {
         const dy = blobState.mouseY - lcy;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (!nearestLogo || dist < nearestLogo.dist) {
-          nearestLogo = { id: logo.id, cx: lcx, cy: lcy, dist, visualRadius: logo.visualRadius, type: logo.type };
+          nearestLogo = {
+            id: logo.id,
+            cx: lcx,
+            cy: lcy,
+            dist,
+            visualRadius: logo.visualRadius,
+            type: logo.type,
+          };
         }
       }
 
@@ -67,7 +81,11 @@ export function BlobCursor() {
       const MAX_PULL = 10;
       if (blobState.attachedTo) {
         // Hop to a closer target if one is within snap distance
-        if (nearestLogo && nearestLogo.id !== blobState.attachedTo && nearestLogo.dist < SNAP_DISTANCE) {
+        if (
+          nearestLogo &&
+          nearestLogo.id !== blobState.attachedTo &&
+          nearestLogo.dist < SNAP_DISTANCE
+        ) {
           blobState.attachedTo = nearestLogo.id;
           blobState.targetRadius = nearestLogo.visualRadius;
           blobState.targetType = nearestLogo.type;
@@ -77,7 +95,7 @@ export function BlobCursor() {
           blobState.attachedTo = null;
           blobState.pullOffsetX = 0;
           blobState.pullOffsetY = 0;
-        } else if (nearestLogo && nearestLogo.id === blobState.attachedTo) {
+        } else if (nearestLogo?.id === blobState.attachedTo) {
           blobState.mergeAmount += (1 - blobState.mergeAmount) * 0.1;
           blobState.targetRadius = nearestLogo.visualRadius;
           blobState.targetType = nearestLogo.type;
@@ -123,7 +141,7 @@ export function BlobCursor() {
 
       // Refine footer detection — only if footer is visible AND cursor is over it
       if (blobState.inFooter) {
-        const footer = document.querySelector('footer');
+        const footer = document.querySelector("footer");
         if (footer) {
           const fRect = footer.getBoundingClientRect();
           blobState.inFooter = blobState.mouseY >= fRect.top;
@@ -154,9 +172,7 @@ export function BlobCursor() {
       // Opacity fades as cursor merges into target
       // For nav targets, fade completely so the nav blob becomes the cursor
       const isNavTarget = blobState.targetType === "nav";
-      const opacity = isNavTarget
-        ? 0.92 * (1 - merge)
-        : 0.92 * (1 - merge * 0.85);
+      const opacity = isNavTarget ? 0.92 * (1 - merge) : 0.92 * (1 - merge * 0.85);
 
       // Tendril direction toward nearest logo
       let tendrilAngle = 0;
@@ -164,7 +180,7 @@ export function BlobCursor() {
       if (nearestLogo && nearestLogo.dist < 150 && !blobState.attachedTo) {
         tendrilAngle = Math.atan2(
           nearestLogo.cy - blobState.cursorY,
-          nearestLogo.cx - blobState.cursorX
+          nearestLogo.cx - blobState.cursorX,
         );
         tendrilStrength = Math.max(0, 1 - nearestLogo.dist / 150);
       }
@@ -235,8 +251,8 @@ export function BlobCursor() {
     <canvas
       ref={canvasRef}
       className="fixed top-0 left-0 z-[9999] pointer-events-none"
-      width={CANVAS_SIZE}
       height={CANVAS_SIZE}
+      width={CANVAS_SIZE}
     />
   );
-}
+};

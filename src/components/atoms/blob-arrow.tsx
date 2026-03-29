@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useId } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
+
 import { blobState, registerLogo } from "@/lib/blob-state";
 
 function generateBlobPath(
@@ -11,7 +12,7 @@ function generateBlobPath(
   proximity: number,
   seed: number,
   isMerged: boolean,
-  mergeAmount: number
+  mergeAmount: number,
 ): string {
   const points = 24;
   const angleStep = (Math.PI * 2) / points;
@@ -67,28 +68,30 @@ interface BlobArrowProps {
   arrowColor?: string;
 }
 
-export function BlobArrow({
+export const BlobArrow = ({
   size = 20,
   className = "",
   color = "#c6c6c6",
   arrowColor = "#f9f9f7",
-}: BlobArrowProps) {
+}: BlobArrowProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const proximityRef = useRef(0);
   const seedRef = useRef(Math.random() * 100);
   const cursorAngleRef = useRef(0);
   const arrowId = useId();
 
-  useEffect(() => {
-    return registerLogo({
-      id: arrowId,
-      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-      visualRadius: size / 2,
-      type: "arrow",
-    });
-  }, [arrowId, size]);
+  useEffect(
+    () =>
+      registerLogo({
+        id: arrowId,
+        getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        visualRadius: size / 2,
+        type: "arrow",
+      }),
+    [arrowId, size],
+  );
 
   const animate = useCallback(() => {
     seedRef.current += 0.025;
@@ -131,13 +134,15 @@ export function BlobArrow({
           path.setAttribute(
             "d",
             generateBlobPath(
-              cx, cy, 42,
+              cx,
+              cy,
+              42,
               cursorAngleRef.current,
               proximityRef.current,
               seedRef.current,
               isMerged,
-              mergeAmount
-            )
+              mergeAmount,
+            ),
           );
         }
       }
@@ -159,28 +164,28 @@ export function BlobArrow({
     >
       <svg
         ref={svgRef}
-        width={size}
+        className="absolute inset-0 overflow-visible"
         height={size}
         viewBox="0 0 100 100"
-        className="absolute inset-0 overflow-visible"
+        width={size}
       >
         <path d={circlePath(50, 50, 42)} fill={color} />
       </svg>
       {/* Arrow icon */}
       <svg
-        width={size * 0.5}
-        height={size * 0.5}
-        viewBox="0 0 24 24"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         fill="none"
+        height={size * 0.5}
         stroke={arrowColor}
-        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        strokeWidth="2.5"
+        viewBox="0 0 24 24"
+        width={size * 0.5}
       >
-        <line x1="7" y1="17" x2="17" y2="7" />
+        <line x1="7" x2="17" y1="17" y2="7" />
         <polyline points="7 7 17 7 17 17" />
       </svg>
     </div>
   );
-}
+};

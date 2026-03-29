@@ -1,16 +1,18 @@
+import { navItems as fallbackNavItems, siteConfig as fallbackSiteConfig } from "@/lib/constants";
+import { blogPosts, timelineEntries } from "@/lib/fallback-data";
+
 import { client } from "./client";
 import {
+  allPostSlugsQuery,
   allPostsQuery,
-  postBySlugQuery,
   allTimelineEntriesQuery,
   latestPostsQuery,
   latestTimelineQuery,
-  allPostSlugsQuery,
+  postBySlugQuery,
   siteConfigQuery,
 } from "./queries";
-import type { SanityBlogPost, SanityTimelineEntry, SanitySiteConfig } from "./types";
-import { blogPosts, timelineEntries } from "@/lib/fallback-data";
-import { siteConfig as fallbackSiteConfig, navItems as fallbackNavItems } from "@/lib/constants";
+
+import type { SanityBlogPost, SanitySiteConfig, SanityTimelineEntry } from "./types";
 
 export async function getAllPosts(): Promise<SanityBlogPost[]> {
   if (!client) return blogPosts as unknown as SanityBlogPost[];
@@ -54,7 +56,8 @@ const defaultSiteConfig: SanitySiteConfig = {
   footerHeading: "Thanks for\nreading.",
   footerSubtitle: "\u2014 End",
   siteName: "zcarr.dev",
-  siteDescription: "A space for long-form thinking on design, engineering, and the details most people skip.",
+  siteDescription:
+    "A space for long-form thinking on design, engineering, and the details most people skip.",
   author: fallbackSiteConfig.author,
   linkedIn: fallbackSiteConfig.linkedIn,
   timezone: fallbackSiteConfig.timezone,

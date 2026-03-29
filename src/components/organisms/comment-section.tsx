@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+
 import { SessionProvider } from "next-auth/react";
-import { RevealText, FadeIn } from "@/components/molecules/reveal-text";
+
 import { HorizontalLine } from "@/components/atoms/horizontal-line";
 import { CommentCard } from "@/components/molecules/comment-card";
 import { CommentForm } from "@/components/molecules/comment-form";
+import { FadeIn, RevealText } from "@/components/molecules/reveal-text";
 
 interface Comment {
   id: string;
@@ -21,8 +23,8 @@ interface CommentSectionProps {
   postSlug: string;
 }
 
-export function CommentSection({ initialComments, postSlug }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>(initialComments);
+export const CommentSection = ({ initialComments, postSlug }: CommentSectionProps) => {
+  const [comments, setComments] = useState(initialComments);
 
   const handleSubmit = async (author: string, text: string, authorImage?: string) => {
     const comment: Comment = {
@@ -68,10 +70,7 @@ export function CommentSection({ initialComments, postSlug }: CommentSectionProp
             <div>
               {comments.map((comment, i) => (
                 <FadeIn key={comment.id} delay={i * 0.05}>
-                  <CommentCard
-                    {...comment}
-                    isLast={i === comments.length - 1}
-                  />
+                  <CommentCard {...comment} isLast={i === comments.length - 1} />
                 </FadeIn>
               ))}
             </div>
@@ -80,4 +79,4 @@ export function CommentSection({ initialComments, postSlug }: CommentSectionProp
       </div>
     </SessionProvider>
   );
-}
+};

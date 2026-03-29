@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
 import { PortableText } from "@portabletext/react";
-import { RevealText, FadeIn } from "@/components/molecules/reveal-text";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+
+import { BlobLink } from "@/components/atoms/blob-link";
+import { FadeIn, RevealText } from "@/components/molecules/reveal-text";
 import { CommentSection } from "@/components/organisms/comment-section";
 import { NeuralBlobNet } from "@/components/organisms/neural-blob-net";
-import { BlobLink } from "@/components/atoms/blob-link";
 import { urlFor } from "@/lib/sanity/client";
+
 import type { SanityBlogPost } from "@/lib/sanity/types";
 
 const ptComponents = {
@@ -17,18 +19,12 @@ const ptComponents = {
       const src = urlFor(value).width(1200).url();
       return (
         <figure className="my-8 md:my-12">
-          <Image
-            src={src}
-            alt={value.alt || ""}
-            width={1200}
-            height={800}
-            className="w-full"
-          />
-          {value.caption && (
+          <Image alt={value.alt || ""} className="w-full" height={800} src={src} width={1200} />
+          {value.caption ? (
             <figcaption className="text-[9px] tracking-[1.5px] uppercase text-[#777777] mt-3 font-[family-name:var(--font-space-grotesk)]">
               {value.caption}
             </figcaption>
-          )}
+          ) : null}
         </figure>
       );
     },
@@ -39,9 +35,10 @@ interface BlogPostContentProps {
   post: SanityBlogPost;
 }
 
-export function BlogPostContent({ post }: BlogPostContentProps) {
+export const BlogPostContent = ({ post }: BlogPostContentProps) => {
   const firstItem = Array.isArray(post.content) && post.content.length > 0 ? post.content[0] : null;
-  const isPortableText = firstItem !== null && typeof firstItem === "object" && "_type" in firstItem;
+  const isPortableText =
+    firstItem !== null && typeof firstItem === "object" && "_type" in firstItem;
 
   const comments = (post.comments || []).map((c, i) => ({
     id: c._id || String(i),
@@ -58,11 +55,11 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
       <div className="relative h-[30vh] md:h-[40vh] overflow-hidden mb-8">
         {post.featuredImage?.url ? (
           <Image
-            src={post.featuredImage.url}
-            alt={post.featuredImage.alt || post.title}
             fill
-            className="object-cover"
             priority
+            alt={post.featuredImage.alt || post.title}
+            className="object-cover"
+            src={post.featuredImage.url}
           />
         ) : (
           <NeuralBlobNet nodeCount={comments.length + 40} />
@@ -73,10 +70,10 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
       <div className="px-5 md:px-16 pt-4 md:pt-8 pb-12 md:pb-16">
         <FadeIn>
           <Link
-            href="/blog"
             className="text-[10px] tracking-[2px] uppercase text-[#bbb] hover:text-black no-underline transition-colors duration-300 flex items-center gap-2 mb-12 md:mb-16 font-[family-name:var(--font-space-grotesk)]"
+            href="/blog"
           >
-            <BlobLink size={14} color="#c6c6c6">
+            <BlobLink color="#c6c6c6" size={14}>
               <ArrowLeft className="w-3 h-3" />
             </BlobLink>
             Writing
@@ -90,8 +87,8 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
-              })}
-              {" "}&mdash; {post.readingTime} read
+              })}{" "}
+              &mdash; {post.readingTime} read
             </p>
           </FadeIn>
           <RevealText
@@ -161,7 +158,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             <div className="space-y-8">
               {isPortableText ? (
                 <div className="prose prose-lg">
-                  <PortableText value={post.content} components={ptComponents} />
+                  <PortableText components={ptComponents} value={post.content} />
                 </div>
               ) : (
                 (post.content as unknown as string[]).map((paragraph: string, i: number) => (
@@ -201,4 +198,4 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
       <CommentSection initialComments={comments} postSlug={post.slug} />
     </div>
   );
-}
+};

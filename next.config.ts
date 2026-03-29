@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  eslint: {
+    // Lint is run separately in CI — don't block builds
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {

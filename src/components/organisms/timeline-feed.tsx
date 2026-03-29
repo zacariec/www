@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { FadeIn } from "@/components/molecules/reveal-text";
 import { StaggerChildren, StaggerItem } from "@/components/molecules/stagger-group";
 import { TimelineEntryCard } from "@/components/molecules/timeline-entry";
@@ -28,11 +29,10 @@ const filters: { label: string; value: FilterType }[] = [
   { label: "Reflections", value: "reflection" },
 ];
 
-export function TimelineFeed({ entries }: TimelineFeedProps) {
+export const TimelineFeed = ({ entries }: TimelineFeedProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
 
-  const filtered =
-    filter === "all" ? entries : entries.filter((e) => e.type === filter);
+  const filtered = filter === "all" ? entries : entries.filter((e) => e.type === filter);
 
   return (
     <>
@@ -62,13 +62,12 @@ export function TimelineFeed({ entries }: TimelineFeedProps) {
             const date = new Date(entry.date);
             const prevDate = i > 0 ? new Date(filtered[i - 1].date) : null;
             const showMonth =
-              !prevDate ||
-              date.getMonth() !== prevDate.getMonth() ||
+              date.getMonth() !== prevDate?.getMonth() ||
               date.getFullYear() !== prevDate.getFullYear();
 
             return (
               <StaggerItem key={entry.id}>
-                {showMonth && (
+                {showMonth ? (
                   <div className="mt-10 mb-4 first:mt-0">
                     <span
                       className="text-[11px] tracking-[2.5px] uppercase text-[#c6c6c6] font-[family-name:var(--font-space-grotesk)]"
@@ -77,7 +76,7 @@ export function TimelineFeed({ entries }: TimelineFeedProps) {
                       {date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                     </span>
                   </div>
-                )}
+                ) : null}
                 <TimelineEntryCard {...entry} />
               </StaggerItem>
             );
@@ -86,4 +85,4 @@ export function TimelineFeed({ entries }: TimelineFeedProps) {
       </div>
     </>
   );
-}
+};

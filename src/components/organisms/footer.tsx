@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { motion } from "motion/react";
-import { BlobLogo } from "@/components/atoms/blob-logo";
+
 import { BlobLink } from "@/components/atoms/blob-link";
-import { NowPlaying } from "@/components/molecules/now-playing";
+import { BlobLogo } from "@/components/atoms/blob-logo";
 import { NavList } from "@/components/molecules/nav-list";
+import { NowPlaying } from "@/components/molecules/now-playing";
 import { blobState } from "@/lib/blob-state";
 import { siteConfig } from "@/lib/constants";
 
@@ -15,11 +17,15 @@ interface FooterProps {
   subtitle?: string;
 }
 
-export function Footer({
-  navItems = [{ label: "Index", href: "/" }, { label: "Writing", href: "/blog" }, { label: "Timeline", href: "/timeline" }],
+export const Footer = ({
+  navItems = [
+    { label: "Index", href: "/" },
+    { label: "Writing", href: "/blog" },
+    { label: "Timeline", href: "/timeline" },
+  ],
   heading = "Thanks for\nreading.",
   subtitle = "\u2014 End",
-}: FooterProps) {
+}: FooterProps) => {
   const footerRef = useRef<HTMLElement>(null);
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
   const headingLines = heading.split("\n");
@@ -28,8 +34,10 @@ export function Footer({
     const el = footerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { blobState.inFooter = entry.isIntersecting; },
-      { threshold: 0 }
+      ([entry]) => {
+        blobState.inFooter = entry.isIntersecting;
+      },
+      { threshold: 0 },
     );
     observer.observe(el);
     return () => {
@@ -39,16 +47,19 @@ export function Footer({
   }, []);
 
   return (
-    <footer ref={footerRef} className="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative">
+    <footer
+      ref={footerRef}
+      className="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative"
+    >
       <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         className="w-full bg-transparent border-none cursor-pointer group text-left px-5 md:px-16 py-8 transition-colors duration-500 hover:bg-[#3b3b3b]/20"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <div className="flex items-center justify-between">
           <span className="text-[10px] tracking-[3px] uppercase text-[#777777] group-hover:text-[#c6c6c6] transition-colors duration-500 font-[family-name:var(--font-space-grotesk)]">
             Back to top
           </span>
-          <BlobLink size={24} color="#3b3b3b">
+          <BlobLink color="#3b3b3b" size={24}>
             <motion.span
               className="text-[#777777] group-hover:text-[#c6c6c6] transition-colors duration-500 text-lg"
               whileHover={{ y: -2 }}
@@ -62,9 +73,9 @@ export function Footer({
       <div className="flex-1 flex items-end px-5 md:px-16 pb-16">
         <motion.div
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.2 }}
+          viewport={{ once: true }}
+          whileInView={{ opacity: 1 }}
         >
           <p className="text-[10px] tracking-[3px] uppercase text-[#777777] mb-6 font-[family-name:var(--font-space-grotesk)]">
             {subtitle}
@@ -86,21 +97,21 @@ export function Footer({
       <div data-footer-nav className="px-5 md:px-16 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <BlobLogo size={20} textSize="6px" darkMode />
+            <BlobLogo darkMode size={20} textSize="6px" />
             <span className="text-[9px] tracking-[2px] uppercase text-[#777777] font-[family-name:var(--font-space-grotesk)]">
               &copy; {new Date().getFullYear()}
             </span>
           </div>
           <NowPlaying variant="footer" />
           <NavList
-            navItems={navItems}
-            linkedInUrl={siteConfig.linkedIn}
-            variant="footer"
             hoveredHref={hoveredHref}
+            linkedInUrl={siteConfig.linkedIn}
+            navItems={navItems}
             onHover={setHoveredHref}
+            variant="footer"
           />
         </div>
       </div>
     </footer>
   );
-}
+};

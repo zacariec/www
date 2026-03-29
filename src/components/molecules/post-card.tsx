@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import { BlobArrow } from "@/components/atoms/blob-arrow";
 
 interface PostCardProps {
@@ -11,7 +12,7 @@ interface PostCardProps {
   variant?: "compact" | "full";
 }
 
-export function PostCard({
+export const PostCard = ({
   slug,
   title,
   subtitle,
@@ -19,18 +20,24 @@ export function PostCard({
   readingTime,
   commentCount,
   variant = "compact",
-}: PostCardProps) {
+}: PostCardProps) => {
   const formattedDate =
     variant === "full"
-      ? new Date(date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      ? new Date(date).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
       : new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
   return (
-    <Link href={`/blog/${slug}`} className="group block no-underline">
+    <Link className="group block no-underline" href={`/blog/${slug}`}>
       <div
         className={`${variant === "full" ? "py-8 md:py-14" : "py-8 md:py-12"} flex flex-col md:flex-row md:items-start gap-3 md:gap-16`}
       >
-        <div className={`flex items-center gap-3 ${variant === "full" ? "md:min-w-[200px]" : "md:min-w-[180px]"} shrink-0`}>
+        <div
+          className={`flex items-center gap-3 ${variant === "full" ? "md:min-w-[200px]" : "md:min-w-[180px]"} shrink-0`}
+        >
           <span className="text-[10px] tracking-[1.5px] uppercase text-[#777777] font-[family-name:var(--font-space-grotesk)]">
             {formattedDate}
           </span>
@@ -73,9 +80,9 @@ export function PostCard({
           )}
         </div>
         <div className="hidden md:flex items-center self-center">
-          <BlobArrow size={24} color="#c6c6c6" arrowColor="#f9f9f7" />
+          <BlobArrow arrowColor="#f9f9f7" color="#c6c6c6" size={24} />
         </div>
       </div>
     </Link>
   );
-}
+};

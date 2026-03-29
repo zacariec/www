@@ -1,17 +1,21 @@
-import type { Metadata } from "next";
-import { getAllTimelineEntries } from "@/lib/sanity/fetch";
 import { NeuralBlobNet } from "@/components/organisms/neural-blob-net";
+import { TimelineFeed } from "@/components/organisms/timeline-feed";
+import { getAllTimelineEntries } from "@/lib/sanity/fetch";
+
+import { TimelineHeader } from "./timeline-header";
+
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-import { TimelineHeader } from "./timeline-header";
-import { TimelineFeed } from "@/components/organisms/timeline-feed";
 
 export const metadata: Metadata = {
   title: "Timeline",
-  description: "Short-form noise. Thoughts, observations, and the things that don't need a whole essay.",
+  description:
+    "Short-form noise. Thoughts, observations, and the things that don't need a whole essay.",
   openGraph: {
     title: "Timeline — zcarr.dev",
-    description: "Short-form noise. Thoughts, observations, and the things that don't need a whole essay.",
+    description:
+      "Short-form noise. Thoughts, observations, and the things that don't need a whole essay.",
     type: "website",
   },
   alternates: {

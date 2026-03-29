@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useId } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
+
 import { blobState, registerLogo } from "@/lib/blob-state";
 
 function generateLogoBlobPath(
@@ -11,7 +12,7 @@ function generateLogoBlobPath(
   proximity: number,
   seed: number,
   isMerged: boolean,
-  mergeAmount: number
+  mergeAmount: number,
 ): string {
   const points = 48;
   const angleStep = (Math.PI * 2) / points;
@@ -40,9 +41,7 @@ function generateLogoBlobPath(
         Math.cos(seed * 0.8 + i * 1.6) * radius * 0.02);
 
     // Subtle merge pulse
-    const mergePulse = isMerged
-      ? Math.sin(seed * 2) * mergeAmount * radius * 0.05
-      : 0;
+    const mergePulse = isMerged ? Math.sin(seed * 2) * mergeAmount * radius * 0.05 : 0;
 
     const r = radius + breathing + extend + wobble + mergePulse;
     coords.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
@@ -79,29 +78,31 @@ interface BlobLogoProps {
   darkMode?: boolean;
 }
 
-export function BlobLogo({
+export const BlobLogo = ({
   size = 32,
   textSize = "10px",
   className = "",
   darkMode = false,
-}: BlobLogoProps) {
+}: BlobLogoProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const proximityRef = useRef(0);
   const seedRef = useRef(Math.random() * 100);
   const cursorAngleRef = useRef(0);
   const logoId = useId();
 
   // Register this logo so the cursor can find it
-  useEffect(() => {
-    return registerLogo({
-      id: logoId,
-      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-      visualRadius: size / 2,
-      type: "logo",
-    });
-  }, [logoId]);
+  useEffect(
+    () =>
+      registerLogo({
+        id: logoId,
+        getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        visualRadius: size / 2,
+        type: "logo",
+      }),
+    [logoId],
+  );
 
   const animate = useCallback(() => {
     seedRef.current += 0.008;
@@ -156,8 +157,8 @@ export function BlobLogo({
               proximityRef.current,
               seedRef.current,
               isMerged,
-              mergeAmount
-            )
+              mergeAmount,
+            ),
           );
         }
       }
@@ -182,10 +183,10 @@ export function BlobLogo({
     >
       <svg
         ref={svgRef}
-        width={size}
+        className="absolute inset-0 overflow-visible"
         height={size}
         viewBox="0 0 100 100"
-        className="absolute inset-0 overflow-visible"
+        width={size}
       >
         <path d={circlePath(50, 50, 42)} fill={fill} />
       </svg>
@@ -203,4 +204,4 @@ export function BlobLogo({
       </span>
     </div>
   );
-}
+};

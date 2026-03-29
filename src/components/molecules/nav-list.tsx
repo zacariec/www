@@ -1,8 +1,9 @@
 "use client";
 
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
+
 import { BlobLink } from "@/components/atoms/blob-link";
 
 interface NavListProps {
@@ -13,13 +14,13 @@ interface NavListProps {
   onHover?: (href: string | null) => void;
 }
 
-export function NavList({
+export const NavList = ({
   navItems,
   linkedInUrl,
   variant,
   hoveredHref = null,
   onHover,
-}: NavListProps) {
+}: NavListProps) => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -43,27 +44,37 @@ export function NavList({
         const showBlob = blobTarget === item.href;
 
         return (
-          <BlobLink key={item.href} size={blobSize} color={blobColor} visible={showBlob} position="left">
+          <BlobLink
+            key={item.href}
+            color={blobColor}
+            position="left"
+            size={blobSize}
+            visible={showBlob}
+          >
             <Link
               href={item.href}
-              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-2 px-3 -my-2 -mx-3 ${fontFamily} ${
-                isHeader
-                  ? active ? "text-[#000000]" : "text-[#777777] hover:text-black"
-                  : active ? "text-[#c6c6c6]" : "text-[#777777] hover:text-[#c6c6c6]"
-              }`}
               onMouseEnter={onHover ? () => onHover(item.href) : undefined}
               onMouseLeave={onHover ? () => onHover(null) : undefined}
+              className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-2 px-3 -my-2 -mx-3 ${fontFamily} ${
+                isHeader
+                  ? active
+                    ? "text-[#000000]"
+                    : "text-[#777777] hover:text-black"
+                  : active
+                    ? "text-[#c6c6c6]"
+                    : "text-[#777777] hover:text-[#c6c6c6]"
+              }`}
             >
               {item.label}
             </Link>
           </BlobLink>
         );
       })}
-      <BlobLink size={blobSize} color="#777777" visible={false}>
+      <BlobLink color="#777777" size={blobSize} visible={false}>
         <a
           href={linkedInUrl}
-          target="_blank"
           rel="noopener noreferrer"
+          target="_blank"
           className={`${textSize} uppercase text-[#777777] ${
             isHeader ? "hover:text-black" : "hover:text-[#c6c6c6]"
           } no-underline transition-colors duration-300 flex items-center gap-1 py-2 px-3 -my-2 -mx-3 ${fontFamily}`}
@@ -73,4 +84,4 @@ export function NavList({
       </BlobLink>
     </div>
   );
-}
+};

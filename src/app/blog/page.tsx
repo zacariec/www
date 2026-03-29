@@ -1,17 +1,21 @@
-import type { Metadata } from "next";
-import { getAllPosts } from "@/lib/sanity/fetch";
 import { NeuralBlobNet } from "@/components/organisms/neural-blob-net";
+import { PostList } from "@/components/organisms/post-list";
+import { getAllPosts } from "@/lib/sanity/fetch";
+
+import { BlogHeader } from "./blog-header";
+
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-import { PostList } from "@/components/organisms/post-list";
-import { BlogHeader } from "./blog-header";
 
 export const metadata: Metadata = {
   title: "Writing",
-  description: "Long-form writing on design, code, and the patterns that shape how we build things.",
+  description:
+    "Long-form writing on design, code, and the patterns that shape how we build things.",
   openGraph: {
     title: "Writing — zcarr.dev",
-    description: "Long-form writing on design, code, and the patterns that shape how we build things.",
+    description:
+      "Long-form writing on design, code, and the patterns that shape how we build things.",
     type: "website",
   },
   alternates: {

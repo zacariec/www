@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useId } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
+
 import { blobState, registerLogo } from "@/lib/blob-state";
 
 function circlePath(cx: number, cy: number, r: number): string {
@@ -38,10 +39,7 @@ function generateNavBlobPath(
     const pullY = blobState.pullOffsetY * pullScale;
 
     const r = radius + extend + wobble;
-    coords.push([
-      cx + pullX + Math.cos(angle) * r,
-      cy + pullY + Math.sin(angle) * r,
-    ]);
+    coords.push([cx + pullX + Math.cos(angle) * r, cy + pullY + Math.sin(angle) * r]);
   }
 
   let d = `M ${coords[0][0]} ${coords[0][1]} `;
@@ -67,23 +65,25 @@ interface NavBlobProps {
   className?: string;
 }
 
-export function NavBlob({ size = 6, color = "#000000", className = "" }: NavBlobProps) {
+export const NavBlob = ({ size = 6, color = "#000000", className = "" }: NavBlobProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const proximityRef = useRef(0);
   const seedRef = useRef(Math.random() * 100);
   const cursorAngleRef = useRef(0);
   const blobId = useId();
 
-  useEffect(() => {
-    return registerLogo({
-      id: blobId,
-      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-      visualRadius: size / 2,
-      type: "nav",
-    });
-  }, [blobId, size]);
+  useEffect(
+    () =>
+      registerLogo({
+        id: blobId,
+        getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+        visualRadius: size / 2,
+        type: "nav",
+      }),
+    [blobId, size],
+  );
 
   const animate = useCallback(() => {
     seedRef.current += 0.02;
@@ -118,7 +118,15 @@ export function NavBlob({ size = 6, color = "#000000", className = "" }: NavBlob
         } else {
           path.setAttribute(
             "d",
-            generateNavBlobPath(50, 50, 42, seedRef.current, proximityRef.current, cursorAngleRef.current, isMerged)
+            generateNavBlobPath(
+              50,
+              50,
+              42,
+              seedRef.current,
+              proximityRef.current,
+              cursorAngleRef.current,
+              isMerged,
+            ),
           );
         }
       }
@@ -140,13 +148,13 @@ export function NavBlob({ size = 6, color = "#000000", className = "" }: NavBlob
     >
       <svg
         ref={svgRef}
-        width={size}
+        className="absolute inset-0 overflow-visible"
         height={size}
         viewBox="0 0 100 100"
-        className="absolute inset-0 overflow-visible"
+        width={size}
       >
         <path d={circlePath(50, 50, 42)} fill={color} />
       </svg>
     </div>
   );
-}
+};
