@@ -28,9 +28,7 @@ export const Footer = ({
   const headingLines = heading.split("\n");
 
   return (
-    <footer
-      className="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative"
-    >
+    <footer className="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative">
       <button
         className="w-full bg-transparent border-none cursor-pointer group text-left px-5 md:px-16 py-8 transition-colors duration-500 hover:bg-[#3b3b3b]/20"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

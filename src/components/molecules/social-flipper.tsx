@@ -32,23 +32,23 @@ export const SocialFlipper = ({ variant = "header" }: SocialFlipperProps) => {
 
   return (
     <a
+      className={`${textClass} uppercase no-underline transition-colors duration-300 flex items-center gap-1 py-5 px-3 -mx-3 ${fontClass} relative overflow-hidden`}
       href={current.href}
-      rel="noopener noreferrer"
-      target="_blank"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className={`${textClass} uppercase no-underline transition-colors duration-300 flex items-center gap-1 py-5 px-3 -mx-3 ${fontClass} relative overflow-hidden`}
+      rel="noopener noreferrer"
+      target="_blank"
     >
       <div className="relative h-[14px] w-[16px] overflow-hidden">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={current.label}
-            initial={{ y: 14, rotateX: -90 }}
             animate={{ y: 0, rotateX: 0 }}
-            exit={{ y: -14, rotateX: 90 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
             className="absolute inset-0 flex items-center"
+            exit={{ y: -14, rotateX: 90 }}
+            initial={{ y: 14, rotateX: -90 }}
             style={{ backfaceVisibility: "hidden" }}
+            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {current.label}
           </motion.span>

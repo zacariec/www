@@ -61,7 +61,7 @@ export const TimelineEntryCard = ({
         style={{ lineHeight: 1.8 }}
       >
         {renderTextWithBreaks(displayText)}
-        {isLong && !expanded && (
+        {isLong && !expanded ? (
           <BlobLink className="ml-1 inline-flex" color="#c6c6c6" size={10} visible={false}>
             <button
               className="text-[#777777] hover:text-[#000000] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 text-[13px] font-[family-name:var(--font-space-grotesk)]"
@@ -71,8 +71,8 @@ export const TimelineEntryCard = ({
               Read more
             </button>
           </BlobLink>
-        )}
-        {isLong && expanded && (
+        ) : null}
+        {isLong && expanded ? (
           <BlobLink className="ml-1 inline-flex" color="#c6c6c6" size={10} visible={false}>
             <button
               className="text-[#c6c6c6] hover:text-[#777777] transition-colors duration-300 bg-transparent border-none cursor-pointer p-0 text-[13px] font-[family-name:var(--font-space-grotesk)]"
@@ -82,7 +82,7 @@ export const TimelineEntryCard = ({
               Show less
             </button>
           </BlobLink>
-        )}
+        ) : null}
       </p>
       <div className="flex items-center gap-5 mt-4">
         <button

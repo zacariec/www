@@ -20,12 +20,7 @@ function getNavLinkColor(isHeader: boolean, active: boolean): string {
   return active ? "text-[#c6c6c6]" : "text-[#777777] hover:text-[#c6c6c6]";
 }
 
-export const NavList = ({
-  navItems,
-  variant,
-  hoveredHref = null,
-  onHover,
-}: NavListProps) => {
+export const NavList = ({ navItems, variant, hoveredHref = null, onHover }: NavListProps) => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -52,11 +47,11 @@ export const NavList = ({
           <BlobLink
             key={item.href}
             color={blobColor}
+            onMouseEnter={onHover ? () => onHover(item.href) : undefined}
+            onMouseLeave={onHover ? () => onHover(null) : undefined}
             position="left"
             size={blobSize}
             visible={showBlob}
-            onMouseEnter={onHover ? () => onHover(item.href) : undefined}
-            onMouseLeave={onHover ? () => onHover(null) : undefined}
           >
             <Link
               href={item.href}
@@ -72,11 +67,11 @@ export const NavList = ({
       })}
       <BlobLink
         color="#777777"
-        size={blobSize}
-        visible={blobTarget === "social"}
-        position="left"
         onMouseEnter={onHover ? () => onHover("social") : undefined}
         onMouseLeave={onHover ? () => onHover(null) : undefined}
+        position="left"
+        size={blobSize}
+        visible={blobTarget === "social"}
       >
         <SocialFlipper variant={variant} />
       </BlobLink>

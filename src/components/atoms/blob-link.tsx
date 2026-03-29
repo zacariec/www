@@ -165,7 +165,12 @@ export const BlobLink = ({
   }, [animate]);
 
   return (
-    <div ref={containerRef} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className={`relative inline-flex items-center z-[10000] active:scale-95 transition-transform duration-75 ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative inline-flex items-center z-[10000] active:scale-95 transition-transform duration-75 ${className}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       {visible ? (
         <svg
           ref={svgRef}

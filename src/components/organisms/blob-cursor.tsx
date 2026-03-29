@@ -143,8 +143,7 @@ export const BlobCursor = () => {
       const footer = document.querySelector("footer");
       if (footer) {
         const fRect = footer.getBoundingClientRect();
-        blobState.inFooter =
-          blobState.mouseY >= fRect.top && blobState.mouseY <= fRect.bottom;
+        blobState.inFooter = blobState.mouseY >= fRect.top && blobState.mouseY <= fRect.bottom;
       } else {
         blobState.inFooter = false;
       }
