@@ -62,7 +62,7 @@ export const NavList = ({
               onMouseLeave={onHover ? () => onHover(null) : undefined}
               className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-5 px-3 -mx-3 ${fontFamily} ${getNavLinkColor(
                 isHeader,
-                active,
+                active || showBlob,
               )}`}
             >
               {item.label}
