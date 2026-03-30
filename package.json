@@ -12,6 +12,7 @@
   "dependencies": {
     "@cloudflare/containers": "^0.2.0",
     "@portabletext/react": "^3.2.0",
+    "@sanity/assist": "^6.0.4",
     "@sanity/client": "^7.3.0",
     "@sanity/image-url": "^2.1.0",
     "class-variance-authority": "^0.7.1",
