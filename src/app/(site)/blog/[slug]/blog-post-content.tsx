@@ -14,6 +14,16 @@ import { urlFor } from "@/lib/sanity/client";
 import type { SanityBlogPost } from "@/lib/sanity/types";
 
 const ptComponents = {
+  block: {
+    normal: ({ children }: { children?: React.ReactNode }) => (
+      <p
+        className="text-[15px] md:text-[17px] text-[#1a1c1b] font-[family-name:var(--font-inter)]"
+        style={{ lineHeight: 1.9, fontWeight: 400 }}
+      >
+        {children}
+      </p>
+    ),
+  },
   types: {
     image: ({ value }: { value: { asset: { _ref: string }; alt?: string; caption?: string } }) => {
       const src = urlFor(value).width(1200).url();
@@ -160,7 +170,7 @@ export const BlogPostContent = ({ post }: BlogPostContentProps) => {
           <div className="md:col-span-7">
             <div className="space-y-8">
               {isPortableText ? (
-                <div className="prose prose-lg">
+                <div className="space-y-8">
                   <PortableText components={ptComponents} value={post.content} />
                 </div>
               ) : (
