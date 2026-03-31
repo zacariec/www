@@ -1,7 +1,7 @@
 import { groq } from "next-sanity";
 
 export const allPostsQuery = groq`
-  *[_type == "blogPost"] | order(publishedAt desc) {
+  *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) {
     title,
     "slug": slug.current,
     subtitle,
@@ -48,7 +48,7 @@ export const allTimelineEntriesQuery = groq`
 `;
 
 export const latestPostsQuery = groq`
-  *[_type == "blogPost"] | order(publishedAt desc) [0..2] {
+  *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) [0..2] {
     title,
     "slug": slug.current,
     subtitle,
@@ -71,7 +71,7 @@ export const latestTimelineQuery = groq`
 `;
 
 export const allPostSlugsQuery = groq`
-  *[_type == "blogPost"] { "slug": slug.current }
+  *[_type == "blogPost" && publishedAt <= now()] { "slug": slug.current }
 `;
 
 export const siteConfigQuery = groq`
