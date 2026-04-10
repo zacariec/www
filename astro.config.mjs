@@ -9,7 +9,7 @@ export default defineConfig({
   site: "https://zcarr.dev",
   output: "static",
   adapter: cloudflare({
-    platformProxy: { enabled: true },
+    platformProxy: { enabled: !process.env.CI },
   }),
   integrations: [
     sanity({
