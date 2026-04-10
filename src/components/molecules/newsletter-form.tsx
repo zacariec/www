@@ -1,19 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+
 import { useStore } from "@nanostores/react";
+import { motion } from "motion/react";
 
 import { useSession } from "@/lib/auth/client";
-import {
-  type NewsletterCopy,
-  withNewsletterDefaults,
-} from "@/lib/newsletter/defaults";
-import {
-  $newsletterStatus,
-  $subscribedEmail,
-  type NewsletterStatus,
-} from "@/lib/newsletter/store";
+import { withNewsletterDefaults } from "@/lib/newsletter/defaults";
+import { $newsletterStatus, $subscribedEmail } from "@/lib/newsletter/store";
+
+import type { NewsletterCopy } from "@/lib/newsletter/defaults";
+import type { NewsletterStatus } from "@/lib/newsletter/store";
 
 export type { NewsletterCopy };
 
@@ -40,14 +37,16 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
     if (!userEmail || $newsletterStatus.get() !== "idle") return;
     setEmail(userEmail);
     fetch(`/api/newsletter/status?email=${encodeURIComponent(userEmail)}`)
-      .then((res) => res.ok ? res.json() as Promise<{ subscribed: boolean }> : null)
+      .then(async (res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.subscribed) {
           $subscribedEmail.set(userEmail);
           $newsletterStatus.set("already");
         }
       })
-      .catch(() => { /* silent */ });
+      .catch(() => {
+        /* silent */
+      });
   }, [session?.user?.email]);
 
   // Auto-reset from "unsubscribed" state after a delay
@@ -98,7 +97,7 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
         body: JSON.stringify({ email, company }),
       });
       if (!res.ok) throw new Error("failed");
-      const data = (await res.json()) as { success?: boolean; status?: "new" | "already" };
+      const data = await res.json();
       setSubmittedEmail(email);
       setStatus(data.status === "already" ? "already" : "success");
       setEmail("");
@@ -124,7 +123,10 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
   };
 
   const isResolved =
-    status === "success" || status === "already" || status === "unsubscribing" || status === "unsubscribed";
+    status === "success" ||
+    status === "already" ||
+    status === "unsubscribing" ||
+    status === "unsubscribed";
 
   return (
     <div className="max-w-[420px]">
@@ -132,9 +134,8 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
       <p className={descriptionClass}>{c.description}</p>
       {isResolved ? (
         <div>
-          {status === "unsubscribing" ? (
-            <p className={messageClass}>...</p>
-          ) : status === "already" ? (
+          {status === "unsubscribing" && <p className={messageClass}>...</p>}
+          {status === "already" && (
             <p className={messageClass}>
               {c.alreadySubscribedMessage}{" "}
               <button
@@ -145,11 +146,10 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
                 {c.unsubscribeLabel}
               </button>
             </p>
-          ) : (
+          )}
+          {(status === "success" || status === "unsubscribed") && (
             <p className={messageClass}>
-              {status === "unsubscribed"
-                ? c.unsubscribeConfirmedMessage
-                : c.successMessage}
+              {status === "unsubscribed" ? c.unsubscribeConfirmedMessage : c.successMessage}
             </p>
           )}
         </div>
@@ -167,11 +167,11 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
           />
           <div className="flex-1">
             <input
+              required
               aria-label="Email address"
               className={inputClass}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={c.placeholder}
-              required
               type="email"
               value={email}
             />

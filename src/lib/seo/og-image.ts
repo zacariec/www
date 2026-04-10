@@ -1,11 +1,11 @@
-import type { SanitySiteConfig } from '@/lib/sanity/types';
+import type { SanitySiteConfig } from "@/lib/sanity/types";
 
 const OG_W = 1200;
 const OG_H = 630;
 
 /** Append Sanity image transform params for OG-shaped previews. */
 export function ogImageFromSanityUrl(url: string): string {
-  const sep = url.includes('?') ? '&' : '?';
+  const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}w=${OG_W}&h=${OG_H}&fit=crop&auto=format`;
 }
 

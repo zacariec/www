@@ -1,7 +1,9 @@
-import type { APIRoute } from 'astro';
-import { createClient } from '@sanity/client';
-import { z, ZodError } from 'zod';
-import { apiVersion, dataset, projectId } from '@/sanity/env';
+import { createClient } from "@sanity/client";
+import { z, ZodError } from "zod";
+
+import { apiVersion, dataset, projectId } from "@/sanity/env";
+
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -27,26 +29,26 @@ export const POST: APIRoute = async ({ request }) => {
 
     const writeClient = getWriteClient();
     if (!writeClient || !import.meta.env.SANITY_API_TOKEN) {
-      return new Response(JSON.stringify({ success: true, message: 'Sanity not configured' }), {
-        headers: { 'Content-Type': 'application/json' },
+      return new Response(JSON.stringify({ success: true, message: "Sanity not configured" }), {
+        headers: { "Content-Type": "application/json" },
       });
     }
 
     await writeClient.patch(commentId).inc({ likes: 1 }).commit();
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      return new Response(JSON.stringify({ error: 'Invalid request' }), {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
-    return new Response(JSON.stringify({ error: 'Failed to like comment' }), {
+    return new Response(JSON.stringify({ error: "Failed to like comment" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 };

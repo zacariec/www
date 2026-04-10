@@ -1,8 +1,10 @@
-import type { APIRoute } from 'astro';
-import { env } from 'cloudflare:workers';
-import { z } from 'zod';
-import { addToResendAudience, getResendContact } from '@/lib/newsletter/resend';
-import { sendSubscriptionConfirmed } from '@/lib/newsletter/send';
+import { env } from "cloudflare:workers";
+import { z } from "zod";
+
+import { addToResendAudience, getResendContact } from "@/lib/newsletter/resend";
+import { sendSubscriptionConfirmed } from "@/lib/newsletter/send";
+
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -17,17 +19,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = subscribeSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: 'Invalid email' }, { status: 400 });
+    return Response.json({ error: "Invalid email" }, { status: 400 });
   }
 
   // Honeypot — silently succeed
   if (parsed.data.company && parsed.data.company.length > 0) {
-    return Response.json({ success: true, status: 'new' });
+    return Response.json({ success: true, status: "new" });
   }
 
   const email = parsed.data.email.toLowerCase();
@@ -43,14 +45,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .bind(email)
       .first<{ id: string; status: string }>();
     if (existing) {
-      if (existing.status === 'unsubscribed') {
+      if (existing.status === "unsubscribed") {
         isResubscription = true;
       } else {
         alreadySubscribed = true;
       }
     }
   } catch {
-    return Response.json({ error: 'Failed to query' }, { status: 500 });
+    return Response.json({ error: "Failed to query" }, { status: 500 });
   }
 
   // 2. If not in D1 but Resend is configured, double-check Resend in case
@@ -73,7 +75,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   if (alreadySubscribed) {
-    return Response.json({ success: true, status: 'already' });
+    return Response.json({ success: true, status: "already" });
   }
 
   // 3. Insert or re-activate in D1
@@ -85,7 +87,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         .bind(now, email)
         .run();
     } catch {
-      return Response.json({ error: 'Failed to update' }, { status: 500 });
+      return Response.json({ error: "Failed to update" }, { status: 500 });
     }
   } else {
     const id = crypto.randomUUID();
@@ -96,7 +98,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         .bind(id, email, now)
         .run();
     } catch {
-      return Response.json({ error: 'Failed to save' }, { status: 500 });
+      return Response.json({ error: "Failed to save" }, { status: 500 });
     }
   }
 
@@ -118,10 +120,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   // 5. Best-effort welcome email — use waitUntil so workerd doesn't kill
   // the isolate before the async render + Resend POST finishes.
-  const emailPromise = sendSubscriptionConfirmed(email, env).then((result) => {
-    if (!result.ok) console.error('Welcome email failed:', result.error);
-  }).catch((err) => console.error('Welcome email threw:', err));
+  const emailPromise = sendSubscriptionConfirmed(email, env)
+    .then((result) => {
+      if (!result.ok) console.error("Welcome email failed:", result.error);
+    })
+    .catch((err) => console.error("Welcome email threw:", err));
   if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
 
-  return Response.json({ success: true, status: 'new' });
+  return Response.json({ success: true, status: "new" });
 };

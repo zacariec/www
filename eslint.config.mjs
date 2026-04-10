@@ -81,7 +81,7 @@ export default defineConfig([
   includeIgnoreFile(gitignorePath),
   // Additional ignores
   {
-    ignores: ["worker.ts", "src/sanity/**", "next-env.d.ts"],
+    ignores: ["worker.ts", "src/sanity/**", "next-env.d.ts", "emails/**"],
   },
   // JavaScript config
   ...jsConfig,
@@ -114,6 +114,7 @@ export default defineConfig([
       "no-plusplus": "off",
       "no-continue": "off",
       "consistent-return": "off",
+      "import-x/no-unresolved": ["error", { ignore: ["^cloudflare:"] }],
       "react/jsx-fragments": ["error", "syntax"],
       "react/jsx-no-useless-fragment": "off",
       "react/function-component-definition": "off",

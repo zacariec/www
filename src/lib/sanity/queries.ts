@@ -1,4 +1,5 @@
-const groq = (strings: TemplateStringsArray, ...values: unknown[]) => String.raw(strings, ...values);
+const groq = (strings: TemplateStringsArray, ...values: unknown[]) =>
+  String.raw(strings, ...values);
 
 export const allPostsQuery = groq`
   *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) {

@@ -18,7 +18,7 @@ function getObserver(): IntersectionObserver {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-visible");
-          io!.unobserve(entry.target);
+          io?.unobserve(entry.target);
         }
       }
     },

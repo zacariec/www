@@ -1,7 +1,9 @@
-import type { APIRoute } from 'astro';
-import { env } from 'cloudflare:workers';
-import { z } from 'zod';
-import { sendUnsubscribeConfirmation } from '@/lib/newsletter/send';
+import { env } from "cloudflare:workers";
+import { z } from "zod";
+
+import { sendUnsubscribeConfirmation } from "@/lib/newsletter/send";
+
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -18,7 +20,7 @@ async function removeFromResendAudience(
     const res = await fetch(
       `https://api.resend.com/audiences/${audienceId}/contacts/${encodeURIComponent(email)}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
         headers: { Authorization: `Bearer ${apiKey}` },
       },
     );
@@ -34,12 +36,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = unsubscribeSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: 'Invalid email' }, { status: 400 });
+    return Response.json({ error: "Invalid email" }, { status: 400 });
   }
 
   const email = parsed.data.email.toLowerCase();
@@ -49,7 +51,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .bind(email)
       .run();
   } catch {
-    return Response.json({ error: 'Failed to update' }, { status: 500 });
+    return Response.json({ error: "Failed to update" }, { status: 500 });
   }
 
   if (env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID) {
@@ -58,9 +60,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   // Best-effort confirmation email — use waitUntil so workerd doesn't kill
   // the isolate before the async render + Resend POST finishes.
-  const emailPromise = sendUnsubscribeConfirmation(email, env).then((result) => {
-    if (!result.ok) console.error('Unsubscribe email failed:', result.error);
-  }).catch((err) => console.error('Unsubscribe email threw:', err));
+  const emailPromise = sendUnsubscribeConfirmation(email, env)
+    .then((result) => {
+      if (!result.ok) console.error("Unsubscribe email failed:", result.error);
+    })
+    .catch((err) => console.error("Unsubscribe email threw:", err));
   if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
 
   return Response.json({ success: true });

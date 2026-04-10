@@ -1,5 +1,6 @@
-import type { APIRoute } from 'astro';
-import { getNowPlaying } from '@/lib/spotify';
+import { getNowPlaying } from "@/lib/spotify";
+
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -8,8 +9,8 @@ export const GET: APIRoute = async () => {
 
   return new Response(JSON.stringify(data), {
     headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+      "Content-Type": "application/json",
+      "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
     },
   });
 };

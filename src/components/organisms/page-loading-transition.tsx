@@ -52,11 +52,10 @@ export const PageLoadingTransition = () => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, w, h);
     }
-
   }, []);
 
   // Animate enter: transparent → fully opaque. Returns promise when done.
-  const animateEnter = useCallback((): Promise<void> => {
+  const animateEnter = useCallback(async (): Promise<void> => {
     const canvas = canvasRef.current;
     if (canvas) canvas.style.display = "block";
     phaseRef.current = "entering";

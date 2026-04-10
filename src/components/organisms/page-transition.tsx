@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-
 const ENTER_DURATION = 300;
 const HOLD_DURATION = 200;
 const LEAVE_DURATION = 400;
@@ -19,7 +18,7 @@ interface PageTransitionProps {
 
 export const PageTransition = ({ pathname: pathnameProp }: PageTransitionProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const pathname = pathnameProp || (typeof window !== "undefined" ? window.location.pathname : "/");
   const prevPathRef = useRef(pathname);
   const phaseRef = useRef<Phase>("idle");
   const startTimeRef = useRef(0);

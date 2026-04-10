@@ -7,8 +7,10 @@ import { motion } from "motion/react";
 import { BlobLink } from "@/components/atoms/blob-link";
 import { BlobLogo } from "@/components/atoms/blob-logo";
 import { NavList } from "@/components/molecules/nav-list";
-import { NewsletterForm, type NewsletterCopy } from "@/components/molecules/newsletter-form";
+import { NewsletterForm } from "@/components/molecules/newsletter-form";
 import { NowPlaying } from "@/components/molecules/now-playing";
+
+import type { NewsletterCopy } from "@/components/molecules/newsletter-form";
 
 interface FooterProps {
   navItems?: { label: string; href: string }[];
@@ -30,7 +32,9 @@ export const Footer = ({
   newsletterCopy,
 }: FooterProps) => {
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
-  const [currentPathname, setCurrentPathname] = useState(pathname || (typeof window !== 'undefined' ? window.location.pathname : '/'));
+  const [currentPathname, setCurrentPathname] = useState(
+    pathname || (typeof window !== "undefined" ? window.location.pathname : "/"),
+  );
   const headingLines = heading.split("\n");
 
   useEffect(() => {
@@ -97,7 +101,10 @@ export const Footer = ({
         </motion.div>
       </div>
 
-      <div data-footer-nav className="px-5 md:px-16 py-6 pb-[calc(env(safe-area-inset-bottom)+72px)] md:pb-6">
+      <div
+        data-footer-nav
+        className="px-5 md:px-16 py-6 pb-[calc(env(safe-area-inset-bottom)+72px)] md:pb-6"
+      >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
             <BlobLogo darkMode size={20} textSize="6px" />

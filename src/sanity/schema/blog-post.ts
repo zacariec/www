@@ -34,7 +34,8 @@ export const blogPostType = defineType({
       name: "dateModified",
       title: "Date Modified",
       type: "datetime",
-      description: "Optional. Used for SEO/structured-data \u201ClastUpdated\u201D. Falls back to Published At.",
+      description:
+        "Optional. Used for SEO/structured-data \u201ClastUpdated\u201D. Falls back to Published At.",
     }),
     defineField({
       name: "readingTime",

@@ -92,8 +92,7 @@ const defaultSiteConfig: SanitySiteConfig = {
   footerHeading: "Thanks for\nreading.",
   footerSubtitle: "\u2014 End",
   siteName: "zcarr.dev",
-  siteDescription:
-    "Code, systems, taste, and whatever else is rattling around in my head.",
+  siteDescription: "Code, systems, taste, and whatever else is rattling around in my head.",
   author: fallbackSiteConfig.author,
   linkedIn: fallbackSiteConfig.linkedIn,
   timezone: fallbackSiteConfig.timezone,

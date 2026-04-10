@@ -17,7 +17,8 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ navItems = defaultNavItems, pathname: pathnameProp }: NavbarProps) => {
-  const initialPathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const initialPathname =
+    pathnameProp || (typeof window !== "undefined" ? window.location.pathname : "/");
   const [currentPathname, setCurrentPathname] = useState(initialPathname);
   const pathname = currentPathname;
   const [hideNav, setHideNav] = useState(false);
@@ -156,11 +157,11 @@ export const Navbar = ({ navItems = defaultNavItems, pathname: pathnameProp }: N
                 >
                   {active ? (
                     <motion.div
+                      layoutId="mobile-nav"
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
                       className={`absolute top-0 left-4 right-4 h-[2px] transition-colors duration-500 ${
                         overFooter ? "bg-[#f9f9f7]" : "bg-black"
                       }`}
-                      layoutId="mobile-nav"
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   ) : null}
                   <span

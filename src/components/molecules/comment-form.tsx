@@ -3,12 +3,15 @@
 import { useState } from "react";
 
 import { motion } from "motion/react";
+
 import { AuthButton } from "@/components/molecules/auth-button";
 
 interface CommentFormProps {
   onSubmit: (author: string, text: string, authorImage?: string) => void;
   placeholder?: string;
-  session?: { user?: { name?: string | null; email?: string | null; image?: string | null } } | null;
+  session?: {
+    user?: { name?: string | null; email?: string | null; image?: string | null };
+  } | null;
 }
 
 export const CommentForm = ({

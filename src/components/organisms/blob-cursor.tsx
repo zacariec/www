@@ -31,8 +31,8 @@ function blobParticlePath(cx: number, cy: number, radius: number, seed: number):
   const coords: [number, number][] = [];
   for (let i = 0; i < points; i++) {
     const angle = step * i;
-    const wobble = Math.sin(seed * 3 + i * 1.5) * radius * 0.25 +
-      Math.cos(seed * 2 + i * 2.3) * radius * 0.15;
+    const wobble =
+      Math.sin(seed * 3 + i * 1.5) * radius * 0.25 + Math.cos(seed * 2 + i * 2.3) * radius * 0.15;
     const r = radius + wobble;
     coords.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
   }
@@ -175,7 +175,11 @@ export const BlobCursor = () => {
       }
 
       // Magnet spit particles — spawn between cursor and target while attached
-      if (blobState.attachedTo && nearestLogo?.id === blobState.attachedTo && blobState.mergeAmount > 0.1) {
+      if (
+        blobState.attachedTo &&
+        nearestLogo?.id === blobState.attachedTo &&
+        blobState.mergeAmount > 0.1
+      ) {
         magnetFrameRef.current++;
         if (magnetFrameRef.current % MAGNET_SPIT_INTERVAL === 0) {
           const curX = blobState.cursorX + blobState.pullOffsetX;
@@ -361,11 +365,11 @@ export const BlobCursor = () => {
             const alpha = Math.min(p.life / 20, 1) * 0.8;
             const shrink = Math.min(p.life / 15, 1);
             const r = p.radius * shrink;
-            const rgb = blobState.inFooter ? "119, 119, 119" : "0, 0, 0";
+            const particleRgb = blobState.inFooter ? "119, 119, 119" : "0, 0, 0";
 
             sctx.save();
             const path = new Path2D(blobParticlePath(p.x, p.y, r, p.seed));
-            sctx.fillStyle = `rgba(${rgb}, ${alpha})`;
+            sctx.fillStyle = `rgba(${particleRgb}, ${alpha})`;
             sctx.fill(path);
             sctx.restore();
           }
@@ -421,10 +425,7 @@ export const BlobCursor = () => {
 
   return (
     <>
-      <canvas
-        ref={splatCanvasRef}
-        className="fixed inset-0 z-[9999] pointer-events-none"
-      />
+      <canvas ref={splatCanvasRef} className="fixed inset-0 z-[9999] pointer-events-none" />
       <canvas
         ref={canvasRef}
         className="fixed top-0 left-0 z-[9999] pointer-events-none"

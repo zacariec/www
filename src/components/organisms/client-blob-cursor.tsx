@@ -2,7 +2,7 @@
 
 import { lazy, Suspense } from "react";
 
-const BlobCursor = lazy(() =>
+const BlobCursor = lazy(async () =>
   import("@/components/organisms/blob-cursor").then((m) => ({ default: m.BlobCursor })),
 );
 

@@ -4,9 +4,11 @@ import { useState } from "react";
 
 import { CommentCard } from "@/components/molecules/comment-card";
 import { CommentForm } from "@/components/molecules/comment-form";
-import { NewsletterForm, type NewsletterCopy } from "@/components/molecules/newsletter-form";
+import { NewsletterForm } from "@/components/molecules/newsletter-form";
 import { FadeIn, RevealText } from "@/components/molecules/reveal-text";
 import { useSession } from "@/lib/auth/client";
+
+import type { NewsletterCopy } from "@/components/molecules/newsletter-form";
 
 interface Comment {
   id: string;
@@ -32,7 +34,7 @@ export const CommentSection = ({
   const [comments, setComments] = useState(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const { data: sessionData, isPending } = useSession();
-  const session = isPending ? undefined : sessionData ?? null;
+  const session = isPending ? undefined : (sessionData ?? null);
 
   const handleSubmit = async (
     author: string,
@@ -68,78 +70,78 @@ export const CommentSection = ({
 
   return (
     <div className="px-5 md:px-16 mt-20 md:mt-32">
-        <div className="max-w-[720px] md:ml-[calc(16.666%+32px)]">
+      <div className="max-w-[720px] md:ml-[calc(16.666%+32px)]">
+        <FadeIn>
+          <div className="mb-16 md:mb-20">
+            <NewsletterForm copy={newsletterCopy} variant="inline" />
+          </div>
+        </FadeIn>
+        <div className="h-px bg-[rgba(0,0,0,0.08)] w-full" />
+        <div className="pt-12 md:pt-16">
+          <RevealText>
+            <h3
+              className="text-[18px] md:text-[20px] tracking-[-1px] uppercase text-[#000000] mb-10 md:mb-12 font-[family-name:var(--font-space-grotesk)]"
+              style={{ fontWeight: 700 }}
+            >
+              Discussion ({comments.length})
+            </h3>
+          </RevealText>
+
           <FadeIn>
-            <div className="mb-16 md:mb-20">
-              <NewsletterForm copy={newsletterCopy} variant="inline" />
-            </div>
+            <CommentForm onSubmit={handleSubmit} session={session} />
           </FadeIn>
-          <div className="h-px bg-[rgba(0,0,0,0.08)] w-full" />
-          <div className="pt-12 md:pt-16">
-            <RevealText>
-              <h3
-                className="text-[18px] md:text-[20px] tracking-[-1px] uppercase text-[#000000] mb-10 md:mb-12 font-[family-name:var(--font-space-grotesk)]"
-                style={{ fontWeight: 700 }}
-              >
-                Discussion ({comments.length})
-              </h3>
-            </RevealText>
 
-            <FadeIn>
-              <CommentForm onSubmit={handleSubmit} session={session} />
-            </FadeIn>
-
-            <div>
-              {topLevel.map((comment, i) => (
-                <FadeIn key={comment.id} delay={i * 0.05}>
+          <div>
+            {topLevel.map((comment, i) => (
+              <FadeIn key={comment.id} delay={i * 0.05}>
+                <CommentCard
+                  author={comment.author}
+                  authorImage={comment.authorImage}
+                  date={comment.date}
+                  id={comment.id}
+                  isLast={i === topLevel.length - 1 && getReplies(comment.id).length === 0}
+                  likes={comment.likes}
+                  onReply={setReplyingTo}
+                  text={comment.text}
+                />
+                {/* Replies */}
+                {getReplies(comment.id).map((reply, j) => (
                   <CommentCard
-                    author={comment.author}
-                    authorImage={comment.authorImage}
-                    date={comment.date}
-                    id={comment.id}
-                    isLast={i === topLevel.length - 1 && getReplies(comment.id).length === 0}
-                    likes={comment.likes}
-                    onReply={setReplyingTo}
-                    text={comment.text}
+                    key={reply.id}
+                    isReply
+                    author={reply.author}
+                    authorImage={reply.authorImage}
+                    date={reply.date}
+                    id={reply.id}
+                    isLast={j === getReplies(comment.id).length - 1}
+                    likes={reply.likes}
+                    text={reply.text}
                   />
-                  {/* Replies */}
-                  {getReplies(comment.id).map((reply, j) => (
-                    <CommentCard
-                      key={reply.id}
-                      isReply
-                      author={reply.author}
-                      authorImage={reply.authorImage}
-                      date={reply.date}
-                      id={reply.id}
-                      isLast={j === getReplies(comment.id).length - 1}
-                      likes={reply.likes}
-                      text={reply.text}
+                ))}
+                {/* Reply form */}
+                {replyingTo === comment.id && (
+                  <div className="ml-8 border-l-2 border-[rgba(0,0,0,0.04)] pl-6 pb-4">
+                    <CommentForm
+                      placeholder="Write a reply..."
+                      session={session}
+                      onSubmit={async (author, text, authorImage) =>
+                        handleSubmit(author, text, authorImage, comment.id)
+                      }
                     />
-                  ))}
-                  {/* Reply form */}
-                  {replyingTo === comment.id && (
-                    <div className="ml-8 border-l-2 border-[rgba(0,0,0,0.04)] pl-6 pb-4">
-                      <CommentForm
-                        placeholder="Write a reply..."
-                        session={session}
-                        onSubmit={async (author, text, authorImage) =>
-                          handleSubmit(author, text, authorImage, comment.id)
-                        }
-                      />
-                      <button
-                        className="text-[10px] text-[#c6c6c6] hover:text-[#777777] transition-colors bg-transparent border-none cursor-pointer p-0 mt-2 font-[family-name:var(--font-space-grotesk)]"
-                        onClick={() => setReplyingTo(null)}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </FadeIn>
-              ))}
-            </div>
+                    <button
+                      className="text-[10px] text-[#c6c6c6] hover:text-[#777777] transition-colors bg-transparent border-none cursor-pointer p-0 mt-2 font-[family-name:var(--font-space-grotesk)]"
+                      onClick={() => setReplyingTo(null)}
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </FadeIn>
+            ))}
           </div>
         </div>
+      </div>
     </div>
   );
 };

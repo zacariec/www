@@ -1,4 +1,4 @@
-import { betterAuth } from 'better-auth';
+import { betterAuth } from "better-auth";
 
 export type RuntimeEnv = Cloudflare.Env;
 
@@ -13,12 +13,12 @@ function create(env: RuntimeEnv) {
     trustedOrigins: env.BETTER_AUTH_URL ? [env.BETTER_AUTH_URL] : undefined,
     socialProviders: {
       github: {
-        clientId: env.AUTH_GITHUB_ID ?? '',
-        clientSecret: env.AUTH_GITHUB_SECRET ?? '',
+        clientId: env.AUTH_GITHUB_ID ?? "",
+        clientSecret: env.AUTH_GITHUB_SECRET ?? "",
       },
       google: {
-        clientId: env.AUTH_GOOGLE_ID ?? '',
-        clientSecret: env.AUTH_GOOGLE_SECRET ?? '',
+        clientId: env.AUTH_GOOGLE_ID ?? "",
+        clientSecret: env.AUTH_GOOGLE_SECRET ?? "",
       },
     },
   });

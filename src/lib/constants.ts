@@ -1,7 +1,6 @@
 export const siteConfig = {
   name: "zcarr.dev",
-  description:
-    "Code, systems, taste, and whatever else is rattling around in my head.",
+  description: "Code, systems, taste, and whatever else is rattling around in my head.",
   author: "ZC",
   linkedIn: "https://www.linkedin.com/in/zacariecarr",
   github: "https://github.com/zacariec",

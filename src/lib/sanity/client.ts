@@ -1,5 +1,5 @@
-import imageUrlBuilder from "@sanity/image-url";
 import { createClient } from "@sanity/client";
+import imageUrlBuilder from "@sanity/image-url";
 
 import { apiVersion, dataset, projectId } from "@/sanity/env";
 

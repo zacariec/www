@@ -1,6 +1,5 @@
 "use client";
 
-
 import { BlobLink } from "@/components/atoms/blob-link";
 import { SocialFlipper } from "@/components/molecules/social-flipper";
 
@@ -20,8 +19,15 @@ function getNavLinkColor(isHeader: boolean, active: boolean): string {
   return active ? "text-[#c6c6c6]" : "text-[#777777] hover:text-[#c6c6c6]";
 }
 
-export const NavList = ({ navItems, variant, hoveredHref = null, onHover, onNavigate, pathname: pathnameProp }: NavListProps) => {
-  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
+export const NavList = ({
+  navItems,
+  variant,
+  hoveredHref = null,
+  onHover,
+  onNavigate,
+  pathname: pathnameProp,
+}: NavListProps) => {
+  const pathname = pathnameProp || (typeof window !== "undefined" ? window.location.pathname : "/");
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";

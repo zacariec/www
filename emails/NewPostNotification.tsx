@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import {
   Body,
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Link,
   Preview,
@@ -48,20 +50,20 @@ export default function NewPostNotificationEmail({
             <table cellPadding="0" cellSpacing="0" style={{ border: 0 }}>
               <tr>
                 <td style={metaItem}>{postDate}</td>
-                <td style={{ width: "16px" }} />
+                <td aria-hidden="true" style={{ width: "16px" }} />
                 <td style={metaItem}>{readingTime}</td>
               </tr>
             </table>
           </Section>
 
           <Section style={content}>
-            <Text style={p}>New one's up.</Text>
+            <Text style={p}>New one&apos;s up.</Text>
 
-            {postExcerpt && (
+            {postExcerpt != null && postExcerpt !== "" ? (
               <Section style={excerptBox}>
                 <Text style={excerptText}>{postExcerpt}</Text>
               </Section>
-            )}
+            ) : null}
 
             <Section style={ctaContainer}>
               <Link href={postUrl} style={ctaLink}>
@@ -71,9 +73,7 @@ export default function NewPostNotificationEmail({
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>
-              You subscribed to zcarr.dev.
-            </Text>
+            <Text style={footerText}>You subscribed to zcarr.dev.</Text>
             <Link href={unsubscribeUrl} style={footerLink}>
               Unsubscribe
             </Link>
@@ -87,8 +87,7 @@ export default function NewPostNotificationEmail({
 const body: React.CSSProperties = {
   backgroundColor: "#f9f9f7",
   padding: "40px 20px",
-  fontFamily:
-    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   WebkitFontSmoothing: "antialiased",
 };
 

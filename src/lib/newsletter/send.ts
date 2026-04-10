@@ -1,7 +1,8 @@
 import { render } from "@react-email/render";
+
+import NewPostNotificationEmail from "../../../emails/NewPostNotification";
 import SubscriptionConfirmedEmail from "../../../emails/SubscriptionConfirmed";
 import UnsubscribeConfirmationEmail from "../../../emails/UnsubscribeConfirmation";
-import NewPostNotificationEmail from "../../../emails/NewPostNotification";
 
 interface MailEnv {
   RESEND_API_KEY?: string;
@@ -48,17 +49,14 @@ async function postEmail(
       }),
     });
     if (!res.ok) return { ok: false, error: `Resend ${res.status}` };
-    const data = (await res.json()) as { id?: string };
+    const data = await res.json();
     return { ok: true, id: data.id };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "unknown" };
   }
 }
 
-function listUnsubscribeHeaders(
-  email: string,
-  env: MailEnv,
-): Record<string, string> | undefined {
+function listUnsubscribeHeaders(email: string, env: MailEnv): Record<string, string> | undefined {
   if (!env.RESEND_AUDIENCE_ID) return undefined;
   return {
     "List-Unsubscribe": `<mailto:unsubscribe@mail.zcarr.dev?subject=unsubscribe>, <https://react.email>`,
@@ -100,14 +98,11 @@ export async function sendUnsubscribeConfirmation(
   try {
     const siteUrl = getSiteUrl(env);
     const resubscribeUrl = `${siteUrl}/?subscribe=${encodeURIComponent(email)}`;
-    const html = await render(
-      UnsubscribeConfirmationEmail({ resubscribeUrl }),
-    );
-    const text = await render(
-      UnsubscribeConfirmationEmail({ resubscribeUrl }),
-      { plainText: true },
-    );
-    return postEmail(env, {
+    const html = await render(UnsubscribeConfirmationEmail({ resubscribeUrl }));
+    const text = await render(UnsubscribeConfirmationEmail({ resubscribeUrl }), {
+      plainText: true,
+    });
+    return await postEmail(env, {
       to: email,
       subject: "You've been unsubscribed",
       html,
@@ -156,7 +151,7 @@ export async function sendNewPostNotification(
     const text = await render(NewPostNotificationEmail(props), {
       plainText: true,
     });
-    return postEmail(env, {
+    return await postEmail(env, {
       to: email,
       subject: `New: ${post.title}`,
       html,

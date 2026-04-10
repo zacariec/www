@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import {
   Body,
   Container,
@@ -20,7 +21,7 @@ export default function UnsubscribeConfirmationEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>You're off the list.</Preview>
+      <Preview>You&apos;re off the list.</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -33,9 +34,7 @@ export default function UnsubscribeConfirmationEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={p}>
-              You're off the list. No more emails.
-            </Text>
+            <Text style={p}>You&apos;re off the list. No more emails.</Text>
 
             <Section style={resubscribeBox}>
               <Link href={resubscribeUrl} style={resubscribeLink}>
@@ -45,9 +44,7 @@ export default function UnsubscribeConfirmationEmail({
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>
-              You unsubscribed from zcarr.dev.
-            </Text>
+            <Text style={footerText}>You unsubscribed from zcarr.dev.</Text>
           </Section>
         </Container>
       </Body>
@@ -58,8 +55,7 @@ export default function UnsubscribeConfirmationEmail({
 const body: React.CSSProperties = {
   backgroundColor: "#f9f9f7",
   padding: "40px 20px",
-  fontFamily:
-    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   WebkitFontSmoothing: "antialiased",
 };
 

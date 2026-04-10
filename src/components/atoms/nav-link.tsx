@@ -10,8 +10,14 @@ interface NavLinkProps {
   pathname?: string;
 }
 
-export const NavLink = ({ href, label, layoutId = "nav-indicator", className, pathname: pathnameProp }: NavLinkProps) => {
-  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
+export const NavLink = ({
+  href,
+  label,
+  layoutId = "nav-indicator",
+  className,
+  pathname: pathnameProp,
+}: NavLinkProps) => {
+  const pathname = pathnameProp || (typeof window !== "undefined" ? window.location.pathname : "/");
 
   const isActive = () => {
     if (href === "/") return pathname === "/";

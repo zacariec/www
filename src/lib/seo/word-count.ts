@@ -1,4 +1,4 @@
-import type { PortableTextBlock } from '@portabletext/react';
+import type { PortableTextBlock } from "@portabletext/react";
 
 interface SpanLike {
   text?: string;
@@ -15,10 +15,10 @@ export function countWords(content: unknown): number {
   let total = 0;
   for (const block of content as PortableTextBlock[]) {
     const b = block as BlockLike;
-    if (b?._type !== 'block') continue;
+    if (b?._type !== "block") continue;
     const children = b.children ?? [];
     for (const span of children) {
-      if (typeof span.text === 'string') {
+      if (typeof span.text === "string") {
         total += span.text.trim().split(/\s+/).filter(Boolean).length;
       }
     }

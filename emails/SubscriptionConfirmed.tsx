@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import {
   Body,
   Container,
@@ -20,7 +21,7 @@ export default function SubscriptionConfirmedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>You're in.</Preview>
+      <Preview>You&apos;re in.</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -28,23 +29,20 @@ export default function SubscriptionConfirmedEmail({
               <Text style={logoText}>ZC</Text>
             </div>
             <Heading as="h1" style={h1}>
-              You're In
+              You&apos;re In
             </Heading>
           </Section>
 
           <Section style={content}>
             <Text style={p}>
-              I'll send you an email when I publish something new. That's it. No
-              spam, no cadence, no newsletter voice. Just a heads up when there's
-              something worth reading.
+              I&apos;ll send you an email when I publish something new. That&apos;s it. No spam, no
+              cadence, no newsletter voice. Just a heads up when there&apos;s something worth reading.
             </Text>
             <Text style={p}>Appreciate it.</Text>
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>
-              You subscribed to zcarr.dev.
-            </Text>
+            <Text style={footerText}>You subscribed to zcarr.dev.</Text>
             <Link href={unsubscribeUrl} style={footerLink}>
               Unsubscribe
             </Link>
@@ -58,8 +56,7 @@ export default function SubscriptionConfirmedEmail({
 const body: React.CSSProperties = {
   backgroundColor: "#f9f9f7",
   padding: "40px 20px",
-  fontFamily:
-    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   WebkitFontSmoothing: "antialiased",
 };
 

@@ -99,8 +99,9 @@ export const BlobLink = ({
   // Lazy initial state — read once on first render so we don't have to
   // upgrade from passthrough → full version (which would unmount the
   // registered snap target and replace the containerRef DOM node).
-  const [hasFinePointer] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
+  // eslint-disable-next-line react/hook-use-state -- read-only initial state, setter intentionally unused
+  const [hasFinePointer] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
   );
 
   useEffect(() => {
