@@ -105,6 +105,13 @@ const twitterHandle = config.twitterHandle;
       <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     )}
 
+    <!-- Analytics (runs in web worker via Partytown) -->
+    <script
+      type="text/partytown"
+      src="https://cloud.umami.is/script.js"
+      data-website-id="f1446875-b105-423f-8788-cb9d5457489b"
+    />
+
     <ClientRouter />
   </head>
   <body class="min-h-screen bg-[#f9f9f7] font-[family-name:var(--font-space-grotesk)]">

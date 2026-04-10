@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
+import partytown from '@astrojs/partytown';
 import sanity from '@sanity/astro';
 
 export default defineConfig({
@@ -19,6 +20,11 @@ export default defineConfig({
     }),
     react(),
     sitemap(),
+    partytown({
+      config: {
+        forward: ['umami.track'],
+      },
+    }),
   ],
   vite: {
     resolve: {
