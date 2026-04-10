@@ -14,6 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -27,9 +31,9 @@ jobs:
       - name: Build
         run: bun run build
         env:
-          NEXT_PUBLIC_SANITY_PROJECT_ID: mrobamxo
-          NEXT_PUBLIC_SANITY_DATASET: production
-          NEXT_PUBLIC_SANITY_API_VERSION: "2026-03-26"
+          PUBLIC_SANITY_PROJECT_ID: mrobamxo
+          PUBLIC_SANITY_DATASET: production
+          PUBLIC_SANITY_API_VERSION: "2026-03-26"
 
       - name: Deploy to Cloudflare
         run: bunx wrangler@latest deploy
