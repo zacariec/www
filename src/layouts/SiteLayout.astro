@@ -1,0 +1,73 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { ClientBlobCursor } from '@/components/organisms/client-blob-cursor';
+import { PageLoadingTransition } from '@/components/organisms/page-loading-transition';
+import { Navbar } from '@/components/organisms/navbar';
+import { Footer } from '@/components/organisms/footer';
+import NavbarFallback from '@/components/astro/NavbarFallback.astro';
+import FooterFallback from '@/components/astro/FooterFallback.astro';
+import { getSiteConfig } from '@/lib/sanity/fetch';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  ogImageAlt?: string;
+  ogType?: string;
+  canonicalUrl?: string;
+  jsonLd?: object;
+  articlePublishedTime?: string;
+  articleModifiedTime?: string;
+  articleAuthor?: string;
+}
+
+const props = Astro.props;
+const config = await getSiteConfig();
+
+const nl = config.newsletter ?? {};
+const footerNewsletterCopy = {
+  heading: nl.footerHeading,
+  description: nl.footerDescription,
+  buttonLabel: nl.buttonLabel,
+  placeholder: nl.placeholder,
+  successMessage: nl.successMessage,
+  alreadySubscribedMessage: nl.alreadySubscribedMessage,
+  unsubscribeLabel: nl.unsubscribeLabel,
+  unsubscribeConfirmedMessage: nl.unsubscribeConfirmedMessage,
+  errorMessage: nl.errorMessage,
+};
+---
+
+<BaseLayout {...props}>
+  <div transition:persist="blob-cursor" data-blob-cursor>
+    <ClientBlobCursor client:only="react" />
+  </div>
+  <div transition:persist="page-transition">
+    <PageLoadingTransition client:only="react" />
+  </div>
+  <Navbar client:only="react" navItems={config.navItems} pathname={Astro.url.pathname}>
+    <NavbarFallback slot="fallback" navItems={config.navItems} pathname={Astro.url.pathname} />
+  </Navbar>
+  <main transition:name="page-content" class="pt-[56px] md:pt-[72px] pb-[64px] md:pb-0 max-w-[1440px] mx-auto">
+    <slot />
+  </main>
+  <Footer
+    client:only="react"
+    heading={config.footerHeading}
+    navItems={config.navItems}
+    newsletterCopy={footerNewsletterCopy}
+    pathname={Astro.url.pathname}
+    subtitle={config.footerSubtitle}
+  >
+    <FooterFallback
+      slot="fallback"
+      heading={config.footerHeading}
+      navItems={config.navItems}
+      newsletterCopy={footerNewsletterCopy}
+      pathname={Astro.url.pathname}
+      subtitle={config.footerSubtitle}
+    />
+  </Footer>
+</BaseLayout>

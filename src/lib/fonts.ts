@@ -1,13 +1,4 @@
-import { Inter, Space_Grotesk } from "next/font/google";
-
-export const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-export const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600"],
-});
+// Stub: fonts are now loaded via @fontsource in Astro layouts.
+// This file exists only to prevent import errors from legacy Next.js files.
+export const spaceGrotesk = { variable: '--font-space-grotesk' };
+export const inter = { variable: '--font-inter' };

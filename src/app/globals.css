@@ -2,6 +2,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Reveal-on-scroll. Activated by src/scripts/reveal.ts which adds .is-visible. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 700ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 700ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+[data-reveal-variant="text"] {
+  transform: translateY(100%);
+}
+[data-reveal-variant="text"].is-visible {
+  transform: translateY(0);
+}
+[data-reveal-variant="scaleX"] {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+[data-reveal-variant="scaleX"].is-visible {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* Blob cursor: hide system cursor when active */
 .blob-cursor-active,
 .blob-cursor-active * {
@@ -28,6 +64,8 @@ button:active {
 }
 
 :root {
+  --font-space-grotesk: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
+  --font-inter: 'Inter Variable', 'Inter', sans-serif;
   --font-size: 16px;
   --background: #f9f9f7;
   --foreground: #1a1c1b;

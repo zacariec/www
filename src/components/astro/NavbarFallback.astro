@@ -1,0 +1,83 @@
+---
+interface Props {
+  navItems?: { label: string; href: string }[];
+  pathname?: string;
+}
+
+const {
+  navItems = [
+    { label: 'Index', href: '/' },
+    { label: 'Writing', href: '/blog' },
+    { label: 'Timeline', href: '/timeline' },
+  ],
+  pathname = '/',
+} = Astro.props;
+
+const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+---
+
+{/* Desktop Navigation */}
+<nav class="fixed top-0 left-0 right-0 z-50 hidden md:block bg-transparent">
+  <div class="flex items-center justify-between px-8 lg:px-16">
+    <a class="no-underline flex items-center gap-3 py-5" href="/">
+      <span
+        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#000000] text-[#f9f9f7]"
+        style="font-size: 10px; font-weight: 700;"
+      >
+        ZC
+      </span>
+    </a>
+
+    <div class="flex items-center gap-10">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={`text-[11px] tracking-[2px] uppercase no-underline transition-colors duration-300 py-5 px-3 -mx-3 ${
+            isActive(item.href) ? 'text-[#000000]' : 'text-[#777777] hover:text-black'
+          }`}
+        >
+          {item.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</nav>
+
+{/* Mobile top bar */}
+<nav class="fixed top-0 left-0 right-0 z-50 md:hidden bg-transparent">
+  <div class="flex items-center justify-between px-5 py-4">
+    <a class="no-underline" href="/">
+      <span
+        class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#000000] text-[#f9f9f7]"
+        style="font-size: 9px; font-weight: 700;"
+      >
+        ZC
+      </span>
+    </a>
+  </div>
+</nav>
+
+{/* Mobile Bottom Nav */}
+<div class="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+  <div class="pb-[env(safe-area-inset-bottom)] bg-[#f9f9f7]/95 backdrop-blur-md">
+    <div class="flex items-center justify-between px-2">
+      {navItems.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <a
+            class="relative flex-1 flex items-center justify-center py-4 no-underline"
+            href={item.href}
+          >
+            {active && <span class="absolute top-0 left-4 right-4 h-[2px] bg-black"></span>}
+            <span
+              style={`font-weight: ${active ? 600 : 400};`}
+              class={`text-[10px] tracking-[2px] uppercase ${active ? 'text-black' : 'text-[#c6c6c6]'}`}
+            >
+              {item.label}
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</div>

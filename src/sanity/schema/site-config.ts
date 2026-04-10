@@ -6,6 +6,7 @@ export const siteConfigType = defineType({
   type: "document",
   groups: [
     { name: "content", title: "Content" },
+    { name: "newsletter", title: "Newsletter" },
     { name: "seo", title: "SEO & Metadata" },
   ],
   fields: [
@@ -63,7 +64,7 @@ export const siteConfigType = defineType({
       title: "Scrolling Marquee Text",
       type: "string",
       group: "content",
-      description: 'e.g. "DESIGN · SYSTEMS · THOUGHTS · CODE ·"',
+      description: 'e.g. "CODE · SYSTEMS · TASTE · NOISE ·"',
     }),
     defineField({
       name: "footerHeading",
@@ -78,6 +79,98 @@ export const siteConfigType = defineType({
       type: "string",
       group: "content",
       description: 'e.g. "— End"',
+    }),
+
+    // Newsletter
+    defineField({
+      name: "newsletter",
+      title: "Newsletter Copy",
+      type: "object",
+      group: "newsletter",
+      description:
+        "Copy for the newsletter signup form (footer + blog post CTA). All fields are optional — sensible defaults are used when blank.",
+      fields: [
+        defineField({
+          name: "footerHeading",
+          title: "Footer Heading",
+          type: "string",
+          description: "Small uppercase label above the form in the site footer.",
+          initialValue: "Newsletter",
+        }),
+        defineField({
+          name: "footerDescription",
+          title: "Footer Description",
+          type: "text",
+          rows: 2,
+          description: "One-liner under the footer heading.",
+          initialValue: "New posts, straight to your inbox. No spam.",
+        }),
+        defineField({
+          name: "inlineHeading",
+          title: "Blog CTA Heading",
+          type: "string",
+          description: "Small uppercase label above the form on blog post pages.",
+          initialValue: "Subscribe",
+        }),
+        defineField({
+          name: "inlineDescription",
+          title: "Blog CTA Description",
+          type: "text",
+          rows: 2,
+          description: "Pitch shown above the form on blog post pages.",
+          initialValue: "Want the next one? Drop your email.",
+        }),
+        defineField({
+          name: "buttonLabel",
+          title: "Button Label",
+          type: "string",
+          description: "Submit button text.",
+          initialValue: "Subscribe",
+        }),
+        defineField({
+          name: "placeholder",
+          title: "Email Placeholder",
+          type: "string",
+          initialValue: "you@domain.com",
+        }),
+        defineField({
+          name: "successMessage",
+          title: "Success Message",
+          type: "string",
+          description: "Shown after a brand-new subscription.",
+          initialValue: "Thanks \u2014 you're subscribed.",
+        }),
+        defineField({
+          name: "alreadySubscribedMessage",
+          title: "Already-Subscribed Message",
+          type: "string",
+          description:
+            "Shown when the email is already on the list. Supports a follow-up unsubscribe prompt.",
+          initialValue: "You're already on the list. Want to unsubscribe?",
+        }),
+        defineField({
+          name: "unsubscribeLabel",
+          title: "Unsubscribe Link Label",
+          type: "string",
+          description:
+            "Label for the unsubscribe button shown next to the already-subscribed message.",
+          initialValue: "Unsubscribe",
+        }),
+        defineField({
+          name: "unsubscribeConfirmedMessage",
+          title: "Unsubscribe Confirmed Message",
+          type: "string",
+          description: "Shown after a successful unsubscribe.",
+          initialValue: "You've been unsubscribed.",
+        }),
+        defineField({
+          name: "errorMessage",
+          title: "Error Message",
+          type: "string",
+          description: "Shown on submission failure.",
+          initialValue: "Something went wrong. Try again?",
+        }),
+      ],
     }),
 
     // SEO
@@ -134,6 +227,13 @@ export const siteConfigType = defineType({
       title: "X / Twitter URL",
       type: "url",
       group: "seo",
+    }),
+    defineField({
+      name: "twitterHandle",
+      title: "X / Twitter Handle",
+      type: "string",
+      group: "seo",
+      description: 'Used for twitter:creator + twitter:site, e.g. "@zacariec"',
     }),
     defineField({
       name: "timezone",

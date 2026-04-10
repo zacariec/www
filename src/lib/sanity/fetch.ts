@@ -85,15 +85,15 @@ export async function getAllPostSlugs(): Promise<{ slug: string }[]> {
 
 const defaultSiteConfig: SanitySiteConfig = {
   navItems: fallbackNavItems.map((n) => ({ label: n.label, href: n.href })),
-  heroSubtitle: "Design \u00b7 Code \u00b7 Noise",
+  heroSubtitle: "Code \u00b7 Systems \u00b7 Noise",
   heroHeading: ["THOUGHTS,", "UNFILTERED."],
   heroDescription: fallbackSiteConfig.description,
-  marqueeText: "DESIGN \u00b7 SYSTEMS \u00b7 THOUGHTS \u00b7 CODE \u00b7",
+  marqueeText: "CODE \u00b7 SYSTEMS \u00b7 TASTE \u00b7 NOISE \u00b7",
   footerHeading: "Thanks for\nreading.",
   footerSubtitle: "\u2014 End",
   siteName: "zcarr.dev",
   siteDescription:
-    "A space for long-form thinking on design, engineering, and the details most people skip.",
+    "Code, systems, taste, and whatever else is rattling around in my head.",
   author: fallbackSiteConfig.author,
   linkedIn: fallbackSiteConfig.linkedIn,
   timezone: fallbackSiteConfig.timezone,

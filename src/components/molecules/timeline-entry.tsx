@@ -56,7 +56,7 @@ export const TimelineEntryCard = ({
         </span>
         <TypeBadge type={type} />
       </div>
-      <p
+      <div
         className="text-[14px] md:text-[16px] text-[#1a1c1b] font-[family-name:var(--font-inter)]"
         style={{ lineHeight: 1.8 }}
       >
@@ -83,7 +83,7 @@ export const TimelineEntryCard = ({
             </button>
           </BlobLink>
         ) : null}
-      </p>
+      </div>
       <div className="flex items-center gap-5 mt-4">
         <button
           className="flex items-center gap-1.5 text-[10px] text-[#c6c6c6] hover:text-[#000000] transition-colors duration-300 cursor-pointer bg-transparent border-none p-0 font-[family-name:var(--font-space-grotesk)]"

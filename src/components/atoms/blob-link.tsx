@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { blobState, registerLogo } from "@/lib/blob-state";
 
@@ -96,18 +96,23 @@ export const BlobLink = ({
   const seedRef = useRef(Math.random() * 100);
   const cursorAngleRef = useRef(0);
   const blobId = useId();
-
-  useEffect(
-    () =>
-      registerLogo({
-        id: blobId,
-        getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
-        getElement: () => containerRef.current,
-        visualRadius: size / 2,
-        type: "nav",
-      }),
-    [blobId, size],
+  // Lazy initial state — read once on first render so we don't have to
+  // upgrade from passthrough → full version (which would unmount the
+  // registered snap target and replace the containerRef DOM node).
+  const [hasFinePointer] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
   );
+
+  useEffect(() => {
+    if (!hasFinePointer) return undefined;
+    return registerLogo({
+      id: blobId,
+      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+      getElement: () => containerRef.current,
+      visualRadius: size / 2,
+      type: "nav",
+    });
+  }, [blobId, size, hasFinePointer]);
 
   const animate = useCallback(() => {
     seedRef.current += 0.01;
@@ -160,9 +165,23 @@ export const BlobLink = ({
   }, [blobId]);
 
   useEffect(() => {
+    if (!hasFinePointer) return undefined;
     frameRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [animate]);
+  }, [animate, hasFinePointer]);
+
+  if (!hasFinePointer) {
+    return (
+      <div
+        ref={containerRef}
+        className={`relative inline-flex items-center active:scale-95 transition-transform duration-75 ${className}`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div

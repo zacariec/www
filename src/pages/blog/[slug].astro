@@ -1,0 +1,60 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import BlogPostContent from '@/components/astro/BlogPostContent.astro';
+import { getPostBySlug, getAllPostSlugs, getSiteConfig } from '@/lib/sanity/fetch';
+import { blogPostJsonLd } from '@/lib/seo/jsonld';
+import { pickOgImage } from '@/lib/seo/og-image';
+import { countWords } from '@/lib/seo/word-count';
+
+export async function getStaticPaths() {
+  const slugs = await getAllPostSlugs();
+  return slugs.map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const [post, config] = await Promise.all([
+  getPostBySlug(slug!),
+  getSiteConfig(),
+]);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const nl = config.newsletter ?? {};
+const inlineNewsletterCopy = {
+  heading: nl.inlineHeading,
+  description: nl.inlineDescription,
+  buttonLabel: nl.buttonLabel,
+  placeholder: nl.placeholder,
+  successMessage: nl.successMessage,
+  alreadySubscribedMessage: nl.alreadySubscribedMessage,
+  unsubscribeLabel: nl.unsubscribeLabel,
+  unsubscribeConfirmedMessage: nl.unsubscribeConfirmedMessage,
+  errorMessage: nl.errorMessage,
+};
+
+const description = post.subtitle || post.excerpt || `${post.title} — a piece of writing by ${config.author}`;
+const canonical = `/blog/${slug}`;
+
+const og = pickOgImage(post.featuredImage?.url, config);
+const wordCount = countWords(post.content);
+const jsonLd = blogPostJsonLd(post, config, { ogImageUrl: og?.url, wordCount });
+---
+
+<SiteLayout
+  articleAuthor={config.author}
+  articleModifiedTime={post.dateModified ?? post.date}
+  articlePublishedTime={post.date}
+  canonicalUrl={canonical}
+  description={description}
+  jsonLd={jsonLd}
+  ogImage={og?.url}
+  ogImageAlt={post.featuredImage?.alt ?? post.title}
+  ogImageHeight={og?.height}
+  ogImageWidth={og?.width}
+  ogType="article"
+  title={post.title}
+>
+  <BlogPostContent newsletterCopy={inlineNewsletterCopy} post={post} />
+</SiteLayout>

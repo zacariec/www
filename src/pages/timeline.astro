@@ -1,0 +1,65 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
+import { TimelineFeed } from '@/components/organisms/timeline-feed';
+import TimelineHeader from '@/components/astro/TimelineHeader.astro';
+import { getAllTimelineEntries, getSiteConfig } from '@/lib/sanity/fetch';
+import { timelineJsonLd } from '@/lib/seo/jsonld';
+import { pickOgImage } from '@/lib/seo/og-image';
+
+const [entries, config] = await Promise.all([getAllTimelineEntries(), getSiteConfig()]);
+
+const mappedEntries = entries.map((e, i) => ({
+  id: e._id || String(i),
+  date: e.date,
+  text: e.text,
+  type: e.type,
+  likes: e.likes,
+  comments: e.comments,
+  url: e.url,
+}));
+
+const jsonLd = timelineJsonLd(config);
+const og = pickOgImage(undefined, config);
+---
+
+<SiteLayout
+  canonicalUrl="/timeline"
+  description="Short-form noise. Thoughts, observations, and the things that don't need a whole essay."
+  jsonLd={jsonLd}
+  ogImage={og?.url}
+  ogImageAlt={og?.alt}
+  ogImageHeight={og?.height}
+  ogImageWidth={og?.width}
+  title="Timeline"
+>
+  <div>
+    <div class="relative h-[30vh] md:h-[40vh] overflow-hidden">
+      <NeuralBlobNet client:only="react" nodeCount={mappedEntries.length} />
+    </div>
+    <div class="px-5 md:px-16 pt-8 md:pt-16 pb-20 md:pb-32">
+      <TimelineHeader />
+      <TimelineFeed client:only="react" entries={mappedEntries}>
+        <div slot="fallback" class="max-w-[720px] mt-12 md:mt-16">
+          {mappedEntries.map((entry) => (
+            <div class="py-6 border-b border-[rgba(0,0,0,0.04)]" id={entry.id}>
+              <div class="flex items-center gap-3 mb-3">
+                <span class="text-[10px] tracking-[1.5px] uppercase text-[#777777]">
+                  {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+                {entry.type === 'linkedin' && (
+                  <span class="text-[8px] tracking-[1.5px] uppercase text-[#777777] border border-[rgba(0,0,0,0.06)] px-2 py-0.5 rounded-full font-[family-name:var(--font-space-grotesk)]">
+                    LinkedIn
+                  </span>
+                )}
+              </div>
+              <p class="text-[15px] md:text-[16px] text-[#1a1c1b] font-[family-name:var(--font-inter)]" style="line-height: 1.8;">
+                {entry.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </TimelineFeed>
+    </div>
+  </div>
+</SiteLayout>
