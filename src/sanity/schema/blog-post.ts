@@ -31,6 +31,12 @@ export const blogPostType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "dateModified",
+      title: "Date Modified",
+      type: "datetime",
+      description: "Optional. Used for SEO/structured-data \u201ClastUpdated\u201D. Falls back to Published At.",
+    }),
+    defineField({
       name: "readingTime",
       title: "Reading Time",
       type: "string",

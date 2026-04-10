@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { BlobLink } from "@/components/atoms/blob-link";
 import { SocialFlipper } from "@/components/molecules/social-flipper";
@@ -11,6 +9,8 @@ interface NavListProps {
   variant: "header" | "footer";
   hoveredHref?: string | null;
   onHover?: (href: string | null) => void;
+  onNavigate?: (href: string) => void;
+  pathname?: string;
 }
 
 function getNavLinkColor(isHeader: boolean, active: boolean): string {
@@ -20,8 +20,8 @@ function getNavLinkColor(isHeader: boolean, active: boolean): string {
   return active ? "text-[#c6c6c6]" : "text-[#777777] hover:text-[#c6c6c6]";
 }
 
-export const NavList = ({ navItems, variant, hoveredHref = null, onHover }: NavListProps) => {
-  const pathname = usePathname();
+export const NavList = ({ navItems, variant, hoveredHref = null, onHover, onNavigate, pathname: pathnameProp }: NavListProps) => {
+  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -53,15 +53,16 @@ export const NavList = ({ navItems, variant, hoveredHref = null, onHover }: NavL
             size={blobSize}
             visible={showBlob}
           >
-            <Link
+            <a
               href={item.href}
+              onClick={onNavigate ? () => onNavigate(item.href) : undefined}
               className={`${textSize} uppercase no-underline transition-colors duration-300 flex items-center gap-2 py-5 px-3 -mx-3 ${fontFamily} ${getNavLinkColor(
                 isHeader,
                 active || showBlob,
               )}`}
             >
               {item.label}
-            </Link>
+            </a>
           </BlobLink>
         );
       })}

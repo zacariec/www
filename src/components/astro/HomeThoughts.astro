@@ -1,0 +1,83 @@
+---
+import Reveal from './Reveal.astro';
+import type { SanityTimelineEntry } from '@/lib/sanity/types';
+
+interface Props {
+  entries: SanityTimelineEntry[];
+}
+
+const { entries } = Astro.props;
+---
+
+<section class="flex-1 min-w-0">
+  <div class="flex items-baseline justify-between mb-12 md:mb-16">
+    <Reveal variant="text">
+      <h2
+        class="text-[24px] md:text-[28px] tracking-[-1.5px] uppercase text-[#000000] font-[family-name:var(--font-space-grotesk)]"
+        style="font-weight: 700;"
+      >
+        Recent Thoughts
+      </h2>
+    </Reveal>
+    <Reveal>
+      <a
+        class="text-[10px] tracking-[2px] uppercase text-[#777777] hover:text-[#000000] no-underline transition-colors duration-300 flex items-center gap-2 font-[family-name:var(--font-space-grotesk)]"
+        href="/timeline"
+      >
+        All
+        <span aria-hidden="true">→</span>
+      </a>
+    </Reveal>
+  </div>
+
+  <div class="max-w-[720px]">
+    {entries.map((entry, i) => {
+      const isLast = i >= entries.length - 1;
+      const truncated = entry.text.length > 280 ? `${entry.text.slice(0, 280)}...` : entry.text;
+      const lines = truncated.split('\n');
+      return (
+        <Reveal delay={i * 80}>
+          <div class={`py-8 md:py-10 ${!isLast ? 'border-b border-[rgba(0,0,0,0.04)]' : ''}`}>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-[10px] tracking-[1.5px] uppercase text-[#ccc]">
+                {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+              {entry.type === 'linkedin' && (
+                <span class="text-[8px] tracking-[1.5px] uppercase text-[#777777] border border-[rgba(0,0,0,0.06)] px-2 py-0.5 rounded-full font-[family-name:var(--font-space-grotesk)]">
+                  LinkedIn
+                </span>
+              )}
+            </div>
+            <div
+              class="text-[15px] md:text-[16px] text-[#1a1c1b] font-[family-name:var(--font-inter)]"
+              style="line-height: 1.8;"
+            >
+              {lines.map((line, j) => (
+                <span>
+                  {line}
+                  {j < lines.length - 1 && <br />}
+                </span>
+              ))}
+              {entry.text.length > 280 && (
+                <a
+                  class="ml-1 text-[#777777] hover:text-[#000000] transition-colors duration-300 no-underline text-[13px] font-[family-name:var(--font-space-grotesk)]"
+                  href={`/timeline#${entry._id}`}
+                >
+                  Read more
+                </a>
+              )}
+            </div>
+            <div class="flex gap-5 mt-4">
+              <span class="text-[10px] text-[#c6c6c6] font-[family-name:var(--font-space-grotesk)]">
+                {entry.likes}
+              </span>
+              <span class="text-[10px] text-[#c6c6c6] font-[family-name:var(--font-space-grotesk)]">
+                {entry.comments} replies
+              </span>
+            </div>
+          </div>
+        </Reveal>
+      );
+    })}
+  </div>
+</section>

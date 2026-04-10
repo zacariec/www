@@ -1,0 +1,24 @@
+---
+interface Props {
+  /** Delay in ms before the reveal transition starts. */
+  delay?: number;
+  /** Animation variant — fade is opacity+translateY, text is overflow-hidden + slide up, scaleX is for horizontal lines. */
+  variant?: 'fade' | 'text' | 'scaleX';
+  /** HTML tag to render. Defaults to div. */
+  as?: 'div' | 'section' | 'article' | 'span' | 'h1' | 'h2' | 'h3' | 'h4' | 'p';
+  class?: string;
+}
+
+const { delay = 0, variant = 'fade', as: Tag = 'div', class: className = '' } = Astro.props;
+const styleAttr = delay ? `--reveal-delay: ${delay}ms` : undefined;
+const wrapperClass = variant === 'text' ? `overflow-hidden ${className}` : className;
+---
+
+<Tag
+  data-reveal
+  data-reveal-variant={variant}
+  class={wrapperClass}
+  style={styleAttr}
+>
+  <slot />
+</Tag>

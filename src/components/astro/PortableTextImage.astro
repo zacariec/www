@@ -1,0 +1,28 @@
+---
+import { urlFor } from '@/lib/sanity/client';
+
+interface ImageNode {
+  _type: 'image';
+  asset: { _ref: string };
+  alt?: string;
+  caption?: string;
+}
+
+interface Props {
+  node: ImageNode;
+  index: number;
+  isInline: boolean;
+}
+
+const { node } = Astro.props;
+const src = urlFor(node).width(1200).url();
+---
+
+<figure class="my-8 md:my-12">
+  <img alt={node.alt || ''} class="w-full" src={src} loading="lazy" />
+  {node.caption && (
+    <figcaption class="text-[9px] tracking-[1.5px] uppercase text-[#777777] mt-3 font-[family-name:var(--font-space-grotesk)]">
+      {node.caption}
+    </figcaption>
+  )}
+</figure>

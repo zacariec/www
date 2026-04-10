@@ -1,0 +1,210 @@
+---
+import { PortableText } from 'astro-portabletext';
+
+import Reveal from './Reveal.astro';
+import { CommentSection } from '@/components/organisms/comment-section';
+import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
+import type { NewsletterCopy } from '@/components/molecules/newsletter-form';
+import type { SanityBlogPost } from '@/lib/sanity/types';
+
+// Dynamic imports so Vite's esbuild dep-scanner doesn't try to resolve
+// .astro files as JS modules (which causes a noisy "No matching export" warning).
+const PortableTextImage = (await import('./PortableTextImage.astro')).default;
+const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
+
+interface Props {
+  post: SanityBlogPost;
+  newsletterCopy?: NewsletterCopy;
+}
+
+const { post, newsletterCopy } = Astro.props;
+
+const comments = (post.comments || []).map((c, i) => ({
+  id: c._id || String(i),
+  author: c.author,
+  authorImage: c.authorImage,
+  date: c.date,
+  text: c.text,
+  likes: c.likes || 0,
+  parentCommentId: c.parentCommentId,
+}));
+
+const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const ptComponents = {
+  type: { image: PortableTextImage },
+  block: { normal: PortableTextParagraph },
+};
+---
+
+<div class="pb-20 md:pb-32">
+  {/* Featured Image or Neural Net */}
+  <div class="relative h-[30vh] md:h-[40vh] overflow-hidden mb-8">
+    {post.featuredImage?.url ? (
+      <img
+        alt={post.featuredImage.alt || post.title}
+        class="object-cover w-full h-full absolute inset-0"
+        src={post.featuredImage.url}
+        loading="eager"
+      />
+    ) : (
+      <NeuralBlobNet client:only="react" nodeCount={comments.length + 40} />
+    )}
+  </div>
+
+  {/* Header */}
+  <div class="px-5 md:px-16 pt-4 md:pt-8 pb-12 md:pb-16">
+    <Reveal>
+      <a
+        class="text-[10px] tracking-[2px] uppercase text-[#bbb] hover:text-black no-underline transition-colors duration-300 inline-flex items-center gap-2 mb-12 md:mb-16 font-[family-name:var(--font-space-grotesk)]"
+        href="/blog"
+      >
+        <span aria-hidden="true">←</span>
+        Writing
+      </a>
+    </Reveal>
+
+    <div class="max-w-[900px]">
+      <Reveal delay={100}>
+        <p class="text-[10px] tracking-[3px] uppercase text-[#777777] mb-6 md:mb-8 font-[family-name:var(--font-space-grotesk)]">
+          {formattedDate} &mdash; {post.readingTime} read
+        </p>
+      </Reveal>
+      <Reveal variant="text">
+        <h1
+          class="text-[clamp(32px,7vw,72px)] text-[#000000] tracking-[-0.04em] font-[family-name:var(--font-space-grotesk)]"
+          style="font-weight: 700; line-height: 0.95;"
+        >
+          {post.title}
+        </h1>
+      </Reveal>
+      <Reveal delay={300}>
+        <p
+          class="text-[16px] md:text-[18px] text-[#777777] max-w-[500px] mt-6 md:mt-8 font-[family-name:var(--font-inter)]"
+          style="line-height: 1.6; font-weight: 300;"
+        >
+          {post.subtitle}
+        </p>
+      </Reveal>
+    </div>
+  </div>
+
+  {/* Content */}
+  <div class="px-5 md:px-16">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16">
+      {/* Left gutter */}
+      <div class="md:col-span-2 hidden md:block">
+        <Reveal delay={400}>
+          <div class="sticky top-[100px]">
+            <div class="mb-10">
+              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
+                Author
+              </p>
+              <p
+                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
+                style="font-weight: 500;"
+              >
+                ZC
+              </p>
+            </div>
+            <div class="mb-10">
+              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
+                Time
+              </p>
+              <p
+                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
+                style="font-weight: 500;"
+              >
+                {post.readingTime?.toUpperCase()}
+              </p>
+            </div>
+            <div>
+              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
+                Replies
+              </p>
+              <p
+                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
+                style="font-weight: 500;"
+              >
+                {comments.length}
+              </p>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+
+      {/* Main content */}
+      <div class="md:col-span-7">
+        <div class="space-y-8">
+          <PortableText value={post.content} components={ptComponents} />
+        </div>
+      </div>
+
+      {/* Right gutter */}
+      <div class="md:col-span-3 hidden md:block">
+        <Reveal delay={500}>
+          <div class="border-l border-[rgba(0,0,0,0.04)] pl-8">
+            <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-3 font-[family-name:var(--font-space-grotesk)]">
+              Note
+            </p>
+            <p
+              class="text-[12px] text-[#777777] italic font-[family-name:var(--font-inter)]"
+              style="line-height: 1.7;"
+            >
+              {post.sideNote || '\u201CIf you\u2019re still reading, you\u2019re my kind of person.\u201D'}
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </div>
+
+  <CommentSection
+    client:only="react"
+    initialComments={comments}
+    newsletterCopy={newsletterCopy}
+    postSlug={post.slug}
+  >
+    <div slot="fallback" class="px-5 md:px-16 mt-20 md:mt-32">
+      <div class="max-w-[720px] md:ml-[calc(16.666%+32px)]">
+        <div class="h-px bg-[rgba(0,0,0,0.08)] w-full"></div>
+        <div class="pt-12 md:pt-16">
+          <h3
+            class="text-[18px] md:text-[20px] tracking-[-1px] uppercase text-[#000000] mb-10 md:mb-12 font-[family-name:var(--font-space-grotesk)]"
+            style="font-weight: 700;"
+          >
+            Discussion ({comments.length})
+          </h3>
+          <div class="mb-16 py-6">
+            <span class="text-[12px] text-[#777777] font-[family-name:var(--font-inter)]">
+              Sign in to comment
+            </span>
+          </div>
+          {comments.filter((c) => !c.parentCommentId).map((comment) => (
+            <div class="py-6 border-b border-[rgba(0,0,0,0.04)]">
+              <div class="flex items-center gap-3 mb-3">
+                {comment.authorImage && (
+                  <img alt="" class="w-6 h-6 rounded-full" src={comment.authorImage} />
+                )}
+                <span
+                  class="text-[12px] text-[#000000] font-[family-name:var(--font-space-grotesk)]"
+                  style="font-weight: 500;"
+                >
+                  {comment.author}
+                </span>
+                <span class="text-[10px] text-[#c6c6c6]">{comment.date}</span>
+              </div>
+              <p class="text-[14px] text-[#1a1c1b] font-[family-name:var(--font-inter)]" style="line-height: 1.7;">
+                {comment.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </CommentSection>
+</div>

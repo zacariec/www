@@ -11,15 +11,15 @@ const NOW_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-pla
 const RECENTLY_PLAYED_ENDPOINT = "https://api.spotify.com/v1/me/player/recently-played?limit=1";
 
 async function getAccessToken(): Promise<string | null> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+  const clientId = import.meta.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET;
+  const refreshToken = import.meta.env.SPOTIFY_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
   }
 
-  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const basic = btoa(`${clientId}:${clientSecret}`);
 
   const res = await fetch(TOKEN_ENDPOINT, {
     method: "POST",

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import { usePathname } from "next/navigation";
 
 const ENTER_DURATION = 300;
 const HOLD_DURATION = 200;
@@ -14,9 +13,13 @@ function easeInOut(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-export const PageTransition = () => {
+interface PageTransitionProps {
+  pathname?: string;
+}
+
+export const PageTransition = ({ pathname: pathnameProp }: PageTransitionProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pathname = usePathname();
+  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
   const prevPathRef = useRef(pathname);
   const phaseRef = useRef<Phase>("idle");
   const startTimeRef = useRef(0);

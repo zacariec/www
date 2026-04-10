@@ -1,0 +1,39 @@
+---
+import HorizontalLine from './HorizontalLine.astro';
+import PostCard from './PostCard.astro';
+import Reveal from './Reveal.astro';
+
+interface Post {
+  slug: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  readingTime: string;
+  commentCount?: number;
+}
+
+interface Props {
+  posts: Post[];
+  variant?: 'compact' | 'full';
+}
+
+const { posts, variant = 'compact' } = Astro.props;
+---
+
+<div>
+  {posts.map((post, i) => (
+    <Reveal delay={i * 80}>
+      <HorizontalLine />
+      <PostCard
+        commentCount={post.commentCount}
+        date={post.date}
+        readingTime={post.readingTime}
+        slug={post.slug}
+        subtitle={post.subtitle}
+        title={post.title}
+        variant={variant}
+      />
+    </Reveal>
+  ))}
+  <HorizontalLine />
+</div>

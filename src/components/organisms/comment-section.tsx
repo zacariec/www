@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 
-import { SessionProvider } from "next-auth/react";
-
-import { HorizontalLine } from "@/components/atoms/horizontal-line";
 import { CommentCard } from "@/components/molecules/comment-card";
 import { CommentForm } from "@/components/molecules/comment-form";
+import { NewsletterForm, type NewsletterCopy } from "@/components/molecules/newsletter-form";
 import { FadeIn, RevealText } from "@/components/molecules/reveal-text";
+import { useSession } from "@/lib/auth/client";
 
 interface Comment {
   id: string;
@@ -22,11 +21,18 @@ interface Comment {
 interface CommentSectionProps {
   initialComments: Comment[];
   postSlug: string;
+  newsletterCopy?: NewsletterCopy;
 }
 
-export const CommentSection = ({ initialComments, postSlug }: CommentSectionProps) => {
+export const CommentSection = ({
+  initialComments,
+  postSlug,
+  newsletterCopy,
+}: CommentSectionProps) => {
   const [comments, setComments] = useState(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const { data: sessionData, isPending } = useSession();
+  const session = isPending ? undefined : sessionData ?? null;
 
   const handleSubmit = async (
     author: string,
@@ -61,10 +67,14 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
   const getReplies = (parentId: string) => comments.filter((c) => c.parentCommentId === parentId);
 
   return (
-    <SessionProvider>
-      <div className="px-5 md:px-16 mt-20 md:mt-32">
+    <div className="px-5 md:px-16 mt-20 md:mt-32">
         <div className="max-w-[720px] md:ml-[calc(16.666%+32px)]">
-          <HorizontalLine />
+          <FadeIn>
+            <div className="mb-16 md:mb-20">
+              <NewsletterForm copy={newsletterCopy} variant="inline" />
+            </div>
+          </FadeIn>
+          <div className="h-px bg-[rgba(0,0,0,0.08)] w-full" />
           <div className="pt-12 md:pt-16">
             <RevealText>
               <h3
@@ -76,7 +86,7 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
             </RevealText>
 
             <FadeIn>
-              <CommentForm onSubmit={handleSubmit} />
+              <CommentForm onSubmit={handleSubmit} session={session} />
             </FadeIn>
 
             <div>
@@ -111,6 +121,7 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
                     <div className="ml-8 border-l-2 border-[rgba(0,0,0,0.04)] pl-6 pb-4">
                       <CommentForm
                         placeholder="Write a reply..."
+                        session={session}
                         onSubmit={async (author, text, authorImage) =>
                           handleSubmit(author, text, authorImage, comment.id)
                         }
@@ -129,7 +140,6 @@ export const CommentSection = ({ initialComments, postSlug }: CommentSectionProp
             </div>
           </div>
         </div>
-      </div>
-    </SessionProvider>
+    </div>
   );
 };

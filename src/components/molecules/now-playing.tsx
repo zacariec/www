@@ -60,8 +60,6 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
     };
   }, []);
 
-  if (!data?.title) return null;
-
   const isHeader = variant === "header";
   const iconColor = isHeader ? "#777777" : "#555";
   const textColor = isHeader ? "text-[#c6c6c6]" : "text-[#777777]";
@@ -70,7 +68,7 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
 
   return (
     <div
-      className="flex items-center gap-2 transition-all duration-500"
+      className={`flex items-center gap-2 transition-all duration-500 min-w-[14px] min-h-[14px] ${!data?.title ? "opacity-0" : "opacity-100"}`}
       onBlur={() => setExpanded(false)}
       onFocus={() => setExpanded(true)}
       onMouseEnter={() => setExpanded(true)}
@@ -85,30 +83,32 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
           expanded ? "max-w-[220px] opacity-100" : "max-w-0 opacity-0"
         }`}
       >
-        {data.albumArt ? (
+        {data?.albumArt ? (
           <img alt="" className="w-3.5 h-3.5 rounded-sm opacity-60 shrink-0" src={data.albumArt} />
         ) : null}
-        <ScrollingText>
-          {data.songUrl ? (
-            <a
-              className={`text-[9px] tracking-[1px] ${textColor} ${hoverColor} no-underline transition-colors duration-300 font-[family-name:var(--font-space-grotesk)]`}
-              href={data.songUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              {data.title}
-            </a>
-          ) : (
-            <span
-              className={`text-[9px] tracking-[1px] ${textColor} font-[family-name:var(--font-space-grotesk)]`}
-            >
-              {data.title}
+        {data?.title ? (
+          <ScrollingText>
+            {data.songUrl ? (
+              <a
+                className={`text-[9px] tracking-[1px] ${textColor} ${hoverColor} no-underline transition-colors duration-300 font-[family-name:var(--font-space-grotesk)]`}
+                href={data.songUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {data.title}
+              </a>
+            ) : (
+              <span
+                className={`text-[9px] tracking-[1px] ${textColor} font-[family-name:var(--font-space-grotesk)]`}
+              >
+                {data.title}
+              </span>
+            )}
+            <span className={`text-[8px] ${artistColor} font-[family-name:var(--font-inter)] ml-1`}>
+              — {data.artist}
             </span>
-          )}
-          <span className={`text-[8px] ${artistColor} font-[family-name:var(--font-inter)] ml-1`}>
-            — {data.artist}
-          </span>
-        </ScrollingText>
+          </ScrollingText>
+        ) : null}
       </div>
     </div>
   );

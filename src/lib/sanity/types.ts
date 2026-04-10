@@ -5,6 +5,7 @@ export interface SanityBlogPost {
   slug: string;
   subtitle: string;
   date: string;
+  dateModified?: string;
   readingTime: string;
   excerpt: string;
   content: PortableTextBlock[];
@@ -28,6 +29,20 @@ export interface SanityComment {
   parentCommentId?: string;
 }
 
+export interface SanityNewsletterCopy {
+  footerHeading?: string;
+  footerDescription?: string;
+  inlineHeading?: string;
+  inlineDescription?: string;
+  buttonLabel?: string;
+  placeholder?: string;
+  successMessage?: string;
+  alreadySubscribedMessage?: string;
+  unsubscribeLabel?: string;
+  unsubscribeConfirmedMessage?: string;
+  errorMessage?: string;
+}
+
 export interface SanitySiteConfig {
   navItems: { label: string; href: string }[];
   heroSubtitle: string;
@@ -37,6 +52,7 @@ export interface SanitySiteConfig {
   marqueeText: string;
   footerHeading: string;
   footerSubtitle: string;
+  newsletter?: SanityNewsletterCopy;
   siteName: string;
   siteDescription: string;
   siteUrl?: string;
@@ -45,6 +61,7 @@ export interface SanitySiteConfig {
   linkedIn?: string;
   github?: string;
   twitter?: string;
+  twitterHandle?: string;
   timezone?: string;
 }
 

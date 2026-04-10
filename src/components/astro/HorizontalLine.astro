@@ -1,0 +1,11 @@
+---
+import Reveal from './Reveal.astro';
+
+interface Props {
+  delay?: number;
+}
+
+const { delay = 0 } = Astro.props;
+---
+
+<Reveal variant="scaleX" delay={delay} class="h-px bg-[rgba(0,0,0,0.08)] w-full" />

@@ -1,4 +1,4 @@
-import { groq } from "next-sanity";
+const groq = (strings: TemplateStringsArray, ...values: unknown[]) => String.raw(strings, ...values);
 
 export const allPostsQuery = groq`
   *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) {
@@ -18,6 +18,7 @@ export const postBySlugQuery = groq`
     "slug": slug.current,
     subtitle,
     "date": publishedAt,
+    "dateModified": coalesce(dateModified, publishedAt),
     readingTime,
     excerpt,
     content,
@@ -84,6 +85,19 @@ export const siteConfigQuery = groq`
     marqueeText,
     footerHeading,
     footerSubtitle,
+    newsletter {
+      footerHeading,
+      footerDescription,
+      inlineHeading,
+      inlineDescription,
+      buttonLabel,
+      placeholder,
+      successMessage,
+      alreadySubscribedMessage,
+      unsubscribeLabel,
+      unsubscribeConfirmedMessage,
+      errorMessage
+    },
     siteName,
     siteDescription,
     siteUrl,
@@ -92,6 +106,7 @@ export const siteConfigQuery = groq`
     linkedIn,
     github,
     twitter,
+    twitterHandle,
     timezone
   }
 `;

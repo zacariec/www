@@ -9,12 +9,56 @@ const DETACH_VELOCITY = 6;
 const BASE_RADIUS = 7;
 const BLOB_POINTS = 16;
 const CANVAS_SIZE = 120;
+const SPLAT_GRAVITY = 0.15;
+const SPLAT_FRICTION = 0.98;
+const SPLAT_LIFETIME = 60; // frames
+const MAGNET_SPIT_INTERVAL = 4; // spawn every N frames while attached
+
+interface SplatParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  life: number;
+  seed: number;
+  noGravity?: boolean; // magnet particles float instead of fall
+}
+
+function blobParticlePath(cx: number, cy: number, radius: number, seed: number): string {
+  const points = 8;
+  const step = (Math.PI * 2) / points;
+  const coords: [number, number][] = [];
+  for (let i = 0; i < points; i++) {
+    const angle = step * i;
+    const wobble = Math.sin(seed * 3 + i * 1.5) * radius * 0.25 +
+      Math.cos(seed * 2 + i * 2.3) * radius * 0.15;
+    const r = radius + wobble;
+    coords.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+  }
+  let d = `M ${coords[0][0]} ${coords[0][1]} `;
+  for (let i = 0; i < points; i++) {
+    const curr = coords[i];
+    const next = coords[(i + 1) % points];
+    const prev = coords[(i - 1 + points) % points];
+    const nextNext = coords[(i + 2) % points];
+    const tension = 2.0;
+    d += `C ${curr[0] + (next[0] - prev[0]) / tension} ${curr[1] + (next[1] - prev[1]) / tension}, `;
+    d += `${next[0] - (nextNext[0] - curr[0]) / tension} ${next[1] - (nextNext[1] - curr[1]) / tension}, `;
+    d += `${next[0]} ${next[1]} `;
+  }
+  d += "Z";
+  return d;
+}
 
 export const BlobCursor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const splatCanvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const seedRef = useRef(0);
   const prevMouseRef = useRef({ x: -100, y: -100 });
+  const splatParticlesRef = useRef<SplatParticle[]>([]);
+  const magnetFrameRef = useRef(0);
   const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
@@ -130,6 +174,56 @@ export const BlobCursor = () => {
         blobState.pullOffsetY *= 0.8;
       }
 
+      // Magnet spit particles — spawn between cursor and target while attached
+      if (blobState.attachedTo && nearestLogo?.id === blobState.attachedTo && blobState.mergeAmount > 0.1) {
+        magnetFrameRef.current++;
+        if (magnetFrameRef.current % MAGNET_SPIT_INTERVAL === 0) {
+          const curX = blobState.cursorX + blobState.pullOffsetX;
+          const curY = blobState.cursorY + blobState.pullOffsetY;
+          const tarX = nearestLogo.cx;
+          const tarY = nearestLogo.cy;
+          const midX = (curX + tarX) / 2;
+          const midY = (curY + tarY) / 2;
+          const dx = tarX - curX;
+          const dy = tarY - curY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 5) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+            // Particle from cursor toward target
+            const spread = 0.8;
+            const perpX = -ny * (Math.random() - 0.5) * spread;
+            const perpY = nx * (Math.random() - 0.5) * spread;
+            const spd = 0.8 + Math.random() * 1.5;
+            splatParticlesRef.current.push({
+              x: curX + nx * 5 + perpX * 4,
+              y: curY + ny * 5 + perpY * 4,
+              vx: nx * spd + perpX,
+              vy: ny * spd + perpY,
+              radius: 0.8 + Math.random() * 1.2,
+              life: 20 + Math.floor(Math.random() * 15),
+              seed: Math.random() * 100,
+              noGravity: true,
+            });
+            // Particle from target toward cursor
+            if (Math.random() > 0.4) {
+              splatParticlesRef.current.push({
+                x: tarX - nx * 5 + perpX * 4,
+                y: tarY - ny * 5 + perpY * 4,
+                vx: -nx * spd * 0.7 + perpX,
+                vy: -ny * spd * 0.7 + perpY,
+                radius: 0.6 + Math.random() * 1.0,
+                life: 15 + Math.floor(Math.random() * 10),
+                seed: Math.random() * 100,
+                noGravity: true,
+              });
+            }
+          }
+        }
+      } else {
+        magnetFrameRef.current = 0;
+      }
+
       // Smooth cursor position when free
       if (!blobState.attachedTo) {
         const lerp = 0.18;
@@ -231,10 +325,75 @@ export const BlobCursor = () => {
 
       ctx.restore();
 
+      // Draw splat particles on the full-screen canvas
+      const splatCanvas = splatCanvasRef.current;
+      if (splatCanvas) {
+        const sctx = splatCanvas.getContext("2d");
+        if (sctx) {
+          const sw = window.innerWidth;
+          const sh = window.innerHeight;
+          const sdpr = window.devicePixelRatio || 1;
+          if (splatCanvas.width !== sw * sdpr || splatCanvas.height !== sh * sdpr) {
+            splatCanvas.width = sw * sdpr;
+            splatCanvas.height = sh * sdpr;
+            splatCanvas.style.width = `${sw}px`;
+            splatCanvas.style.height = `${sh}px`;
+          }
+          sctx.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+          sctx.clearRect(0, 0, sw, sh);
+
+          const particles = splatParticlesRef.current;
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            if (!p.noGravity) p.vy += SPLAT_GRAVITY;
+            p.vx *= p.noGravity ? 0.94 : SPLAT_FRICTION;
+            p.vy *= p.noGravity ? 0.94 : SPLAT_FRICTION;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            p.seed += 0.05;
+
+            if (p.life <= 0) {
+              particles.splice(i, 1);
+              continue;
+            }
+
+            const alpha = Math.min(p.life / 20, 1) * 0.8;
+            const shrink = Math.min(p.life / 15, 1);
+            const r = p.radius * shrink;
+            const rgb = blobState.inFooter ? "119, 119, 119" : "0, 0, 0";
+
+            sctx.save();
+            const path = new Path2D(blobParticlePath(p.x, p.y, r, p.seed));
+            sctx.fillStyle = `rgba(${rgb}, ${alpha})`;
+            sctx.fill(path);
+            sctx.restore();
+          }
+        }
+      }
+
       frameRef.current = requestAnimationFrame(animate);
     };
 
+    const spawnSplat = () => {
+      const count = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 3;
+        splatParticlesRef.current.push({
+          x: blobState.cursorX + blobState.pullOffsetX,
+          y: blobState.cursorY + blobState.pullOffsetY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.5,
+          radius: 1.5 + Math.random() * 2.5,
+          life: SPLAT_LIFETIME,
+          seed: Math.random() * 100,
+        });
+      }
+    };
+
     const onClick = () => {
+      spawnSplat();
       if (blobState.attachedTo) {
         const target = blobState.logos.find((l) => l.id === blobState.attachedTo);
         if (target) {
@@ -261,11 +420,17 @@ export const BlobCursor = () => {
   if (isTouch) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed top-0 left-0 z-[9999] pointer-events-none"
-      height={CANVAS_SIZE}
-      width={CANVAS_SIZE}
-    />
+    <>
+      <canvas
+        ref={splatCanvasRef}
+        className="fixed inset-0 z-[9999] pointer-events-none"
+      />
+      <canvas
+        ref={canvasRef}
+        className="fixed top-0 left-0 z-[9999] pointer-events-none"
+        height={CANVAS_SIZE}
+        width={CANVAS_SIZE}
+      />
+    </>
   );
 };

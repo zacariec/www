@@ -1,0 +1,115 @@
+---
+import { type NewsletterCopy, withNewsletterDefaults } from '@/lib/newsletter/defaults';
+
+interface Props {
+  navItems?: { label: string; href: string }[];
+  heading?: string;
+  subtitle?: string;
+  pathname?: string;
+  newsletterCopy?: NewsletterCopy;
+}
+
+const {
+  navItems = [
+    { label: 'Index', href: '/' },
+    { label: 'Writing', href: '/blog' },
+    { label: 'Timeline', href: '/timeline' },
+  ],
+  heading = 'Thanks for\nreading.',
+  subtitle = '\u2014 End',
+  pathname = '/',
+  newsletterCopy,
+} = Astro.props;
+
+const nl = withNewsletterDefaults(newsletterCopy);
+const headingLines = heading.split('\n');
+const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+const year = new Date().getFullYear();
+---
+
+<footer class="min-h-screen bg-[#1a1c1b] text-[#f9f9f7] flex flex-col justify-between relative">
+  <div class="w-full px-5 md:px-16 py-8">
+    <div class="flex items-center justify-between">
+      <span class="text-[10px] tracking-[3px] uppercase text-[#777777] font-[family-name:var(--font-space-grotesk)]">
+        Back to top
+      </span>
+      <span class="text-[#777777] text-lg" aria-hidden="true">↑</span>
+    </div>
+  </div>
+
+  <div class="flex-1 flex items-end px-5 md:px-16 pb-16">
+    <div class="w-full flex flex-col md:flex-row md:items-end md:justify-between gap-12">
+      <div>
+        <p class="text-[10px] tracking-[3px] uppercase text-[#777777] mb-6 font-[family-name:var(--font-space-grotesk)]">
+          {subtitle}
+        </p>
+        <h2
+          class="text-[clamp(28px,6vw,64px)] tracking-[-0.03em] text-[#3b3b3b]"
+          style="font-weight: 700; line-height: 1.1;"
+        >
+          {headingLines.map((line, i) => (
+            <span>
+              {line}
+              {i < headingLines.length - 1 && <br />}
+            </span>
+          ))}
+        </h2>
+      </div>
+      {/* Newsletter form skeleton — works without JS */}
+      <div class="max-w-[420px]">
+        <p class="text-[10px] tracking-[3px] uppercase text-[#777777] mb-4 font-[family-name:var(--font-space-grotesk)]">
+          {nl.heading}
+        </p>
+        <p class="text-[13px] text-[#c6c6c6] mb-5 font-[family-name:var(--font-inter)] leading-[1.6]">
+          {nl.description}
+        </p>
+        <form class="flex items-end gap-3" action="/api/newsletter/subscribe" method="post">
+          <div class="flex-1">
+            <input
+              aria-label="Email address"
+              class="w-full bg-transparent border-b border-[rgba(249,249,247,0.2)] py-2 text-[13px] text-[#f9f9f7] placeholder-[#777777] focus:outline-none focus:border-[#f9f9f7] transition-colors duration-500 font-[family-name:var(--font-inter)]"
+              name="email"
+              placeholder={nl.placeholder}
+              required
+              type="email"
+            />
+          </div>
+          <button
+            class="text-[10px] tracking-[2px] uppercase bg-[#f9f9f7] text-[#1a1c1b] px-5 py-2.5 border-none cursor-pointer font-[family-name:var(--font-space-grotesk)]"
+            type="submit"
+          >
+            {nl.buttonLabel}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div data-footer-nav class="px-5 md:px-16 py-6 pb-[calc(env(safe-area-inset-bottom)+72px)] md:pb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex items-center gap-3">
+        <span
+          class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#3b3b3b] text-[#c6c6c6]"
+          style="font-size: 6px; font-weight: 700;"
+        >
+          ZC
+        </span>
+        <span class="text-[9px] tracking-[2px] uppercase text-[#777777] font-[family-name:var(--font-space-grotesk)]">
+          &copy; {year}
+        </span>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        {navItems.map((item) => (
+          <a
+            href={item.href}
+            class={`text-[9px] tracking-[2px] uppercase no-underline transition-colors duration-300 font-[family-name:var(--font-space-grotesk)] ${
+              isActive(item.href) ? 'text-[#c6c6c6]' : 'text-[#777777] hover:text-[#c6c6c6]'
+            }`}
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</footer>

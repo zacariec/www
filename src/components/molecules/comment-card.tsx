@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Heart, MessageCircle } from "lucide-react";
-import Image from "next/image";
 
 interface CommentCardProps {
   id: string;
@@ -54,7 +53,7 @@ export const CommentCard = ({
     >
       <div className="flex items-center gap-3 mb-2">
         {authorImage ? (
-          <Image alt="" className="rounded-full" height={20} src={authorImage} width={20} />
+          <img alt="" className="rounded-full" height={20} src={authorImage} width={20} />
         ) : null}
         <span
           className="text-[12px] text-[#000000] font-[family-name:var(--font-space-grotesk)]"

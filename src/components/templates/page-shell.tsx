@@ -1,10 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { usePathname } from "next/navigation";
+interface PageShellProps {
+  children: React.ReactNode;
+  pathname?: string;
+}
 
-export const PageShell = ({ children }: { children: React.ReactNode }) => {
-  const pathname = usePathname();
+export const PageShell = ({ children, pathname: pathnameProp }: PageShellProps) => {
+  const pathname = pathnameProp || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
   return (
     <AnimatePresence mode="wait">

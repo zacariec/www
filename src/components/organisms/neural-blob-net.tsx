@@ -195,5 +195,9 @@ export const NeuralBlobNet = ({ nodeCount = DEFAULT_NODE_COUNT }: NeuralBlobNetP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
+  return (
+    <div className="absolute inset-0 w-full h-full">
+      <canvas ref={canvasRef} className="w-full h-full" />
+    </div>
+  );
 };

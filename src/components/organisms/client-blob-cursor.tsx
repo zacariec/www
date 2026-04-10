@@ -1,10 +1,13 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazy, Suspense } from "react";
 
-const BlobCursor = dynamic(
-  async () => import("@/components/organisms/blob-cursor").then((m) => m.BlobCursor),
-  { ssr: false },
+const BlobCursor = lazy(() =>
+  import("@/components/organisms/blob-cursor").then((m) => ({ default: m.BlobCursor })),
 );
 
-export const ClientBlobCursor = () => <BlobCursor />;
+export const ClientBlobCursor = () => (
+  <Suspense fallback={null}>
+    <BlobCursor />
+  </Suspense>
+);

@@ -3,26 +3,25 @@
 import { useState } from "react";
 
 import { motion } from "motion/react";
-import { useSession } from "next-auth/react";
-
 import { AuthButton } from "@/components/molecules/auth-button";
 
 interface CommentFormProps {
   onSubmit: (author: string, text: string, authorImage?: string) => void;
   placeholder?: string;
+  session?: { user?: { name?: string | null; email?: string | null; image?: string | null } } | null;
 }
 
 export const CommentForm = ({
   onSubmit,
   placeholder = "Share your thoughts...",
+  session,
 }: CommentFormProps) => {
-  const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
 
   if (!session?.user) {
     return (
       <div className="mb-16 py-6">
-        <AuthButton />
+        <AuthButton session={session} />
       </div>
     );
   }
@@ -37,7 +36,7 @@ export const CommentForm = ({
   return (
     <form className="mb-16" onSubmit={handleSubmit}>
       <div className="flex items-center gap-3 mb-4">
-        <AuthButton />
+        <AuthButton session={session} />
       </div>
       <textarea
         className="w-full border-b border-[rgba(0,0,0,0.08)] bg-transparent py-3 text-[13px] text-[#000000] placeholder-[#c6c6c6] focus:outline-none focus:border-[#000000] transition-colors duration-500 resize-none font-[family-name:var(--font-inter)]"
