@@ -35,6 +35,19 @@ jobs:
           PUBLIC_SANITY_DATASET: production
           PUBLIC_SANITY_API_VERSION: "2026-03-26"
 
+      - name: Patch DO migration into deploy config
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = 'dist/server/wrangler.json';
+            const c = JSON.parse(fs.readFileSync(p, 'utf8'));
+            c.migrations = [
+              { tag: 'v1', new_classes: ['NextApp'] },
+              { tag: 'v2', deleted_classes: ['NextApp'] }
+            ];
+            fs.writeFileSync(p, JSON.stringify(c));
+          "
+
       - name: Deploy to Cloudflare
         run: bunx wrangler@latest deploy
         env:
