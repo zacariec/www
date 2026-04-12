@@ -48,12 +48,6 @@ jobs:
             fs.writeFileSync(p, JSON.stringify(c));
           "
 
-      - name: Apply D1 migrations
-        run: bunx wrangler@latest d1 migrations apply zcarr-auth --remote
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
       - name: Deploy to Cloudflare
         run: bunx wrangler@latest deploy
         env:
