@@ -27,9 +27,7 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
 
   // Shared state across all NewsletterForm islands
   const status = useStore($newsletterStatus);
-  const submittedEmail = useStore($subscribedEmail);
   const setStatus = (s: NewsletterStatus) => $newsletterStatus.set(s);
-  const setSubmittedEmail = (e: string) => $subscribedEmail.set(e);
 
   // If the user is logged in, pre-fill their email and check subscription status
   useEffect(() => {
@@ -48,17 +46,6 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
         /* silent */
       });
   }, [session?.user?.email]);
-
-  // Auto-reset from "unsubscribed" state after a delay
-  useEffect(() => {
-    if (status !== "unsubscribed") return;
-    const timer = setTimeout(() => {
-      setStatus("idle");
-      setSubmittedEmail("");
-      setEmail("");
-    }, 7000);
-    return () => clearTimeout(timer);
-  }, [status]);
 
   const isInline = variant === "inline";
 
@@ -98,7 +85,7 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
       });
       if (!res.ok) throw new Error("failed");
       const data = await res.json();
-      setSubmittedEmail(email);
+      $subscribedEmail.set(email);
       setStatus(data.status === "already" ? "already" : "success");
       setEmail("");
     } catch {
@@ -106,27 +93,7 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
     }
   };
 
-  const handleUnsubscribe = async () => {
-    if (!submittedEmail || status === "unsubscribing") return;
-    setStatus("unsubscribing");
-    try {
-      const res = await fetch("/api/newsletter/unsubscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: submittedEmail }),
-      });
-      if (!res.ok) throw new Error("failed");
-      setStatus("unsubscribed");
-    } catch {
-      setStatus("error");
-    }
-  };
-
-  const isResolved =
-    status === "success" ||
-    status === "already" ||
-    status === "unsubscribing" ||
-    status === "unsubscribed";
+  const isResolved = status === "success" || status === "already";
 
   return (
     <div className="max-w-[420px]">
@@ -134,24 +101,18 @@ export const NewsletterForm = ({ variant = "footer", copy }: NewsletterFormProps
       <p className={descriptionClass}>{c.description}</p>
       {isResolved ? (
         <div>
-          {status === "unsubscribing" && <p className={messageClass}>...</p>}
           {status === "already" && (
             <p className={messageClass}>
               {c.alreadySubscribedMessage}{" "}
-              <button
-                className={`${isInline ? "text-[#c6c6c6] hover:text-[#777777]" : "text-[#777777] hover:text-[#c6c6c6]"} bg-transparent border-none cursor-pointer p-0 font-[family-name:var(--font-inter)] text-[inherit] underline underline-offset-4 transition-colors duration-300`}
-                onClick={handleUnsubscribe}
-                type="button"
+              <a
+                className={`${isInline ? "text-[#c6c6c6] hover:text-[#777777]" : "text-[#777777] hover:text-[#c6c6c6]"} font-[family-name:var(--font-inter)] text-[inherit] underline underline-offset-4 transition-colors duration-300`}
+                href="/preferences"
               >
-                {c.unsubscribeLabel}
-              </button>
+                Manage preferences
+              </a>
             </p>
           )}
-          {(status === "success" || status === "unsubscribed") && (
-            <p className={messageClass}>
-              {status === "unsubscribed" ? c.unsubscribeConfirmedMessage : c.successMessage}
-            </p>
-          )}
+          {status === "success" && <p className={messageClass}>{c.successMessage}</p>}
         </div>
       ) : (
         <form className="flex items-end gap-3" onSubmit={handleSubmit}>

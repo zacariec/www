@@ -1,10 +1,12 @@
 import { render } from "@react-email/render";
 
+import { buildSignedUnsubscribeUrl } from "./hmac";
 import NewPostNotificationEmail from "../../../emails/NewPostNotification";
 import SubscriptionConfirmedEmail from "../../../emails/SubscriptionConfirmed";
 import UnsubscribeConfirmationEmail from "../../../emails/UnsubscribeConfirmation";
 
 interface MailEnv {
+  AUTH_SECRET?: string;
   RESEND_API_KEY?: string;
   RESEND_AUDIENCE_ID?: string;
   RESEND_FROM_EMAIL?: string;
@@ -56,10 +58,9 @@ async function postEmail(
   }
 }
 
-function listUnsubscribeHeaders(email: string, env: MailEnv): Record<string, string> | undefined {
-  if (!env.RESEND_AUDIENCE_ID) return undefined;
+function listUnsubscribeHeaders(unsubscribeUrl: string): Record<string, string> {
   return {
-    "List-Unsubscribe": `<mailto:unsubscribe@mail.zcarr.dev?subject=unsubscribe>, <https://react.email>`,
+    "List-Unsubscribe": `<${unsubscribeUrl}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
 }
@@ -70,7 +71,7 @@ export async function sendSubscriptionConfirmed(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const siteUrl = getSiteUrl(env);
-    const unsubscribeUrl = `${siteUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const unsubscribeUrl = await buildSignedUnsubscribeUrl(email, siteUrl, env.AUTH_SECRET ?? "");
     console.log("[email] rendering SubscriptionConfirmed for", email);
     const html = await render(SubscriptionConfirmedEmail({ unsubscribeUrl }));
     const text = await render(SubscriptionConfirmedEmail({ unsubscribeUrl }), { plainText: true });
@@ -80,7 +81,7 @@ export async function sendSubscriptionConfirmed(
       subject: "Welcome to the list",
       html,
       text,
-      headers: listUnsubscribeHeaders(email, env),
+      headers: listUnsubscribeHeaders(unsubscribeUrl),
     });
     console.log("[email] send result:", result.ok ? "OK" : result.error);
     return result;
@@ -133,7 +134,7 @@ export async function sendNewPostNotification(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const siteUrl = getSiteUrl(env);
-    const unsubscribeUrl = `${siteUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const unsubscribeUrl = await buildSignedUnsubscribeUrl(email, siteUrl, env.AUTH_SECRET ?? "");
     const props = {
       postTitle: post.title,
       postSubtitle: post.subtitle,
@@ -156,7 +157,7 @@ export async function sendNewPostNotification(
       subject: `New: ${post.title}`,
       html,
       text,
-      headers: listUnsubscribeHeaders(email, env),
+      headers: listUnsubscribeHeaders(unsubscribeUrl),
     });
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "render failed" };

@@ -1,15 +1,11 @@
 import { env } from "cloudflare:workers";
-import { z } from "zod";
 
+import { getAuth } from "@/lib/auth/auth";
 import { sendUnsubscribeConfirmation } from "@/lib/newsletter/send";
 
 import type { APIRoute } from "astro";
 
 export const prerender = false;
-
-const unsubscribeSchema = z.object({
-  email: z.string().email().max(254),
-});
 
 async function removeFromResendAudience(
   apiKey: string,
@@ -30,42 +26,47 @@ async function removeFromResendAudience(
   }
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const parsed = unsubscribeSchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json({ error: "Invalid email" }, { status: 400 });
-  }
-
-  const email = parsed.data.email.toLowerCase();
-
+export async function performUnsubscribe(
+  email: string,
+  ctx?: ExecutionContext,
+): Promise<{ ok: boolean; error?: string }> {
   try {
     await env.DB.prepare(`UPDATE subscriber SET status = 'unsubscribed' WHERE email = ?`)
       .bind(email)
       .run();
   } catch {
-    return Response.json({ error: "Failed to update" }, { status: 500 });
+    return { ok: false, error: "Failed to update" };
   }
 
   if (env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID) {
     await removeFromResendAudience(env.RESEND_API_KEY, env.RESEND_AUDIENCE_ID, email);
   }
 
-  // Best-effort confirmation email — use waitUntil so workerd doesn't kill
-  // the isolate before the async render + Resend POST finishes.
   const emailPromise = sendUnsubscribeConfirmation(email, env)
     .then((result) => {
       if (!result.ok) console.error("Unsubscribe email failed:", result.error);
     })
     .catch((err) => console.error("Unsubscribe email threw:", err));
   if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
+
+  return { ok: true };
+}
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
+
+  const auth = getAuth(env);
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user?.email) {
+    return Response.json({ error: "Sign in to manage preferences" }, { status: 401 });
+  }
+
+  const email = session.user.email.toLowerCase();
+  const result = await performUnsubscribe(email, ctx);
+
+  if (!result.ok) {
+    return Response.json({ error: result.error }, { status: 500 });
+  }
 
   return Response.json({ success: true });
 };

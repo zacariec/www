@@ -1,0 +1,52 @@
+---
+export const prerender = false;
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const success = Astro.url.searchParams.get('success') === 'true';
+const error = Astro.url.searchParams.get('error');
+---
+
+<SiteLayout title="Unsubscribe">
+  <div class="min-h-[70vh] px-6 md:px-12 py-20 md:py-32 max-w-[640px] mx-auto">
+    <a
+      href="/"
+      class="inline-flex items-center gap-1.5 text-[10px] tracking-[2px] uppercase text-[#777777] hover:text-[#000000] transition-colors duration-500 mb-16 font-[family-name:var(--font-space-grotesk)] font-semibold"
+    >
+      &larr; Home
+    </a>
+
+    {success ? (
+      <div>
+        <h1 class="text-[12px] tracking-[2px] uppercase text-[#000000] mb-3 font-[family-name:var(--font-space-grotesk)] font-semibold">
+          Done
+        </h1>
+        <p class="text-[14px] text-[#777777] font-[family-name:var(--font-inter)] leading-[1.7] mb-8">
+          You&apos;ve been unsubscribed. No more emails.
+        </p>
+        <a
+          href="/preferences"
+          class="text-[10px] tracking-[2px] uppercase text-[#000000] font-[family-name:var(--font-space-grotesk)] font-semibold border-b-2 border-[#000000] pb-1 hover:text-[#777777] hover:border-[#777777] transition-colors duration-300"
+        >
+          Manage preferences &rarr;
+        </a>
+      </div>
+    ) : (
+      <div>
+        <h1 class="text-[12px] tracking-[2px] uppercase text-[#000000] mb-3 font-[family-name:var(--font-space-grotesk)] font-semibold">
+          {error === 'expired' ? 'Link expired' : 'Unable to unsubscribe'}
+        </h1>
+        <p class="text-[14px] text-[#777777] font-[family-name:var(--font-inter)] leading-[1.7] mb-8">
+          {error === 'expired'
+            ? 'This unsubscribe link has expired. Sign in to manage your preferences.'
+            : 'Something went wrong. Sign in to manage your preferences directly.'}
+        </p>
+        <a
+          href="/preferences"
+          class="text-[10px] tracking-[2px] uppercase text-[#000000] font-[family-name:var(--font-space-grotesk)] font-semibold border-b-2 border-[#000000] pb-1 hover:text-[#777777] hover:border-[#777777] transition-colors duration-300"
+        >
+          Manage preferences &rarr;
+        </a>
+      </div>
+    )}
+  </div>
+</SiteLayout>

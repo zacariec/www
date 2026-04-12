@@ -15,6 +15,11 @@ const subscribeSchema = z.object({
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
+
+  if (!env.RESEND_AUDIENCE_ID) {
+    console.warn("[newsletter] RESEND_AUDIENCE_ID not set — skipping Resend sync");
+  }
+
   let body: unknown;
   try {
     body = await request.json();

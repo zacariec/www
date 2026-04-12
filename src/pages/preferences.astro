@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { PreferencesPanel } from '@/components/organisms/preferences-panel';
+---
+
+<SiteLayout title="Preferences">
+  <PreferencesPanel client:only="react" />
+</SiteLayout>
