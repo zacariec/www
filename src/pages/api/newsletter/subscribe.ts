@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { addToResendAudience, getResendContact } from "@/lib/newsletter/resend";
 import { sendSubscriptionConfirmed } from "@/lib/newsletter/send";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 import type { APIRoute } from "astro";
 
@@ -15,6 +16,12 @@ const subscribeSchema = z.object({
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
+  const ip =
+    request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
+  const allowed = await checkRateLimit(env.DB, `subscribe:${ip}`, 3, 60_000);
+  if (!allowed) {
+    return Response.json({ error: "Too many requests, try again later" }, { status: 429 });
+  }
 
   if (!env.RESEND_AUDIENCE_ID) {
     console.warn("[newsletter] RESEND_AUDIENCE_ID not set — skipping Resend sync");

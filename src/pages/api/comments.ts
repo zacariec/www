@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { ZodError } from "zod";
 
 import { getAuth } from "@/lib/auth/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { commentRequestSchema, sanityPostRefSchema } from "@/lib/schemas/comment";
 import { apiVersion, dataset, projectId } from "@/sanity/env";
 
@@ -59,6 +60,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!session?.user) {
       return new Response(JSON.stringify({ error: "Sign in to comment" }), {
         status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const allowed = await checkRateLimit(env.DB, `comment:${session.user.email}`, 5, 60_000);
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Too many comments, slow down" }), {
+        status: 429,
         headers: { "Content-Type": "application/json" },
       });
     }
