@@ -21,7 +21,38 @@ function getWriteClient() {
   });
 }
 
-export const POST: APIRoute = async ({ request }) => {
+async function notifyNewComment(
+  author: string,
+  text: string,
+  postSlug: string,
+  isReply: boolean,
+): Promise<void> {
+  if (!env.RESEND_API_KEY) return;
+  const siteUrl = (env.SITE_URL ?? "https://zcarr.dev").replace(/\/$/, "");
+  const subject = isReply
+    ? `Reply from ${author} on ${postSlug}`
+    : `New comment from ${author} on ${postSlug}`;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "ZC <signal@mail.zcarr.dev>",
+        to: "signal@zcarr.dev",
+        subject,
+        text: `${author} commented on ${siteUrl}/blog/${postSlug}:\n\n${text}`,
+      }),
+    });
+  } catch (err) {
+    console.error("[comment-notify] failed:", err);
+  }
+}
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
   try {
     const auth = getAuth(env);
     const session = await auth.api.getSession({ headers: request.headers });
@@ -68,6 +99,14 @@ export const POST: APIRoute = async ({ request }) => {
       publishedAt: new Date().toISOString(),
       likes: 0,
     });
+
+    const emailPromise = notifyNewComment(
+      session.user.name || "Anonymous",
+      text,
+      postSlug,
+      Boolean(parentCommentId),
+    );
+    if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
 
     return new Response(JSON.stringify({ success: true, comment }), {
       headers: { "Content-Type": "application/json" },
