@@ -23,7 +23,7 @@ interface FooterProps {
 export const Footer = ({
   navItems = [
     { label: "Index", href: "/" },
-    { label: "Writing", href: "/blog" },
+    { label: "Sessions", href: "/sessions" },
     { label: "Timeline", href: "/timeline" },
   ],
   heading = "Thanks for\nreading.",

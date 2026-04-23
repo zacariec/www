@@ -138,7 +138,7 @@ export async function sendNewPostNotification(
     const props = {
       postTitle: post.title,
       postSubtitle: post.subtitle,
-      postUrl: `${siteUrl}/blog/${post.slug}`,
+      postUrl: `${siteUrl}/sessions/${post.slug}`,
       postDate: new Date(post.date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",

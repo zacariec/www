@@ -1,8 +1,8 @@
 const groq = (strings: TemplateStringsArray, ...values: unknown[]) =>
   String.raw(strings, ...values);
 
-export const allPostsQuery = groq`
-  *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) {
+export const allSessionsQuery = groq`
+  *[_type == "sessionTape" && publishedAt <= now()] | order(publishedAt desc) {
     title,
     "slug": slug.current,
     subtitle,
@@ -13,8 +13,8 @@ export const allPostsQuery = groq`
   }
 `;
 
-export const postBySlugQuery = groq`
-  *[_type == "blogPost" && slug.current == $slug][0] {
+export const sessionBySlugQuery = groq`
+  *[_type == "sessionTape" && slug.current == $slug][0] {
     title,
     "slug": slug.current,
     subtitle,
@@ -49,8 +49,8 @@ export const allTimelineEntriesQuery = groq`
   }
 `;
 
-export const latestPostsQuery = groq`
-  *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) [0..2] {
+export const latestSessionsQuery = groq`
+  *[_type == "sessionTape" && publishedAt <= now()] | order(publishedAt desc) [0..2] {
     title,
     "slug": slug.current,
     subtitle,
@@ -72,8 +72,8 @@ export const latestTimelineQuery = groq`
   }
 `;
 
-export const allPostSlugsQuery = groq`
-  *[_type == "blogPost" && publishedAt <= now()] { "slug": slug.current }
+export const allSessionSlugsQuery = groq`
+  *[_type == "sessionTape" && publishedAt <= now()] { "slug": slug.current }
 `;
 
 export const siteConfigQuery = groq`

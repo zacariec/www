@@ -2,25 +2,25 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import HeroSection from '@/components/astro/HeroSection.astro';
 import HomeThoughts from '@/components/astro/HomeThoughts.astro';
-import PostList from '@/components/astro/PostList.astro';
+import SessionList from '@/components/astro/SessionList.astro';
 import Marquee from '@/components/astro/Marquee.astro';
 import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
-import { getLatestPosts, getLatestTimeline, getSiteConfig } from '@/lib/sanity/fetch';
+import { getLatestSessions, getLatestTimeline, getSiteConfig } from '@/lib/sanity/fetch';
 import { homeJsonLd } from '@/lib/seo/jsonld';
 import { pickOgImage } from '@/lib/seo/og-image';
 
-const [latestPosts, latestThoughts, config] = await Promise.all([
-  getLatestPosts(),
+const [latestSessions, latestThoughts, config] = await Promise.all([
+  getLatestSessions(),
   getLatestTimeline(),
   getSiteConfig(),
 ]);
 
-const posts = latestPosts.map((p) => ({
-  slug: p.slug,
-  title: p.title,
-  subtitle: p.subtitle,
-  date: p.date,
-  readingTime: p.readingTime,
+const sessions = latestSessions.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  subtitle: s.subtitle,
+  date: s.date,
+  readingTime: s.readingTime,
 }));
 
 const hasHeroImage = !!config.heroImage?.url;
@@ -60,7 +60,7 @@ const og = pickOgImage(undefined, config);
             <div class="absolute inset-0 bg-white mix-blend-saturation"></div>
           </div>
         ) : (
-          <NeuralBlobNet client:only="react" nodeCount={latestPosts.length + latestThoughts.length} />
+          <NeuralBlobNet client:only="react" nodeCount={latestSessions.length + latestThoughts.length} />
         )}
       </div>
       <p class="text-[9px] tracking-[1.5px] uppercase text-[#777777] mt-4 px-5 md:px-0 font-[family-name:var(--font-space-grotesk)]">
@@ -68,7 +68,7 @@ const og = pickOgImage(undefined, config);
       </p>
     </section>
 
-    <!-- Latest Writing + Recent Thoughts -->
+    <!-- Latest Sessions + Recent Thoughts -->
     <div class="px-5 md:px-16 pb-20 md:pb-32 flex flex-col md:flex-row gap-16 md:gap-20">
       <section class="flex-1 min-w-0">
         <div class="flex items-baseline justify-between mb-12 md:mb-16">
@@ -76,17 +76,17 @@ const og = pickOgImage(undefined, config);
             class="text-[24px] md:text-[28px] tracking-[-1.5px] uppercase text-[#000000] font-[family-name:var(--font-space-grotesk)]"
             style="font-weight: 700;"
           >
-            Latest Writing
+            Latest Sessions
           </h2>
           <a
             class="text-[10px] tracking-[2px] uppercase text-[#777777] hover:text-[#000000] no-underline transition-colors duration-300 flex items-center gap-2 font-[family-name:var(--font-space-grotesk)]"
-            href="/blog"
+            href="/sessions"
           >
             All
             <span aria-hidden="true">→</span>
           </a>
         </div>
-        <PostList posts={posts} variant="compact" />
+        <SessionList sessions={sessions} variant="compact" />
       </section>
 
       <HomeThoughts entries={latestThoughts} />

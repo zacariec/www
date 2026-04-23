@@ -1,9 +1,9 @@
 ---
 import HorizontalLine from './HorizontalLine.astro';
-import PostCard from './PostCard.astro';
+import SessionCard from './SessionCard.astro';
 import Reveal from './Reveal.astro';
 
-interface Post {
+interface Session {
   slug: string;
   title: string;
   subtitle: string;
@@ -13,24 +13,24 @@ interface Post {
 }
 
 interface Props {
-  posts: Post[];
+  sessions: Session[];
   variant?: 'compact' | 'full';
 }
 
-const { posts, variant = 'compact' } = Astro.props;
+const { sessions, variant = 'compact' } = Astro.props;
 ---
 
 <div>
-  {posts.map((post, i) => (
+  {sessions.map((session, i) => (
     <Reveal delay={i * 80}>
       <HorizontalLine />
-      <PostCard
-        commentCount={post.commentCount}
-        date={post.date}
-        readingTime={post.readingTime}
-        slug={post.slug}
-        subtitle={post.subtitle}
-        title={post.title}
+      <SessionCard
+        commentCount={session.commentCount}
+        date={session.date}
+        readingTime={session.readingTime}
+        slug={session.slug}
+        subtitle={session.subtitle}
+        title={session.title}
         variant={variant}
       />
     </Reveal>

@@ -11,6 +11,18 @@ export default defineConfig({
   adapter: cloudflare({
     platformProxy: { enabled: true },
   }),
+  // /blog/* → /sessions/* permanent redirects preserve any existing inbound
+  // links (search results, newsletter archives, shared URLs) after the rename.
+  redirects: {
+    "/blog": {
+      status: 301,
+      destination: "/sessions",
+    },
+    "/blog/[slug]": {
+      status: 301,
+      destination: "/sessions/[slug]",
+    },
+  },
   integrations: [
     sanity({
       projectId: "mrobamxo",

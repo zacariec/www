@@ -1,20 +1,20 @@
 import { navItems as fallbackNavItems, siteConfig as fallbackSiteConfig } from "@/lib/constants";
-import { blogPosts, timelineEntries } from "@/lib/fallback-data";
+import { sessionTapes, timelineEntries } from "@/lib/fallback-data";
 
 import { client } from "./client";
 import {
-  allPostSlugsQuery,
-  allPostsQuery,
+  allSessionSlugsQuery,
+  allSessionsQuery,
   allTimelineEntriesQuery,
-  latestPostsQuery,
+  latestSessionsQuery,
   latestTimelineQuery,
-  postBySlugQuery,
+  sessionBySlugQuery,
   siteConfigQuery,
 } from "./queries";
 
-import type { SanityBlogPost, SanitySiteConfig, SanityTimelineEntry } from "./types";
+import type { SanitySessionTape, SanitySiteConfig, SanityTimelineEntry } from "./types";
 
-function toSanityPost(p: (typeof blogPosts)[number]): SanityBlogPost {
+function toSanitySession(p: (typeof sessionTapes)[number]): SanitySessionTape {
   return {
     title: p.title,
     slug: p.slug,
@@ -50,17 +50,17 @@ function toSanityTimeline(e: (typeof timelineEntries)[number]): SanityTimelineEn
   };
 }
 
-export async function getAllPosts(): Promise<SanityBlogPost[]> {
-  if (!client) return blogPosts.map(toSanityPost);
-  return client.fetch<SanityBlogPost[]>(allPostsQuery);
+export async function getAllSessions(): Promise<SanitySessionTape[]> {
+  if (!client) return sessionTapes.map(toSanitySession);
+  return client.fetch<SanitySessionTape[]>(allSessionsQuery);
 }
 
-export async function getPostBySlug(slug: string): Promise<SanityBlogPost | null> {
+export async function getSessionBySlug(slug: string): Promise<SanitySessionTape | null> {
   if (!client) {
-    const post = blogPosts.find((p) => p.slug === slug);
-    return post ? toSanityPost(post) : null;
+    const post = sessionTapes.find((p) => p.slug === slug);
+    return post ? toSanitySession(post) : null;
   }
-  return client.fetch<SanityBlogPost | null>(postBySlugQuery, { slug });
+  return client.fetch<SanitySessionTape | null>(sessionBySlugQuery, { slug });
 }
 
 export async function getAllTimelineEntries(): Promise<SanityTimelineEntry[]> {
@@ -68,9 +68,9 @@ export async function getAllTimelineEntries(): Promise<SanityTimelineEntry[]> {
   return client.fetch<SanityTimelineEntry[]>(allTimelineEntriesQuery);
 }
 
-export async function getLatestPosts(): Promise<SanityBlogPost[]> {
-  if (!client) return blogPosts.slice(0, 3).map(toSanityPost);
-  return client.fetch<SanityBlogPost[]>(latestPostsQuery);
+export async function getLatestSessions(): Promise<SanitySessionTape[]> {
+  if (!client) return sessionTapes.slice(0, 3).map(toSanitySession);
+  return client.fetch<SanitySessionTape[]>(latestSessionsQuery);
 }
 
 export async function getLatestTimeline(): Promise<SanityTimelineEntry[]> {
@@ -78,9 +78,9 @@ export async function getLatestTimeline(): Promise<SanityTimelineEntry[]> {
   return client.fetch<SanityTimelineEntry[]>(latestTimelineQuery);
 }
 
-export async function getAllPostSlugs(): Promise<{ slug: string }[]> {
-  if (!client) return blogPosts.map((p) => ({ slug: p.slug }));
-  return client.fetch<{ slug: string }[]>(allPostSlugsQuery);
+export async function getAllSessionSlugs(): Promise<{ slug: string }[]> {
+  if (!client) return sessionTapes.map((p) => ({ slug: p.slug }));
+  return client.fetch<{ slug: string }[]>(allSessionSlugsQuery);
 }
 
 const defaultSiteConfig: SanitySiteConfig = {
