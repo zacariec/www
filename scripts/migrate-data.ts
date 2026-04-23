@@ -9,7 +9,7 @@
 
 import { createClient } from "@sanity/client";
 
-import { blogPosts, timelineEntries } from "../src/lib/fallback-data";
+import { sessionTapes, timelineEntries } from "../src/lib/fallback-data";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
@@ -65,7 +65,7 @@ async function migrate() {
       timezone: "Australia/Sydney",
       navItems: [
         { _type: "object", _key: "nav-index", label: "Index", href: "/" },
-        { _type: "object", _key: "nav-writing", label: "Writing", href: "/blog" },
+        { _type: "object", _key: "nav-sessions", label: "Sessions", href: "/sessions" },
         { _type: "object", _key: "nav-timeline", label: "Timeline", href: "/timeline" },
       ],
       heroSubtitle: "Design \u00b7 Code \u00b7 Noise",
@@ -81,24 +81,24 @@ async function migrate() {
     console.log("Site config already exists, skipping.\n");
   }
 
-  // Check if blog posts already exist
-  const existingPosts = await client.fetch('count(*[_type == "blogPost"])');
-  if (existingPosts === 0) {
-    // Migrate blog posts
-    for (const post of blogPosts) {
-      console.log(`Creating post: ${post.title}`);
+  // Check if session tapes already exist
+  const existingSessions = await client.fetch('count(*[_type == "sessionTape"])');
+  if (existingSessions === 0) {
+    // Migrate session tapes
+    for (const session of sessionTapes) {
+      console.log(`Creating session: ${session.title}`);
       const doc = await client.create({
-        _type: "blogPost",
-        title: post.title,
-        slug: { _type: "slug", current: post.slug },
-        subtitle: post.subtitle,
-        publishedAt: new Date(post.date).toISOString(),
-        readingTime: post.readingTime,
-        excerpt: post.excerpt,
-        content: textToPortableText(post.content),
+        _type: "sessionTape",
+        title: session.title,
+        slug: { _type: "slug", current: session.slug },
+        subtitle: session.subtitle,
+        publishedAt: new Date(session.date).toISOString(),
+        readingTime: session.readingTime,
+        excerpt: session.excerpt,
+        content: textToPortableText(session.content),
       });
 
-      for (const comment of post.comments) {
+      for (const comment of session.comments) {
         console.log(`  Creating comment by ${comment.author}`);
         await client.create({
           _type: "comment",
@@ -111,7 +111,7 @@ async function migrate() {
       }
     }
   } else {
-    console.log(`${existingPosts} blog posts already exist, skipping.\n`);
+    console.log(`${existingSessions} sessions already exist, skipping.\n`);
   }
 
   // Check if timeline entries already exist

@@ -16,6 +16,6 @@ export const socialLinks = [
 
 export const navItems = [
   { href: "/", label: "Index" },
-  { href: "/blog", label: "Writing" },
+  { href: "/sessions", label: "Sessions" },
   { href: "/timeline", label: "Timeline" },
 ] as const;

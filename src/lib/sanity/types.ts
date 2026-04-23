@@ -1,6 +1,6 @@
 import type { PortableTextBlock } from "@portabletext/react";
 
-export interface SanityBlogPost {
+export interface SanitySessionTape {
   title: string;
   slug: string;
   subtitle: string;

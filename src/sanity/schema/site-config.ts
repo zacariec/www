@@ -88,7 +88,7 @@ export const siteConfigType = defineType({
       type: "object",
       group: "newsletter",
       description:
-        "Copy for the newsletter signup form (footer + blog post CTA). All fields are optional — sensible defaults are used when blank.",
+        "Copy for the newsletter signup form (footer + session tape CTA). All fields are optional — sensible defaults are used when blank.",
       fields: [
         defineField({
           name: "footerHeading",
@@ -107,17 +107,17 @@ export const siteConfigType = defineType({
         }),
         defineField({
           name: "inlineHeading",
-          title: "Blog CTA Heading",
+          title: "Session CTA Heading",
           type: "string",
-          description: "Small uppercase label above the form on blog post pages.",
+          description: "Small uppercase label above the form on session tape pages.",
           initialValue: "Subscribe",
         }),
         defineField({
           name: "inlineDescription",
-          title: "Blog CTA Description",
+          title: "Session CTA Description",
           type: "text",
           rows: 2,
-          description: "Pitch shown above the form on blog post pages.",
+          description: "Pitch shown above the form on session tape pages.",
           initialValue: "Want the next one? Drop your email.",
         }),
         defineField({

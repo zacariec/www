@@ -1,4 +1,4 @@
-export interface BlogPost {
+export interface SessionTape {
   slug: string;
   title: string;
   subtitle: string;
@@ -30,7 +30,7 @@ export interface TimelineEntry {
   comments: number;
 }
 
-export const blogPosts: BlogPost[] = [
+export const sessionTapes: SessionTape[] = [
   {
     slug: "the-silence-of-concrete-voids",
     title: "THE SILENCE OF CONCRETE VOIDS.",

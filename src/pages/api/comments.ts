@@ -44,7 +44,7 @@ async function notifyNewComment(
         from: "ZC <signal@mail.zcarr.dev>",
         to: "signal@zcarr.dev",
         subject,
-        text: `${author} commented on ${siteUrl}/blog/${postSlug}:\n\n${text}`,
+        text: `${author} commented on ${siteUrl}/sessions/${postSlug}:\n\n${text}`,
       }),
     });
   } catch (err) {
@@ -83,13 +83,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const postResult: unknown = await writeClient.fetch(
-      `*[_type == "blogPost" && slug.current == $slug][0]{ _id }`,
+      `*[_type == "sessionTape" && slug.current == $slug][0]{ _id }`,
       { slug: postSlug },
     );
 
     const post = sanityPostRefSchema.safeParse(postResult);
     if (!post.success) {
-      return new Response(JSON.stringify({ error: "Post not found" }), {
+      return new Response(JSON.stringify({ error: "Session not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });

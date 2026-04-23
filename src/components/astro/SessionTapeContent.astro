@@ -5,7 +5,7 @@ import Reveal from './Reveal.astro';
 import { CommentSection } from '@/components/organisms/comment-section';
 import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
 import type { NewsletterCopy } from '@/components/molecules/newsletter-form';
-import type { SanityBlogPost } from '@/lib/sanity/types';
+import type { SanitySessionTape } from '@/lib/sanity/types';
 
 // Dynamic imports so Vite's esbuild dep-scanner doesn't try to resolve
 // .astro files as JS modules (which causes a noisy "No matching export" warning).
@@ -13,13 +13,13 @@ const PortableTextImage = (await import('./PortableTextImage.astro')).default;
 const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
 
 interface Props {
-  post: SanityBlogPost;
+  session: SanitySessionTape;
   newsletterCopy?: NewsletterCopy;
 }
 
-const { post, newsletterCopy } = Astro.props;
+const { session, newsletterCopy } = Astro.props;
 
-const comments = (post.comments || []).map((c, i) => ({
+const comments = (session.comments || []).map((c, i) => ({
   id: c._id || String(i),
   author: c.author,
   authorImage: c.authorImage,
@@ -29,7 +29,7 @@ const comments = (post.comments || []).map((c, i) => ({
   parentCommentId: c.parentCommentId,
 }));
 
-const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
+const formattedDate = new Date(session.date).toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
@@ -44,11 +44,11 @@ const ptComponents = {
 <div class="pb-20 md:pb-32">
   {/* Featured Image or Neural Net */}
   <div class="relative h-[30vh] md:h-[40vh] overflow-hidden mb-8">
-    {post.featuredImage?.url ? (
+    {session.featuredImage?.url ? (
       <img
-        alt={post.featuredImage.alt || post.title}
+        alt={session.featuredImage.alt || session.title}
         class="object-cover w-full h-full absolute inset-0"
-        src={post.featuredImage.url}
+        src={session.featuredImage.url}
         loading="eager"
       />
     ) : (
@@ -61,17 +61,17 @@ const ptComponents = {
     <Reveal>
       <a
         class="text-[10px] tracking-[2px] uppercase text-[#bbb] hover:text-black no-underline transition-colors duration-300 inline-flex items-center gap-2 mb-12 md:mb-16 font-[family-name:var(--font-space-grotesk)]"
-        href="/blog"
+        href="/sessions"
       >
         <span aria-hidden="true">←</span>
-        Writing
+        Sessions
       </a>
     </Reveal>
 
     <div class="max-w-[900px]">
       <Reveal delay={100}>
         <p class="text-[10px] tracking-[3px] uppercase text-[#777777] mb-6 md:mb-8 font-[family-name:var(--font-space-grotesk)]">
-          {formattedDate} &mdash; {post.readingTime} read
+          {formattedDate} &mdash; {session.readingTime} read
         </p>
       </Reveal>
       <Reveal variant="text">
@@ -79,7 +79,7 @@ const ptComponents = {
           class="text-[clamp(32px,7vw,72px)] text-[#000000] tracking-[-0.04em] font-[family-name:var(--font-space-grotesk)]"
           style="font-weight: 700; line-height: 0.95;"
         >
-          {post.title}
+          {session.title}
         </h1>
       </Reveal>
       <Reveal delay={300}>
@@ -87,7 +87,7 @@ const ptComponents = {
           class="text-[16px] md:text-[18px] text-[#777777] max-w-[500px] mt-6 md:mt-8 font-[family-name:var(--font-inter)]"
           style="line-height: 1.6; font-weight: 300;"
         >
-          {post.subtitle}
+          {session.subtitle}
         </p>
       </Reveal>
     </div>
@@ -119,7 +119,7 @@ const ptComponents = {
                 class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
                 style="font-weight: 500;"
               >
-                {post.readingTime?.toUpperCase()}
+                {session.readingTime?.toUpperCase()}
               </p>
             </div>
             <div>
@@ -140,7 +140,7 @@ const ptComponents = {
       {/* Main content */}
       <div class="md:col-span-7">
         <div class="space-y-8">
-          <PortableText value={post.content} components={ptComponents} />
+          <PortableText value={session.content} components={ptComponents} />
         </div>
       </div>
 
@@ -155,7 +155,7 @@ const ptComponents = {
               class="text-[12px] text-[#777777] italic font-[family-name:var(--font-inter)]"
               style="line-height: 1.7;"
             >
-              {post.sideNote || '\u201CIf you\u2019re still reading, you\u2019re my kind of person.\u201D'}
+              {session.sideNote || '\u201CIf you\u2019re still reading, you\u2019re my kind of person.\u201D'}
             </p>
           </div>
         </Reveal>
@@ -167,7 +167,7 @@ const ptComponents = {
     client:only="react"
     initialComments={comments}
     newsletterCopy={newsletterCopy}
-    postSlug={post.slug}
+    postSlug={session.slug}
   >
     <div slot="fallback" class="px-5 md:px-16 mt-20 md:mt-32">
       <div class="max-w-[720px] md:ml-[calc(16.666%+32px)]">

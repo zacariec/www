@@ -1,0 +1,46 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
+import SessionList from '@/components/astro/SessionList.astro';
+import SessionsHeader from '@/components/astro/SessionsHeader.astro';
+import { getAllSessions, getSiteConfig } from '@/lib/sanity/fetch';
+import { sessionsIndexJsonLd } from '@/lib/seo/jsonld';
+import { pickOgImage } from '@/lib/seo/og-image';
+
+const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
+
+const mappedSessions = sessions.map((s) => ({
+  slug: s.slug,
+  title: s.title,
+  subtitle: s.subtitle,
+  date: s.date,
+  readingTime: s.readingTime,
+  commentCount: s.commentCount,
+}));
+
+const jsonLd = sessionsIndexJsonLd(config);
+const og = pickOgImage(undefined, config);
+---
+
+<SiteLayout
+  canonicalUrl="/sessions"
+  description="Long-form sessions on code, systems, and the patterns behind how things work."
+  jsonLd={jsonLd}
+  ogImage={og?.url}
+  ogImageAlt={og?.alt}
+  ogImageHeight={og?.height}
+  ogImageWidth={og?.width}
+  title="Sessions"
+>
+  <div>
+    <div class="relative h-[30vh] md:h-[40vh] overflow-hidden">
+      <NeuralBlobNet client:only="react" nodeCount={mappedSessions.length} />
+    </div>
+    <div class="px-5 md:px-16 pt-8 md:pt-16 pb-20 md:pb-32">
+      <SessionsHeader />
+      <div class="mt-16 md:mt-24">
+        <SessionList sessions={mappedSessions} variant="full" />
+      </div>
+    </div>
+  </div>
+</SiteLayout>

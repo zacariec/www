@@ -1,8 +1,8 @@
-import type { SanityBlogPost, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 
 const personId = (siteUrl: string) => `${siteUrl}/#person`;
 const websiteId = (siteUrl: string) => `${siteUrl}/#website`;
-const blogId = (siteUrl: string) => `${siteUrl}/blog#blog`;
+const sessionsId = (siteUrl: string) => `${siteUrl}/sessions#blog`;
 
 function trimSlash(s: string): string {
   return s.endsWith("/") ? s.slice(0, -1) : s;
@@ -40,14 +40,17 @@ function website(config: SanitySiteConfig) {
   };
 }
 
-function blogObj(config: SanitySiteConfig) {
+// Note: schema.org type stays "Blog" — that's what search engines index.
+// The customer-facing name is "Sessions" but the structured-data vocabulary
+// is unchanged so SEO semantics carry over cleanly.
+function sessionsObj(config: SanitySiteConfig) {
   const siteUrl = siteUrlOrEmpty(config);
   return {
     "@type": "Blog",
-    "@id": blogId(siteUrl),
-    name: "Writing",
-    description: "Long-form writing on code, systems, and the patterns behind how things work.",
-    ...(siteUrl && { url: `${siteUrl}/blog` }),
+    "@id": sessionsId(siteUrl),
+    name: "Sessions",
+    description: "Long-form sessions on code, systems, and the patterns behind how things work.",
+    ...(siteUrl && { url: `${siteUrl}/sessions` }),
     inLanguage: "en",
     publisher: { "@id": personId(siteUrl) },
     isPartOf: { "@id": websiteId(siteUrl) },
@@ -79,29 +82,35 @@ function breadcrumbs(items: { name: string; url: string }[]) {
   };
 }
 
-interface BlogPostingOpts {
+interface SessionTapePostingOpts {
   ogImageUrl?: string;
   wordCount?: number;
 }
 
-function blogPosting(post: SanityBlogPost, config: SanitySiteConfig, opts: BlogPostingOpts) {
+// schema.org @type stays "BlogPosting" for SEO semantics even though the
+// customer-facing label is "Session Tape".
+function sessionTapePosting(
+  session: SanitySessionTape,
+  config: SanitySiteConfig,
+  opts: SessionTapePostingOpts,
+) {
   const siteUrl = siteUrlOrEmpty(config);
-  const url = `${siteUrl}/blog/${post.slug}`;
+  const url = `${siteUrl}/sessions/${session.slug}`;
   return {
     "@type": "BlogPosting",
     "@id": `${url}#blogposting`,
-    headline: post.title,
-    description: post.subtitle || post.excerpt,
+    headline: session.title,
+    description: session.subtitle || session.excerpt,
     ...(opts.ogImageUrl && { image: opts.ogImageUrl }),
-    datePublished: post.date,
-    dateModified: post.dateModified ?? post.date,
+    datePublished: session.date,
+    dateModified: session.dateModified ?? session.date,
     author: { "@id": personId(siteUrl) },
     publisher: { "@id": personId(siteUrl) },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
     inLanguage: "en",
-    articleSection: "Writing",
-    isPartOf: { "@id": blogId(siteUrl) },
+    articleSection: "Sessions",
+    isPartOf: { "@id": sessionsId(siteUrl) },
     ...(opts.wordCount && opts.wordCount > 0 && { wordCount: opts.wordCount }),
   };
 }
@@ -115,36 +124,36 @@ export function homeJsonLd(config: SanitySiteConfig) {
   };
 }
 
-export function blogIndexJsonLd(config: SanitySiteConfig) {
+export function sessionsIndexJsonLd(config: SanitySiteConfig) {
   const siteUrl = siteUrlOrEmpty(config);
   return {
     "@context": "https://schema.org",
     "@graph": [
-      blogObj(config),
+      sessionsObj(config),
       person(config),
       breadcrumbs([
         { name: "Home", url: siteUrl },
-        { name: "Writing", url: `${siteUrl}/blog` },
+        { name: "Sessions", url: `${siteUrl}/sessions` },
       ]),
     ],
   };
 }
 
-export function blogPostJsonLd(
-  post: SanityBlogPost,
+export function sessionTapeJsonLd(
+  session: SanitySessionTape,
   config: SanitySiteConfig,
-  opts: BlogPostingOpts = {},
+  opts: SessionTapePostingOpts = {},
 ) {
   const siteUrl = siteUrlOrEmpty(config);
   return {
     "@context": "https://schema.org",
     "@graph": [
-      blogPosting(post, config, opts),
+      sessionTapePosting(session, config, opts),
       person(config),
       breadcrumbs([
         { name: "Home", url: siteUrl },
-        { name: "Writing", url: `${siteUrl}/blog` },
-        { name: post.title, url: `${siteUrl}/blog/${post.slug}` },
+        { name: "Sessions", url: `${siteUrl}/sessions` },
+        { name: session.title, url: `${siteUrl}/sessions/${session.slug}` },
       ]),
     ],
   };

@@ -7,9 +7,9 @@ export const commentType = defineType({
   fields: [
     defineField({
       name: "post",
-      title: "Post",
+      title: "Session Tape",
       type: "reference",
-      to: [{ type: "blogPost" }],
+      to: [{ type: "sessionTape" }],
       validation: (rule) => rule.required(),
     }),
     defineField({
