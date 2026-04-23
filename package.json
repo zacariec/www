@@ -24,6 +24,7 @@
     "@sanity/assist": "^6.0.4",
     "@sanity/astro": "^3.3.1",
     "@sanity/client": "^7.3.0",
+    "@sanity/code-input": "^7.1.0",
     "@sanity/image-url": "^2.1.0",
     "astro": "^6.1.2",
     "astro-portabletext": "^0.13.0",
@@ -37,6 +38,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "sanity": "^3.86.0",
+    "shiki": "^4.0.2",
     "styled-components": "^6.1.14",
     "tailwind-merge": "^3.3.0",
     "zod": "^4.3.6"

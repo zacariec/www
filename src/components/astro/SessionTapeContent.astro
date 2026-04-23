@@ -11,6 +11,7 @@ import type { SanitySessionTape } from '@/lib/sanity/types';
 // .astro files as JS modules (which causes a noisy "No matching export" warning).
 const PortableTextImage = (await import('./PortableTextImage.astro')).default;
 const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
+const PortableTextCode = (await import('./PortableTextCode.astro')).default;
 
 interface Props {
   session: SanitySessionTape;
@@ -36,7 +37,10 @@ const formattedDate = new Date(session.date).toLocaleDateString('en-US', {
 });
 
 const ptComponents = {
-  type: { image: PortableTextImage },
+  type: {
+    image: PortableTextImage,
+    code: PortableTextCode,
+  },
   block: { normal: PortableTextParagraph },
 };
 ---
