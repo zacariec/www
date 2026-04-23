@@ -1,4 +1,5 @@
 import { assist } from "@sanity/assist";
+import { codeInput } from "@sanity/code-input";
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 
@@ -10,5 +11,5 @@ export default defineConfig({
   projectId,
   dataset,
   schema,
-  plugins: [structureTool(), assist()],
+  plugins: [structureTool(), assist(), codeInput()],
 });

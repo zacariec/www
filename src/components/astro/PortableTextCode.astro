@@ -1,0 +1,76 @@
+---
+// Custom serializer for the `code` block inside PortableText content.
+// Uses shiki for build-time syntax highlighting — themes are inlined as HTML,
+// zero client-side JS is shipped for syntax highlighting.
+import { codeToHtml } from 'shiki';
+
+interface CodeNode {
+  _type: 'code';
+  _key?: string;
+  code: string;
+  language?: string;
+  filename?: string;
+  highlightedLines?: number[];
+}
+
+interface Props {
+  node: CodeNode;
+  index: number;
+  isInline: boolean;
+}
+
+const { node } = Astro.props;
+const language = node.language || 'text';
+const code = node.code ?? '';
+
+// Languages we've wired into the Sanity schema. Anything outside this list
+// falls back to plain text so shiki doesn't throw on missing grammar.
+const supportedLanguages = new Set([
+  'text',
+  'bash',
+  'css',
+  'diff',
+  'groq',
+  'html',
+  'javascript',
+  'json',
+  'liquid',
+  'markdown',
+  'python',
+  'sql',
+  'tsx',
+  'typescript',
+  'yaml',
+]);
+const lang = supportedLanguages.has(language) ? language : 'text';
+
+const html = await codeToHtml(code, {
+  lang,
+  theme: 'github-dark',
+});
+---
+
+<figure class="my-8 md:my-12">
+  {node.filename && (
+    <figcaption
+      class="text-[9px] tracking-[1.5px] uppercase text-[#777777] mb-2 font-[family-name:var(--font-space-grotesk)]"
+    >
+      {node.filename}
+    </figcaption>
+  )}
+  <div
+    class="rounded-md overflow-hidden text-[13px] md:text-[14px] font-[family-name:var(--font-jetbrains-mono,monospace)]"
+    set:html={html}
+  />
+</figure>
+
+<style is:global>
+  /* shiki ships inline styles via `style="..."`; keep its background but
+     force our layout rules so the pre plays nicely with the article column. */
+  figure > .shiki,
+  figure > div > pre.shiki {
+    padding: 1rem 1.25rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+</style>
