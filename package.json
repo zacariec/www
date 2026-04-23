@@ -27,7 +27,6 @@
     "@sanity/code-input": "^7.1.0",
     "@sanity/image-url": "^2.1.0",
     "@sanity/preview-url-secret": "^4.0.5",
-    "@sanity/visual-editing": "^5.3.4",
     "astro": "^6.1.2",
     "astro-portabletext": "^0.13.0",
     "better-auth": "^1.6.0",
