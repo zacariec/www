@@ -1,0 +1,52 @@
+---
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import SessionTapeContent from '@/components/astro/SessionTapeContent.astro';
+import { getSessionBySlug, getSiteConfig } from '@/lib/sanity/fetch';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+if (!Astro.cookies.get('__sanity_preview')?.value) {
+  const target = `/api/preview/enable?sanity-preview-pathname=${encodeURIComponent(Astro.url.pathname)}`;
+  return Astro.redirect(target, 307);
+}
+
+const [session, config] = await Promise.all([
+  getSessionBySlug(slug!, { preview: true }),
+  getSiteConfig(),
+]);
+
+if (!session) {
+  return new Response('Draft not found', { status: 404 });
+}
+
+const nl = config.newsletter ?? {};
+const inlineNewsletterCopy = {
+  heading: nl.inlineHeading,
+  description: nl.inlineDescription,
+  buttonLabel: nl.buttonLabel,
+  placeholder: nl.placeholder,
+  successMessage: nl.successMessage,
+  alreadySubscribedMessage: nl.alreadySubscribedMessage,
+  unsubscribeLabel: nl.unsubscribeLabel,
+  unsubscribeConfirmedMessage: nl.unsubscribeConfirmedMessage,
+  errorMessage: nl.errorMessage,
+};
+
+const description = session.subtitle || session.excerpt || session.title;
+---
+
+<SiteLayout
+  canonicalUrl={`/preview/sessions/${slug}`}
+  description={description}
+  ogType="article"
+  title={`[Preview] ${session.title}`}
+>
+  <SessionTapeContent newsletterCopy={inlineNewsletterCopy} session={session} />
+</SiteLayout>
+
+<script>
+  import { enableVisualEditing } from '@sanity/visual-editing';
+  enableVisualEditing();
+</script>

@@ -1,6 +1,7 @@
 import { assist } from "@sanity/assist";
 import { codeInput } from "@sanity/code-input";
 import { defineConfig } from "sanity";
+import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
 
 import { dataset, projectId } from "./src/sanity/env";
@@ -11,5 +12,34 @@ export default defineConfig({
   projectId,
   dataset,
   schema,
-  plugins: [structureTool(), assist(), codeInput()],
+  plugins: [
+    structureTool(),
+    assist(),
+    codeInput(),
+    presentationTool({
+      previewUrl: {
+        origin: "same-origin",
+        preview: "/",
+        previewMode: {
+          enable: "/api/preview/enable",
+          disable: "/api/preview/disable",
+        },
+      },
+      resolve: {
+        locations: {
+          sessionTape: {
+            select: { title: "title", slug: "slug.current" },
+            resolve: (doc) => ({
+              locations: [
+                {
+                  title: (doc?.title as string | undefined) ?? "Untitled",
+                  href: `/preview/sessions/${doc?.slug as string}`,
+                },
+              ],
+            }),
+          },
+        },
+      },
+    }),
+  ],
 });

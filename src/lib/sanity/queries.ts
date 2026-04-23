@@ -37,6 +37,25 @@ export const sessionBySlugQuery = groq`
   }
 `;
 
+// Draft-friendly variant for Presentation preview. Drops the publishedAt guard
+// (drafts may have no publishedAt yet) and skips comments — drafts can't have
+// real references to a still-unpublished document.
+export const sessionBySlugPreviewQuery = groq`
+  *[_type == "sessionTape" && slug.current == $slug][0] {
+    title,
+    "slug": slug.current,
+    subtitle,
+    "date": publishedAt,
+    "dateModified": coalesce(dateModified, publishedAt),
+    readingTime,
+    excerpt,
+    content,
+    sideNote,
+    featuredImage { asset, "url": asset->url, alt },
+    "comments": []
+  }
+`;
+
 export const allTimelineEntriesQuery = groq`
   *[_type == "timelineEntry"] | order(publishedAt desc) {
     _id,

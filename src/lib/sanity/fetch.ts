@@ -1,13 +1,14 @@
 import { navItems as fallbackNavItems, siteConfig as fallbackSiteConfig } from "@/lib/constants";
 import { sessionTapes, timelineEntries } from "@/lib/fallback-data";
 
-import { client } from "./client";
+import { client, previewClient } from "./client";
 import {
   allSessionSlugsQuery,
   allSessionsQuery,
   allTimelineEntriesQuery,
   latestSessionsQuery,
   latestTimelineQuery,
+  sessionBySlugPreviewQuery,
   sessionBySlugQuery,
   siteConfigQuery,
 } from "./queries";
@@ -55,10 +56,16 @@ export async function getAllSessions(): Promise<SanitySessionTape[]> {
   return client.fetch<SanitySessionTape[]>(allSessionsQuery);
 }
 
-export async function getSessionBySlug(slug: string): Promise<SanitySessionTape | null> {
+export async function getSessionBySlug(
+  slug: string,
+  opts: { preview?: boolean } = {},
+): Promise<SanitySessionTape | null> {
   if (!client) {
     const post = sessionTapes.find((p) => p.slug === slug);
     return post ? toSanitySession(post) : null;
+  }
+  if (opts.preview && previewClient) {
+    return previewClient.fetch<SanitySessionTape | null>(sessionBySlugPreviewQuery, { slug });
   }
   return client.fetch<SanitySessionTape | null>(sessionBySlugQuery, { slug });
 }
