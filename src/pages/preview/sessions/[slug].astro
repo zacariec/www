@@ -1,5 +1,4 @@
 ---
-import { VisualEditing } from '@sanity/astro/visual-editing';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import SessionTapeContent from '@/components/astro/SessionTapeContent.astro';
 import { getSessionBySlug, getSiteConfig } from '@/lib/sanity/fetch';
@@ -45,5 +44,4 @@ const description = session.subtitle || session.excerpt || session.title;
   title={`[Preview] ${session.title}`}
 >
   <SessionTapeContent newsletterCopy={inlineNewsletterCopy} session={session} />
-  <VisualEditing enabled />
 </SiteLayout>
