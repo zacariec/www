@@ -23,10 +23,12 @@
  *   sanity dataset export production pre-migration.tar.gz
  */
 
-import { createClient, type SanityClient } from "@sanity/client";
+import { createClient } from "@sanity/client";
+
+import type { SanityClient } from "@sanity/client";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
 const token = process.env.SANITY_API_TOKEN;
 
 if (!projectId || !token) {
@@ -58,16 +60,16 @@ interface CommentRef {
   post?: { _ref: string };
 }
 
-function stripSystemFields<T extends BlogPostDoc>(doc: T): Record<string, unknown> {
-  const { _id, _type, _createdAt, _updatedAt, _rev, ...rest } = doc;
-  // Keep these referenced to satisfy TS noUnusedLocals; we're intentionally
-  // dropping them from the copy so Sanity assigns fresh values.
-  void _id;
-  void _type;
-  void _createdAt;
-  void _updatedAt;
-  void _rev;
-  return rest;
+// Sanity-managed fields we drop when copying a doc so the new one gets fresh
+// ids/timestamps assigned by the server.
+const SYSTEM_FIELDS = ["_id", "_type", "_createdAt", "_updatedAt", "_rev"] as const;
+
+function stripSystemFields(doc: BlogPostDoc): Record<string, unknown> {
+  const copy: Record<string, unknown> = { ...doc };
+  for (const field of SYSTEM_FIELDS) {
+    delete copy[field];
+  }
+  return copy;
 }
 
 async function main(): Promise<void> {
@@ -108,9 +110,7 @@ async function main(): Promise<void> {
   for (const comment of comments) {
     const newRef = oldToNew.get(comment.post?._ref ?? "");
     if (!newRef) continue;
-    tx.patch(comment._id, (patch) =>
-      patch.set({ post: { _type: "reference", _ref: newRef } }),
-    );
+    tx.patch(comment._id, (patch) => patch.set({ post: { _type: "reference", _ref: newRef } }));
   }
 
   // 3. Delete original blogPost documents
