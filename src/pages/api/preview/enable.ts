@@ -1,12 +1,14 @@
 import { validatePreviewUrl } from "@sanity/preview-url-secret";
+import { env } from "cloudflare:workers";
 
-import { previewClient } from "@/lib/sanity/client";
+import { createPreviewClient } from "@/lib/sanity/client";
 
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+  const previewClient = createPreviewClient(env.SANITY_API_TOKEN);
   if (!previewClient) {
     return new Response("Preview client not configured (missing SANITY_API_TOKEN)", {
       status: 500,

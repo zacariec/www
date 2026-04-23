@@ -1,7 +1,9 @@
+import { env } from "cloudflare:workers";
+
 import { navItems as fallbackNavItems, siteConfig as fallbackSiteConfig } from "@/lib/constants";
 import { sessionTapes, timelineEntries } from "@/lib/fallback-data";
 
-import { client, previewClient } from "./client";
+import { client, createPreviewClient } from "./client";
 import {
   allSessionSlugsQuery,
   allSessionsQuery,
@@ -64,8 +66,11 @@ export async function getSessionBySlug(
     const post = sessionTapes.find((p) => p.slug === slug);
     return post ? toSanitySession(post) : null;
   }
-  if (opts.preview && previewClient) {
-    return previewClient.fetch<SanitySessionTape | null>(sessionBySlugPreviewQuery, { slug });
+  if (opts.preview) {
+    const pc = createPreviewClient(env.SANITY_API_TOKEN);
+    if (pc) {
+      return pc.fetch<SanitySessionTape | null>(sessionBySlugPreviewQuery, { slug });
+    }
   }
   return client.fetch<SanitySessionTape | null>(sessionBySlugQuery, { slug });
 }
