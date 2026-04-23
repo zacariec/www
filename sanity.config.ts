@@ -18,8 +18,6 @@ export default defineConfig({
     codeInput(),
     presentationTool({
       previewUrl: {
-        origin: "same-origin",
-        preview: "/",
         previewMode: {
           enable: "/api/preview/enable",
           disable: "/api/preview/disable",
