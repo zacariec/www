@@ -7,7 +7,10 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://zcarr.dev",
-  output: "static",
+  // Server-rendered by default so CMS edits show up without a redeploy.
+  // Individual routes can still opt into build-time rendering with
+  // `export const prerender = true` where freshness doesn't matter.
+  output: "server",
   adapter: cloudflare({
     platformProxy: { enabled: true },
   }),

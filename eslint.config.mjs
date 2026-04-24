@@ -114,7 +114,7 @@ export default defineConfig([
       "no-plusplus": "off",
       "no-continue": "off",
       "consistent-return": "off",
-      "import-x/no-unresolved": ["error", { ignore: ["^cloudflare:"] }],
+      "import-x/no-unresolved": ["error", { ignore: ["^cloudflare:", "^astro:"] }],
       "react/jsx-fragments": ["error", "syntax"],
       "react/jsx-no-useless-fragment": "off",
       "react/function-component-definition": "off",
