@@ -4,6 +4,7 @@ import { PortableText } from 'astro-portabletext';
 import Reveal from './Reveal.astro';
 import { CommentSection } from '@/components/organisms/comment-section';
 import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
+import { normalizeMarkdownShortcuts } from '@/lib/sanity/normalize-markdown';
 import type { NewsletterCopy } from '@/components/molecules/newsletter-form';
 import type { SanitySessionTape } from '@/lib/sanity/types';
 
@@ -13,6 +14,10 @@ const PortableTextImage = (await import('./PortableTextImage.astro')).default;
 const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
 const PortableTextCode = (await import('./PortableTextCode.astro')).default;
 const PortableTextInlineCode = (await import('./PortableTextInlineCode.astro')).default;
+const PortableTextH2 = (await import('./PortableTextH2.astro')).default;
+const PortableTextH3 = (await import('./PortableTextH3.astro')).default;
+const PortableTextH4 = (await import('./PortableTextH4.astro')).default;
+const PortableTextBlockquote = (await import('./PortableTextBlockquote.astro')).default;
 
 interface Props {
   session: SanitySessionTape;
@@ -37,12 +42,23 @@ const formattedDate = new Date(session.date).toLocaleDateString('en-US', {
   day: 'numeric',
 });
 
+// Convert author-typed `backticks` and **bold** into real decorator marks
+// before the PortableText renderer sees them. Spans with existing marks
+// are preserved untouched — see normalize-markdown.ts.
+const normalizedContent = normalizeMarkdownShortcuts(session.content);
+
 const ptComponents = {
   type: {
     image: PortableTextImage,
     code: PortableTextCode,
   },
-  block: { normal: PortableTextParagraph },
+  block: {
+    normal: PortableTextParagraph,
+    h2: PortableTextH2,
+    h3: PortableTextH3,
+    h4: PortableTextH4,
+    blockquote: PortableTextBlockquote,
+  },
   mark: { code: PortableTextInlineCode },
 };
 ---
@@ -146,7 +162,7 @@ const ptComponents = {
       {/* Main content */}
       <div class="md:col-span-7">
         <div class="space-y-8">
-          <PortableText value={session.content} components={ptComponents} />
+          <PortableText value={normalizedContent} components={ptComponents} />
         </div>
       </div>
 

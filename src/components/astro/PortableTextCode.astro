@@ -1,14 +1,12 @@
 ---
 // Custom serializer for the `code` block inside PortableText content.
-// Uses shiki for build-time syntax highlighting — themes are inlined as HTML,
-// zero client-side JS is shipped for syntax highlighting.
-//
-// Shiki lazy-imports language grammars at runtime. That works fine during a
-// static build, but the preview route (`prerender = false`) runs inside the
-// Cloudflare Workers runtime, where dynamic node_modules resolution is flaky.
-// We catch any failure and fall back to a plain <pre><code> — the preview
-// never 500s just because a grammar didn't load.
-import { codeToHtml } from 'shiki';
+// Uses the singleton shiki highlighter so we get syntax colouring on both
+// the static build and the Workers-runtime preview route.
+import {
+  getHighlighter,
+  isSupportedLanguage,
+  SHIKI_THEME,
+} from "@/lib/shiki/highlighter";
 
 interface CodeNode {
   _type: 'code';
@@ -26,29 +24,9 @@ interface Props {
 }
 
 const { node } = Astro.props;
-const language = node.language || 'text';
+const requestedLanguage = node.language || 'text';
+const lang = isSupportedLanguage(requestedLanguage) ? requestedLanguage : 'text';
 const code = node.code ?? '';
-
-// Languages we've wired into the Sanity schema. Anything outside this list
-// falls back to plain text so shiki doesn't throw on missing grammar.
-const supportedLanguages = new Set([
-  'text',
-  'bash',
-  'css',
-  'diff',
-  'groq',
-  'html',
-  'javascript',
-  'json',
-  'liquid',
-  'markdown',
-  'python',
-  'sql',
-  'tsx',
-  'typescript',
-  'yaml',
-]);
-const lang = supportedLanguages.has(language) ? language : 'text';
 
 function escapeHtml(input: string): string {
   return input
@@ -61,13 +39,12 @@ function escapeHtml(input: string): string {
 
 let html: string;
 try {
-  html = await codeToHtml(code, {
-    lang,
-    theme: 'tokyo-night',
-  });
+  const highlighter = await getHighlighter();
+  html = highlighter.codeToHtml(code, { lang, theme: SHIKI_THEME });
 } catch (err) {
-  // Preview runtime (workerd) can fail to pull a grammar — don't crash the
-  // route. Log to the worker console and render plain, un-highlighted code.
+  // Belt-and-braces: if the highlighter throws for any reason, render plain
+  // escaped code on a tokyo-night-matching background so the post still
+  // renders — it just misses the colours.
   console.warn('[PortableTextCode] shiki failed, falling back:', err instanceof Error ? err.message : err);
   html = `<pre class="shiki" style="background-color:#1a1b26;color:#a9b1d6"><code>${escapeHtml(code)}</code></pre>`;
 }

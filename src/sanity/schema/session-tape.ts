@@ -55,6 +55,15 @@ export const sessionTapeType = defineType({
       of: [
         {
           type: "block",
+          // Restrict to the styles we actually have frontend serializers for
+          // — H1 is reserved for the page title so we skip it here.
+          styles: [
+            { title: "Normal", value: "normal" },
+            { title: "Heading 2", value: "h2" },
+            { title: "Heading 3", value: "h3" },
+            { title: "Heading 4", value: "h4" },
+            { title: "Quote", value: "blockquote" },
+          ],
           // Explicit decorators so the Studio toolbar shows exactly what's
           // supported in inline copy. `code` is the single-backtick style.
           marks: {
