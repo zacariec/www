@@ -51,7 +51,7 @@ export default defineConfig({
     ssr: {
       // Bundle these directly into the SSR module instead of externalising —
       // workerd cannot resolve from node_modules at runtime.
-      noExternal: ["@sanity/astro", "react", "react-dom", "motion", "better-auth"],
+      noExternal: ["@sanity/astro", "react", "react-dom", "motion", "better-auth", "shiki"],
     },
     optimizeDeps: {
       // Warm the prebundle on startup so the first request can't race with

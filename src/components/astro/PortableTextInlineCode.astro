@@ -1,0 +1,12 @@
+---
+// Custom serializer for the inline `code` mark — rendered inside paragraphs
+// when a word or phrase is wrapped with the Code decorator in Sanity Studio.
+// Gives backticked text a readable monospace pill so it stands out from body
+// copy without pulling the eye the way a fenced block would.
+---
+
+<code
+  class="px-[0.4em] py-[0.1em] rounded-[4px] bg-[rgba(0,0,0,0.06)] text-[0.92em] text-[#1a1c1b] font-[family-name:var(--font-jetbrains-mono,monospace)]"
+>
+  <slot />
+</code>
