@@ -63,13 +63,13 @@ let html: string;
 try {
   html = await codeToHtml(code, {
     lang,
-    theme: 'github-dark',
+    theme: 'tokyo-night',
   });
 } catch (err) {
   // Preview runtime (workerd) can fail to pull a grammar — don't crash the
   // route. Log to the worker console and render plain, un-highlighted code.
   console.warn('[PortableTextCode] shiki failed, falling back:', err instanceof Error ? err.message : err);
-  html = `<pre class="shiki" style="background-color:#24292e;color:#e1e4e8"><code>${escapeHtml(code)}</code></pre>`;
+  html = `<pre class="shiki" style="background-color:#1a1b26;color:#a9b1d6"><code>${escapeHtml(code)}</code></pre>`;
 }
 ---
 
