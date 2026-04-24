@@ -12,6 +12,7 @@ import type { SanitySessionTape } from '@/lib/sanity/types';
 const PortableTextImage = (await import('./PortableTextImage.astro')).default;
 const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
 const PortableTextCode = (await import('./PortableTextCode.astro')).default;
+const PortableTextInlineCode = (await import('./PortableTextInlineCode.astro')).default;
 
 interface Props {
   session: SanitySessionTape;
@@ -42,6 +43,7 @@ const ptComponents = {
     code: PortableTextCode,
   },
   block: { normal: PortableTextParagraph },
+  mark: { code: PortableTextInlineCode },
 };
 ---
 

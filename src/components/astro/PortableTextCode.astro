@@ -2,6 +2,12 @@
 // Custom serializer for the `code` block inside PortableText content.
 // Uses shiki for build-time syntax highlighting — themes are inlined as HTML,
 // zero client-side JS is shipped for syntax highlighting.
+//
+// Shiki lazy-imports language grammars at runtime. That works fine during a
+// static build, but the preview route (`prerender = false`) runs inside the
+// Cloudflare Workers runtime, where dynamic node_modules resolution is flaky.
+// We catch any failure and fall back to a plain <pre><code> — the preview
+// never 500s just because a grammar didn't load.
 import { codeToHtml } from 'shiki';
 
 interface CodeNode {
@@ -44,10 +50,27 @@ const supportedLanguages = new Set([
 ]);
 const lang = supportedLanguages.has(language) ? language : 'text';
 
-const html = await codeToHtml(code, {
-  lang,
-  theme: 'github-dark',
-});
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+let html: string;
+try {
+  html = await codeToHtml(code, {
+    lang,
+    theme: 'github-dark',
+  });
+} catch (err) {
+  // Preview runtime (workerd) can fail to pull a grammar — don't crash the
+  // route. Log to the worker console and render plain, un-highlighted code.
+  console.warn('[PortableTextCode] shiki failed, falling back:', err instanceof Error ? err.message : err);
+  html = `<pre class="shiki" style="background-color:#24292e;color:#e1e4e8"><code>${escapeHtml(code)}</code></pre>`;
+}
 ---
 
 <figure class="my-8 md:my-12">

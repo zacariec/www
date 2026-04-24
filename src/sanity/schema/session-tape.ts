@@ -53,7 +53,36 @@ export const sessionTapeType = defineType({
       title: "Content",
       type: "array",
       of: [
-        { type: "block" },
+        {
+          type: "block",
+          // Explicit decorators so the Studio toolbar shows exactly what's
+          // supported in inline copy. `code` is the single-backtick style.
+          marks: {
+            decorators: [
+              { title: "Strong", value: "strong" },
+              { title: "Emphasis", value: "em" },
+              { title: "Code", value: "code" },
+              { title: "Underline", value: "underline" },
+              { title: "Strike", value: "strike-through" },
+            ],
+            annotations: [
+              {
+                name: "link",
+                type: "object",
+                title: "Link",
+                fields: [
+                  {
+                    name: "href",
+                    type: "url",
+                    title: "URL",
+                    validation: (rule) =>
+                      rule.uri({ scheme: ["http", "https", "mailto", "tel"] }),
+                  },
+                ],
+              },
+            ],
+          },
+        },
         {
           type: "image",
           options: { hotspot: true },
