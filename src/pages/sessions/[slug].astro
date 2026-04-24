@@ -1,16 +1,13 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import SessionTapeContent from '@/components/astro/SessionTapeContent.astro';
-import { getSessionBySlug, getAllSessionSlugs, getSiteConfig } from '@/lib/sanity/fetch';
+import { getSessionBySlug, getSiteConfig } from '@/lib/sanity/fetch';
 import { sessionTapeJsonLd } from '@/lib/seo/jsonld';
 import { pickOgImage } from '@/lib/seo/og-image';
 import { countWords } from '@/lib/seo/word-count';
 
-export async function getStaticPaths() {
-  const slugs = await getAllSessionSlugs();
-  return slugs.map((s) => ({ params: { slug: s.slug } }));
-}
-
+// Server-rendered per request so freshly-published sessions appear without a
+// redeploy. Cache-Control headers from middleware keep the edge cache hot.
 const { slug } = Astro.params;
 const [session, config] = await Promise.all([
   getSessionBySlug(slug!),

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="32" fill="#000000"/>
+  <text
+    x="32"
+    y="32"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="#f9f9f7"
+    font-family="'Space Grotesk', system-ui, sans-serif"
+    font-size="22"
+    font-weight="700"
+    letter-spacing="2"
+  >ZC</text>
+</svg>
