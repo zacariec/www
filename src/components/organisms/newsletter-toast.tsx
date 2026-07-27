@@ -52,7 +52,10 @@ const SUBSCRIBED_DAYS = 365;
 const SCROLL_SHOW_FRACTION = 0.15;
 const SCROLL_HIDE_FRACTION = 0.9;
 const INLINE_FORM_SELECTOR = "[data-newsletter-inline]";
-const INLINE_FORM_HIDE_MARGIN_PX = 120;
+// Big-enough margin that the toast is out before the inline form enters the
+// viewport. Sized against the tallest state (mobile toast card ≈ 200px + its
+// 72px bottom offset, plus breathing room so there's never a two-form flash).
+const INLINE_FORM_HIDE_MARGIN_PX = 480;
 
 interface NewsletterToastProps {
   readonly copy?: NewsletterCopy;
@@ -94,13 +97,27 @@ export const NewsletterToast = ({ copy }: NewsletterToastProps): ReactElement =>
   const dismissed = dismissedUntil > Date.now();
   const subscribed = status === "success" || status === "already";
 
-  // Scroll bookkeeping — tracks whether the reader is past the "show"
-  // threshold and whether they've hit the "hide near bottom" band.
+  // Scroll bookkeeping — tracks reader position and re-queries the inline
+  // form's rect. Re-querying every scroll avoids the "element not in DOM at
+  // mount" trap that killed an IntersectionObserver approach: the CommentSection
+  // is `client:only="react"` and hydrates after the toast mounts, so any
+  // querySelector run on mount returns null.
   useEffect(() => {
     const onScroll = (): void => {
       const progress = scrollProgress();
       setScrolledPastShow(progress >= SCROLL_SHOW_FRACTION);
       setNearBottom(progress >= SCROLL_HIDE_FRACTION);
+
+      const observed = document.querySelector(INLINE_FORM_SELECTOR);
+      if (observed === null) {
+        setInlineVisible(false);
+        return;
+      }
+      const rect = observed.getBoundingClientRect();
+      const withinHideZone =
+        rect.top < window.innerHeight + INLINE_FORM_HIDE_MARGIN_PX &&
+        rect.bottom > -INLINE_FORM_HIDE_MARGIN_PX;
+      setInlineVisible(withinHideZone);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
@@ -109,23 +126,6 @@ export const NewsletterToast = ({ copy }: NewsletterToastProps): ReactElement =>
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
-
-  // Hide the toast whenever the inline form comes into view. We give it a
-  // generous rootMargin so the swap happens before the form is fully visible —
-  // avoids the reader briefly seeing both.
-  useEffect(() => {
-    const observed = document.querySelector(INLINE_FORM_SELECTOR);
-    if (observed === null) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry !== undefined) setInlineVisible(entry.isIntersecting);
-      },
-      { rootMargin: `0px 0px ${INLINE_FORM_HIDE_MARGIN_PX}px 0px`, threshold: 0 },
-    );
-    observer.observe(observed);
-    return () => observer.disconnect();
   }, []);
 
   // Auto-close + persist on successful subscribe.
