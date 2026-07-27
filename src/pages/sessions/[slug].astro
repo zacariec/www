@@ -1,6 +1,7 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import SessionTapeContent from '@/components/astro/SessionTapeContent.astro';
+import { NewsletterToast } from '@/components/organisms/newsletter-toast';
 import { getSessionBySlug, getSiteConfig } from '@/lib/sanity/fetch';
 import { sessionTapeJsonLd } from '@/lib/seo/jsonld';
 import { pickOgImage } from '@/lib/seo/og-image';
@@ -54,4 +55,5 @@ const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url, wordCou
   title={session.title}
 >
   <SessionTapeContent newsletterCopy={inlineNewsletterCopy} session={session} />
+  <NewsletterToast client:only="react" copy={inlineNewsletterCopy} />
 </SiteLayout>
