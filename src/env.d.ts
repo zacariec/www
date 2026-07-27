@@ -15,6 +15,7 @@ declare namespace Cloudflare {
     RESEND_AUDIENCE_ID?: string;
     RESEND_FROM_EMAIL?: string;
     SANITY_API_TOKEN?: string;
+    SANITY_WEBHOOK_SECRET?: string;
     SITE_URL?: string;
   }
 }
