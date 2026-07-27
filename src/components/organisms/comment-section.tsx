@@ -72,7 +72,9 @@ export const CommentSection = ({
     <div className="px-5 md:px-16 mt-20 md:mt-32">
       <div className="max-w-[720px] md:ml-[calc(16.666%+32px)]">
         <FadeIn>
-          <div className="mb-16 md:mb-20">
+          {/* data-newsletter-inline: NewsletterToast observes this to hide
+              itself when the inline form is on screen. */}
+          <div data-newsletter-inline className="mb-16 md:mb-20">
             <NewsletterForm copy={newsletterCopy} variant="inline" />
           </div>
         </FadeIn>

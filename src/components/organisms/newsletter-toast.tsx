@@ -5,23 +5,36 @@
  *
  * Bottom-anchored subscribe prompt for session (blog) pages.
  *
- * Behavior:
- *  - Shows after the reader has spent DISPLAY_DELAY_MS on the page, or once
- *    they've scrolled past SCROLL_TRIGGER_FRACTION of the document — whichever
- *    fires first. Prevents pouncing on first paint.
- *  - Dismissal (X) persists to localStorage for DISMISS_DAYS days.
- *  - Successful subscription auto-hides the toast and persists that state
- *    for a year — no more prompting a subscribed reader.
- *  - Respects prefers-reduced-motion (no slide, just fade).
+ * Visibility rules:
+ *  1. Reader has scrolled past SCROLL_SHOW_FRACTION of the doc — enough that
+ *     they're clearly reading, not just skimming the header.
+ *  2. Reader is NOT within the last SCROLL_HIDE_FRACTION of the doc — the
+ *     footer nav is close, no need to double up on CTAs.
+ *  3. The inline subscribe form (element with `data-newsletter-inline`) is NOT
+ *     in the viewport — hide the toast when the reader's already looking at
+ *     the real thing.
+ *  4. Reader hasn't dismissed (X) recently.
+ *  5. Reader isn't already subscribed.
  *
- * Mobile: full-width sheet flush with the viewport bottom.
- * Desktop: floating card, bottom-right, max 400px wide.
+ * Motion:
+ *  - AnimatePresence handles the reverse-on-exit automatically — flip
+ *    `visible` off and it slides + fades back out. Ease-out cubic with a
+ *    slight rise-in for a soft pop.
+ *  - Respects prefers-reduced-motion (fade only, no translate).
+ *
+ * Persistence:
+ *  - Dismissal via X → 30-day localStorage lock.
+ *  - Successful subscribe → 365-day lock + auto-hide.
+ *
+ * Layout:
+ *  - Mobile: full-width sheet above the fixed bottom nav.
+ *  - Desktop: floating bottom-right card, max 420px.
  *
  * Composes the existing NewsletterForm (variant="inline") — one source of
- * truth for form logic, styling stays consistent with the inline embed.
+ * truth for form logic; styling stays consistent with the inline embed.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useStore } from "@nanostores/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -36,8 +49,10 @@ import type { NewsletterCopy } from "@/components/molecules/newsletter-form";
 const STORAGE_KEY = "zc.newsletter-toast.dismissed-until";
 const DISMISS_DAYS = 30;
 const SUBSCRIBED_DAYS = 365;
-const DISPLAY_DELAY_MS = 20_000;
-const SCROLL_TRIGGER_FRACTION = 0.3;
+const SCROLL_SHOW_FRACTION = 0.15;
+const SCROLL_HIDE_FRACTION = 0.9;
+const INLINE_FORM_SELECTOR = "[data-newsletter-inline]";
+const INLINE_FORM_HIDE_MARGIN_PX = 120;
 
 interface NewsletterToastProps {
   readonly copy?: NewsletterCopy;
@@ -57,75 +72,93 @@ function writeDismissedUntil(days: number): void {
   window.localStorage.setItem(STORAGE_KEY, String(until));
 }
 
-function scrolledPast(fraction: number): boolean {
-  const scrolled = window.scrollY + window.innerHeight;
-  const total = document.documentElement.scrollHeight;
-  if (total <= 0) return false;
-  return scrolled / total >= fraction;
+/**
+ * True scroll progress. 0 when the viewport top is at the top of the page,
+ * 1 when the viewport bottom is at the bottom. Independent of doc length.
+ */
+function scrollProgress(): number {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  if (scrollable <= 0) return 0;
+  return Math.min(1, Math.max(0, window.scrollY / scrollable));
 }
 
 export const NewsletterToast = ({ copy }: NewsletterToastProps): ReactElement => {
-  const [visible, setVisible] = useState(false);
   const reduceMotion = useReducedMotion();
   const status = useStore($newsletterStatus);
 
-  // Gate: reveal after delay or scroll, unless dismissed / already subscribed.
+  const [scrolledPastShow, setScrolledPastShow] = useState(false);
+  const [nearBottom, setNearBottom] = useState(false);
+  const [inlineVisible, setInlineVisible] = useState(false);
+  const [dismissedUntil, setDismissedUntil] = useState<number>(() => readDismissedUntil());
+
+  const dismissed = dismissedUntil > Date.now();
+  const subscribed = status === "success" || status === "already";
+
+  // Scroll bookkeeping — tracks whether the reader is past the "show"
+  // threshold and whether they've hit the "hide near bottom" band.
   useEffect(() => {
-    if (readDismissedUntil() > Date.now()) return;
-    if (status === "success" || status === "already") return;
-
-    let done = false;
-
-    const reveal = (): void => {
-      if (done) return;
-      done = true;
-      setVisible(true);
-    };
-
-    const timeoutHandle = setTimeout(reveal, DISPLAY_DELAY_MS);
-
     const onScroll = (): void => {
-      if (scrolledPast(SCROLL_TRIGGER_FRACTION)) {
-        reveal();
-      }
+      const progress = scrollProgress();
+      setScrolledPastShow(progress >= SCROLL_SHOW_FRACTION);
+      setNearBottom(progress >= SCROLL_HIDE_FRACTION);
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     onScroll();
-
     return () => {
-      clearTimeout(timeoutHandle);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
-  }, [status]);
+  }, []);
+
+  // Hide the toast whenever the inline form comes into view. We give it a
+  // generous rootMargin so the swap happens before the form is fully visible —
+  // avoids the reader briefly seeing both.
+  useEffect(() => {
+    const observed = document.querySelector(INLINE_FORM_SELECTOR);
+    if (observed === null) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry !== undefined) setInlineVisible(entry.isIntersecting);
+      },
+      { rootMargin: `0px 0px ${INLINE_FORM_HIDE_MARGIN_PX}px 0px`, threshold: 0 },
+    );
+    observer.observe(observed);
+    return () => observer.disconnect();
+  }, []);
 
   // Auto-close + persist on successful subscribe.
   useEffect(() => {
-    if (status !== "success" && status !== "already") return;
+    if (!subscribed) return;
     writeDismissedUntil(SUBSCRIBED_DAYS);
-    const handle = setTimeout(() => setVisible(false), 3200);
-    return () => clearTimeout(handle);
-  }, [status]);
+    setDismissedUntil(readDismissedUntil());
+  }, [subscribed]);
 
   const dismiss = (): void => {
     writeDismissedUntil(DISMISS_DAYS);
-    setVisible(false);
+    setDismissedUntil(readDismissedUntil());
   };
 
-  const slideDistance = reduceMotion === true ? 0 : 24;
+  const visible = useMemo(
+    () => scrolledPastShow && !nearBottom && !inlineVisible && !dismissed && !subscribed,
+    [scrolledPastShow, nearBottom, inlineVisible, dismissed, subscribed],
+  );
+
+  const slideDistance = reduceMotion === true ? 0 : 32;
 
   return (
     <AnimatePresence>
       {visible ? (
         <motion.aside
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           aria-label="Newsletter subscription"
-          // Mobile: sits above the fixed bottom nav (SiteLayout adds pb-[64px]
-          // to <main>, so the nav owns the bottom 64px). Desktop: floats bottom-right.
+          // Mobile: above the fixed bottom nav (SiteLayout pads main pb-[64px]).
+          // Desktop: floating bottom-right.
           className="fixed inset-x-0 bottom-[72px] z-40 flex justify-center px-3 pointer-events-none sm:inset-x-auto sm:right-6 sm:bottom-6 sm:px-0"
-          exit={{ opacity: 0, y: slideDistance }}
-          initial={{ opacity: 0, y: slideDistance }}
-          transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+          exit={{ opacity: 0, y: slideDistance, scale: reduceMotion === true ? 1 : 0.98 }}
+          initial={{ opacity: 0, y: slideDistance, scale: reduceMotion === true ? 1 : 0.98 }}
+          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="pointer-events-auto w-full max-w-[420px] bg-[#ffffff] border border-[rgba(0,0,0,0.06)] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.18)]">
             <div className="relative p-6 sm:p-7">
