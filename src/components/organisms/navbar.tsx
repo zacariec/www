@@ -9,6 +9,7 @@ import { BlobLogo } from "@/components/atoms/blob-logo";
 import { TimeDisplay } from "@/components/atoms/time-display";
 import { NavList } from "@/components/molecules/nav-list";
 import { NowPlaying } from "@/components/molecules/now-playing";
+import { SocialFlipper } from "@/components/molecules/social-flipper";
 import { navItems as defaultNavItems, siteConfig } from "@/lib/constants";
 
 interface NavbarProps {
@@ -118,6 +119,7 @@ export const Navbar = ({ navItems = defaultNavItems, pathname: pathnameProp }: N
               pathname={pathname}
               variant="header"
             />
+            <SocialFlipper variant="header" />
             <TimeDisplay />
             <NowPlaying variant="header" />
           </div>

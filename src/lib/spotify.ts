@@ -1,3 +1,5 @@
+import { env } from "cloudflare:workers";
+
 import {
   spotifyCurrentlyPlayingSchema,
   spotifyRecentlyPlayedSchema,
@@ -10,13 +12,22 @@ const TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
 const NOW_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-playing";
 const RECENTLY_PLAYED_ENDPOINT = "https://api.spotify.com/v1/me/player/recently-played?limit=1";
 
-async function getAccessToken(): Promise<string | null> {
-  const clientId = import.meta.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET;
-  const refreshToken = import.meta.env.SPOTIFY_REFRESH_TOKEN;
+async function getAccessToken(): Promise<string | undefined> {
+  // Runtime secrets live on the Cloudflare `env` binding, not import.meta.env.
+  // import.meta.env is baked at build time and only exposes PUBLIC_* vars.
+  const clientId = env.SPOTIFY_CLIENT_ID;
+  const clientSecret = env.SPOTIFY_CLIENT_SECRET;
+  const refreshToken = env.SPOTIFY_REFRESH_TOKEN;
 
-  if (!clientId || !clientSecret || !refreshToken) {
-    return null;
+  if (
+    clientId === undefined ||
+    clientSecret === undefined ||
+    refreshToken === undefined ||
+    clientId === "" ||
+    clientSecret === "" ||
+    refreshToken === ""
+  ) {
+    return undefined;
   }
 
   const basic = btoa(`${clientId}:${clientSecret}`);
@@ -35,12 +46,12 @@ async function getAccessToken(): Promise<string | null> {
   });
 
   if (!res.ok) {
-    return null;
+    return undefined;
   }
 
   const data: unknown = await res.json();
   const parsed = spotifyTokenSchema.safeParse(data);
-  if (!parsed.success) return null;
+  if (!parsed.success) return undefined;
 
   return parsed.data.access_token;
 }
@@ -49,7 +60,7 @@ export type { NowPlayingData };
 
 export async function getNowPlaying(): Promise<NowPlayingData> {
   const token = await getAccessToken();
-  if (!token) return { isPlaying: false, error: "No access token" };
+  if (token === undefined) return { isPlaying: false, error: "No access token" };
 
   // Try currently playing
   const res = await fetch(NOW_PLAYING_ENDPOINT, {

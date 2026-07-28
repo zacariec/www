@@ -9,6 +9,7 @@ import { BlobLogo } from "@/components/atoms/blob-logo";
 import { NavList } from "@/components/molecules/nav-list";
 import { NewsletterForm } from "@/components/molecules/newsletter-form";
 import { NowPlaying } from "@/components/molecules/now-playing";
+import { SocialFlipper } from "@/components/molecules/social-flipper";
 
 import type { NewsletterCopy } from "@/components/molecules/newsletter-form";
 
@@ -113,7 +114,7 @@ export const Footer = ({
               &copy; {new Date().getFullYear()}
             </span>
           </div>
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center gap-6">
             <NavList
               hoveredHref={hoveredHref}
               navItems={navItems}
@@ -122,6 +123,7 @@ export const Footer = ({
               pathname={currentPathname}
               variant="footer"
             />
+            <SocialFlipper variant="footer" />
           </div>
         </div>
       </div>

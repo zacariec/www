@@ -1,7 +1,6 @@
 "use client";
 
 import { BlobLink } from "@/components/atoms/blob-link";
-import { SocialFlipper } from "@/components/molecules/social-flipper";
 
 interface NavListProps {
   navItems: readonly { label: string; href: string }[];
@@ -72,16 +71,6 @@ export const NavList = ({
           </BlobLink>
         );
       })}
-      <BlobLink
-        color="#777777"
-        onMouseEnter={onHover ? () => onHover("social") : undefined}
-        onMouseLeave={onHover ? () => onHover(null) : undefined}
-        position="left"
-        size={blobSize}
-        visible={blobTarget === "social"}
-      >
-        <SocialFlipper variant={variant} />
-      </BlobLink>
     </div>
   );
 };
