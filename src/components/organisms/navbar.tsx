@@ -136,7 +136,11 @@ export const Navbar = ({ navItems = defaultNavItems, pathname: pathnameProp }: N
           <a className="no-underline" href="/">
             <BlobLogo size={28} textSize="9px" />
           </a>
-          <TimeDisplay className="text-[9px]" />
+          <div className="flex items-center gap-4">
+            <SocialFlipper variant="header" />
+            <TimeDisplay className="text-[9px]" />
+            <NowPlaying touch variant="header" />
+          </div>
         </div>
       </nav>
 

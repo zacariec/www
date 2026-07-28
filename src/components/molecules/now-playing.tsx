@@ -32,9 +32,16 @@ const ScrollingText = ({ children }: { children: React.ReactNode }) => (
 
 interface NowPlayingProps {
   variant?: "header" | "footer";
+  /**
+   * When true, renders as a tap-anywhere link to the track's Spotify URL
+   * instead of a hover-to-expand widget. Parent decides — used by the
+   * mobile navbar where hover doesn't exist and inline expand would break
+   * the tight header layout.
+   */
+  touch?: boolean;
 }
 
-export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
+export const NowPlaying = ({ variant = "footer", touch = false }: NowPlayingProps) => {
   const [data, setData] = useState<NowPlayingData | null>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -65,6 +72,33 @@ export const NowPlaying = ({ variant = "footer" }: NowPlayingProps) => {
   const textColor = isHeader ? "text-[#c6c6c6]" : "text-[#777777]";
   const hoverColor = isHeader ? "hover:text-[#000000]" : "hover:text-[#c6c6c6]";
   const artistColor = isHeader ? "text-[#c6c6c6]/60" : "text-[#555]";
+
+  // Touch UX: tap the icon to open the track's Spotify URL directly. Inline
+  // expand blows out the mobile header layout (max-w-[220px] pushes into the
+  // sibling meta strip, wraps the time to two lines). A direct link is the
+  // useful action anyway — "here's what I'm playing" + one tap to hear it.
+  if (touch) {
+    const commonClass = `flex items-center gap-2 transition-opacity duration-500 min-w-[14px] min-h-[14px] no-underline ${!data?.title ? "opacity-0" : "opacity-100"}`;
+
+    if (data?.songUrl) {
+      return (
+        <a
+          aria-label={data.title ? `Open on Spotify: ${data.title}` : "Open on Spotify"}
+          className={commonClass}
+          href={data.songUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <SpotifyIcon color={iconColor} size={14} />
+        </a>
+      );
+    }
+    return (
+      <div aria-hidden="true" className={commonClass}>
+        <SpotifyIcon color={iconColor} size={14} />
+      </div>
+    );
+  }
 
   return (
     <div
