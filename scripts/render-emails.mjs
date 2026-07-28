@@ -1,8 +1,27 @@
-import { renderToStaticMarkup } from "react-dom/server";
+/**
+ * Render the three lifecycle email templates to static HTML for visual review
+ * (screenshots, browser preview). Run from repo root:
+ *
+ *   bun scripts/render-emails.mjs
+ *
+ * Writes:
+ *   /tmp/email-new-post.html
+ *   /tmp/email-welcome.html
+ *   /tmp/email-unsub.html
+ *
+ * Uses react-dom/server (not @react-email/render) to sidestep the render
+ * package's plaintext dependency chain — this file is dev-only and never
+ * shipped to production. The worker still uses @react-email/render at
+ * runtime via src/lib/newsletter/send.ts and broadcast.ts.
+ */
+/* eslint-disable no-console */
 import { writeFileSync } from "node:fs";
-import NewPostNotification from "/home/employee_00/github.com/zacariec/www/emails/NewPostNotification.tsx";
-import SubscriptionConfirmed from "/home/employee_00/github.com/zacariec/www/emails/SubscriptionConfirmed.tsx";
-import UnsubscribeConfirmation from "/home/employee_00/github.com/zacariec/www/emails/UnsubscribeConfirmation.tsx";
+
+import { renderToStaticMarkup } from "react-dom/server";
+
+import NewPostNotification from "../emails/NewPostNotification.tsx";
+import SubscriptionConfirmed from "../emails/SubscriptionConfirmed.tsx";
+import UnsubscribeConfirmation from "../emails/UnsubscribeConfirmation.tsx";
 
 const specs = [
   {
@@ -31,9 +50,10 @@ const specs = [
   },
 ];
 
-for (const { name, element } of specs) {
+specs.forEach(({ name, element }) => {
   const inner = renderToStaticMarkup(element);
   const wrapped = `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"></head><body style="margin:0;background:#f9f9f7">${inner}</body></html>`;
-  writeFileSync(`/tmp/email-${name}.html`, wrapped);
-  console.log(`wrote /tmp/email-${name}.html`);
-}
+  const path = `/tmp/email-${name}.html`;
+  writeFileSync(path, wrapped);
+  console.log(`wrote ${path}`);
+});
