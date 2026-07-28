@@ -8,10 +8,12 @@
  *   - URL:      https://zcarr.dev/api/newsletter/broadcast
  *   - Trigger:  Create, Update
  *   - Filter:   _type == "sessionTape" && !(_id in path("drafts.**")) && defined(publishedAt)
- *   - Projection:
+ *   - Projection (keys deliberately don't start with `_` — avoids collisions
+ *     with Sanity's internal metadata fields and copy/paste rendering foot-
+ *     guns in Discord/Slack markdown):
  *       {
- *         "_id": _id,
- *         "_type": _type,
+ *         "id": _id,
+ *         "type": _type,
  *         "slug": slug.current,
  *         "title": title,
  *         "subtitle": subtitle,
@@ -37,8 +39,8 @@ import type { APIRoute } from "astro";
 export const prerender = false;
 
 const payloadSchema = z.object({
-  _id: z.string().min(1),
-  _type: z.literal("sessionTape"),
+  id: z.string().min(1),
+  type: z.literal("sessionTape"),
   slug: z.string().min(1),
   title: z.string().min(1),
   subtitle: z.string(),
