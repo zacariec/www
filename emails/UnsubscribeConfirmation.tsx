@@ -21,7 +21,7 @@ export default function UnsubscribeConfirmationEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>You&apos;re off the list.</Preview>
+      <Preview>you&apos;re off the list. done.</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -29,22 +29,22 @@ export default function UnsubscribeConfirmationEmail({
               <Text style={logoText}>ZC</Text>
             </div>
             <Heading as="h1" style={h1}>
-              Done
+              done.
             </Heading>
           </Section>
 
           <Section style={content}>
-            <Text style={p}>You&apos;re off the list. No more emails.</Text>
-
-            <Section style={resubscribeBox}>
-              <Link href={resubscribeUrl} style={resubscribeLink}>
-                Resubscribe →
-              </Link>
-            </Section>
+            <Text style={p}>you&apos;re off. no more emails from me.</Text>
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>You unsubscribed from zcarr.dev.</Text>
+            <Text style={footerLine}>
+              changed your mind?{" "}
+              <Link href={resubscribeUrl} style={footerLink}>
+                resubscribe
+              </Link>
+              .
+            </Text>
           </Section>
         </Container>
       </Body>
@@ -52,9 +52,18 @@ export default function UnsubscribeConfirmationEmail({
   );
 }
 
+const CREAM = "#f9f9f7";
+const WHITE = "#ffffff";
+const INK = "#1a1c1b";
+const BLACK = "#000000";
+const OFFWHITE = "#e2e2e2";
+const MUTED = "#777777";
+const SUBTLE = "#c6c6c6";
+const HAIRLINE = "rgba(0, 0, 0, 0.08)";
+
 const body: React.CSSProperties = {
-  backgroundColor: "#f9f9f7",
-  padding: "40px 20px",
+  backgroundColor: CREAM,
+  padding: "56px 20px",
   fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   WebkitFontSmoothing: "antialiased",
 };
@@ -62,87 +71,71 @@ const body: React.CSSProperties = {
 const container: React.CSSProperties = {
   maxWidth: "560px",
   margin: "0 auto",
-  backgroundColor: "#ffffff",
-  border: "1px solid rgba(0, 0, 0, 0.06)",
+  backgroundColor: WHITE,
 };
 
 const header: React.CSSProperties = {
-  padding: "48px 40px 32px",
-  borderBottom: "1px solid rgba(0, 0, 0, 0.04)",
+  padding: "64px 48px 32px",
 };
 
 const logo: React.CSSProperties = {
-  width: "48px",
-  height: "48px",
-  backgroundColor: "#000000",
+  width: "44px",
+  height: "44px",
+  backgroundColor: BLACK,
   borderRadius: "50%",
   textAlign: "center",
-  lineHeight: "48px",
-  marginBottom: "32px",
+  lineHeight: "44px",
+  marginBottom: "40px",
 };
 
 const logoText: React.CSSProperties = {
   fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "18px",
+  fontSize: "16px",
   fontWeight: 700,
-  color: "#e2e2e2",
+  color: OFFWHITE,
   letterSpacing: "1px",
   margin: 0,
-  lineHeight: "48px",
+  lineHeight: "44px",
 };
 
 const h1: React.CSSProperties = {
   fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "28px",
+  fontSize: "36px",
   fontWeight: 700,
-  color: "#000000",
-  letterSpacing: "-0.02em",
-  lineHeight: "1.2",
-  marginBottom: "16px",
+  color: BLACK,
+  letterSpacing: "-0.03em",
+  lineHeight: "1.1",
   marginTop: 0,
+  marginBottom: 0,
 };
 
 const content: React.CSSProperties = {
-  padding: "40px",
+  padding: "16px 48px 48px",
 };
 
 const p: React.CSSProperties = {
   fontSize: "15px",
-  color: "#1a1c1b",
-  lineHeight: "1.9",
-  marginBottom: "24px",
+  color: INK,
+  lineHeight: "1.75",
   marginTop: 0,
-};
-
-const resubscribeBox: React.CSSProperties = {
-  backgroundColor: "#fcfcfb",
-  border: "1px solid rgba(0, 0, 0, 0.06)",
-  padding: "28px",
-  margin: "32px 0",
-  textAlign: "center" as const,
-};
-
-const resubscribeLink: React.CSSProperties = {
-  fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "11px",
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "2px",
-  color: "#000000",
-  textDecoration: "none",
-  borderBottom: "2px solid #000000",
-  paddingBottom: "4px",
+  marginBottom: 0,
 };
 
 const footer: React.CSSProperties = {
-  padding: "32px 40px",
-  backgroundColor: "#fcfcfb",
-  borderTop: "1px solid rgba(0, 0, 0, 0.04)",
+  padding: "32px 48px 40px",
+  borderTop: `1px solid ${HAIRLINE}`,
 };
 
-const footerText: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#777777",
+const footerLine: React.CSSProperties = {
+  fontSize: "13px",
+  color: MUTED,
   lineHeight: "1.7",
-  margin: 0,
+  marginTop: 0,
+  marginBottom: 0,
+};
+
+const footerLink: React.CSSProperties = {
+  color: INK,
+  textDecoration: "none",
+  borderBottom: `1px solid ${SUBTLE}`,
 };

@@ -2,6 +2,7 @@
 import {
   Body,
   Container,
+  Font,
   Head,
   Heading,
   Hr,
@@ -25,7 +26,7 @@ interface Props {
 export default function NewPostNotificationEmail({
   postTitle = "New Post Title",
   postSubtitle = "A compelling subtitle",
-  postUrl = "https://zcarr.dev/blog/example",
+  postUrl = "https://zcarr.dev/sessions/example",
   postDate = "April 9, 2026",
   readingTime = "5 min read",
   postExcerpt,
@@ -33,50 +34,56 @@ export default function NewPostNotificationEmail({
 }: Props) {
   return (
     <Html lang="en">
-      <Head />
-      <Preview>New: {postTitle}</Preview>
+      <Head>
+        <Font
+          fontFamily="Space Grotesk"
+          fallbackFontFamily="sans-serif"
+          webFont={{
+            url: "https://fonts.gstatic.com/s/spacegrotesk/v16/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7ZjF.woff2",
+            format: "woff2",
+          }}
+          fontWeight="700"
+          fontStyle="normal"
+        />
+      </Head>
+      <Preview>{`${postTitle} — a new session on zcarr.dev`}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
-            <div style={logo}>
-              <Text style={logoText}>ZC</Text>
-            </div>
-            <Text style={badge}>New Post</Text>
+            <Text style={metaRow}>
+              SESSIONS&nbsp;&nbsp;·&nbsp;&nbsp;{postDate.toUpperCase()}&nbsp;&nbsp;·&nbsp;&nbsp;
+              {readingTime.toUpperCase()}
+            </Text>
             <Heading as="h1" style={h1}>
               {postTitle}
             </Heading>
             <Text style={subtitle}>{postSubtitle}</Text>
-            <Hr style={metaDivider} />
-            <table cellPadding="0" cellSpacing="0" style={{ border: 0 }}>
-              <tr>
-                <td style={metaItem}>{postDate}</td>
-                <td aria-hidden="true" style={{ width: "16px" }} />
-                <td style={metaItem}>{readingTime}</td>
-              </tr>
-            </table>
           </Section>
 
-          <Section style={content}>
-            <Text style={p}>New one&apos;s up.</Text>
+          <Hr style={divider} />
 
-            {postExcerpt != null && postExcerpt !== "" ? (
-              <Section style={excerptBox}>
-                <Text style={excerptText}>{postExcerpt}</Text>
-              </Section>
-            ) : null}
-
-            <Section style={ctaContainer}>
-              <Link href={postUrl} style={ctaLink}>
-                Read it →
-              </Link>
+          {postExcerpt != null && postExcerpt !== "" ? (
+            <Section style={excerptSection}>
+              <Text style={excerptLabel}>EXCERPT</Text>
+              <Text style={excerptText}>{postExcerpt}</Text>
             </Section>
+          ) : null}
+
+          <Section style={ctaSection}>
+            <Link href={postUrl} style={ctaLink}>
+              read the session →
+            </Link>
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>You subscribed to zcarr.dev.</Text>
-            <Link href={unsubscribeUrl} style={footerLink}>
-              Unsubscribe
-            </Link>
+            <Text style={footerLine}>direct from zc.</Text>
+            <Text style={footerLine}>
+              not for you?{" "}
+              <Link href={unsubscribeUrl} style={footerLink}>
+                unsubscribe
+              </Link>
+              .
+            </Text>
           </Section>
         </Container>
       </Body>
@@ -84,9 +91,17 @@ export default function NewPostNotificationEmail({
   );
 }
 
+const CREAM = "#f9f9f7";
+const WHITE = "#ffffff";
+const INK = "#1a1c1b";
+const BLACK = "#000000";
+const MUTED = "#777777";
+const SUBTLE = "#c6c6c6";
+const HAIRLINE = "rgba(0, 0, 0, 0.08)";
+
 const body: React.CSSProperties = {
-  backgroundColor: "#f9f9f7",
-  padding: "40px 20px",
+  backgroundColor: CREAM,
+  padding: "56px 20px",
   fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   WebkitFontSmoothing: "antialiased",
 };
@@ -94,110 +109,76 @@ const body: React.CSSProperties = {
 const container: React.CSSProperties = {
   maxWidth: "600px",
   margin: "0 auto",
-  backgroundColor: "#ffffff",
-  border: "1px solid rgba(0, 0, 0, 0.06)",
+  backgroundColor: WHITE,
 };
 
 const header: React.CSSProperties = {
-  padding: "48px 40px 40px",
-  borderBottom: "1px solid rgba(0, 0, 0, 0.04)",
+  padding: "64px 48px 40px",
 };
 
-const logo: React.CSSProperties = {
-  width: "48px",
-  height: "48px",
-  backgroundColor: "#000000",
-  borderRadius: "50%",
-  textAlign: "center",
-  lineHeight: "48px",
-  marginBottom: "32px",
-};
-
-const logoText: React.CSSProperties = {
+const metaRow: React.CSSProperties = {
   fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "18px",
-  fontWeight: 700,
-  color: "#e2e2e2",
-  letterSpacing: "1px",
-  margin: 0,
-  lineHeight: "48px",
-};
-
-const badge: React.CSSProperties = {
-  fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "9px",
+  fontSize: "10px",
   fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "2px",
-  color: "#c6c6c6",
-  marginBottom: "20px",
+  letterSpacing: "3px",
+  color: SUBTLE,
   marginTop: 0,
+  marginBottom: "40px",
 };
 
 const h1: React.CSSProperties = {
   fontFamily: "'Space Grotesk', sans-serif",
-  fontSize: "32px",
+  fontSize: "40px",
   fontWeight: 700,
-  color: "#000000",
-  letterSpacing: "-0.03em",
-  lineHeight: "1.15",
-  marginBottom: "20px",
+  color: BLACK,
+  letterSpacing: "-0.035em",
+  lineHeight: "1.05",
   marginTop: 0,
+  marginBottom: "20px",
 };
 
 const subtitle: React.CSSProperties = {
   fontSize: "17px",
-  color: "#777777",
-  lineHeight: "1.6",
+  color: MUTED,
+  lineHeight: "1.55",
   fontWeight: 300,
-  marginBottom: "24px",
   marginTop: 0,
+  marginBottom: 0,
 };
 
-const metaDivider: React.CSSProperties = {
-  borderColor: "rgba(0, 0, 0, 0.04)",
-  borderTop: "1px solid rgba(0, 0, 0, 0.04)",
-  margin: "0 0 16px 0",
+const divider: React.CSSProperties = {
+  borderColor: HAIRLINE,
+  borderTop: `1px solid ${HAIRLINE}`,
+  margin: "0 48px",
+  width: "auto",
 };
 
-const metaItem: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#c6c6c6",
-  textTransform: "uppercase",
-  letterSpacing: "1px",
+const excerptSection: React.CSSProperties = {
+  padding: "40px 48px 24px",
+};
+
+const excerptLabel: React.CSSProperties = {
   fontFamily: "'Space Grotesk', sans-serif",
-};
-
-const content: React.CSSProperties = {
-  padding: "40px",
-};
-
-const p: React.CSSProperties = {
-  fontSize: "15px",
-  color: "#1a1c1b",
-  lineHeight: "1.9",
-  marginBottom: "24px",
+  fontSize: "10px",
+  fontWeight: 600,
+  letterSpacing: "3px",
+  color: SUBTLE,
   marginTop: 0,
-};
-
-const excerptBox: React.CSSProperties = {
-  backgroundColor: "#fcfcfb",
-  borderLeft: "3px solid rgba(0, 0, 0, 0.1)",
-  padding: "28px 32px",
-  margin: "32px 0",
+  marginBottom: "16px",
 };
 
 const excerptText: React.CSSProperties = {
   fontSize: "16px",
-  color: "#1a1c1b",
-  lineHeight: "1.8",
+  color: INK,
+  lineHeight: "1.7",
   fontWeight: 300,
-  margin: 0,
+  fontStyle: "italic",
+  marginTop: 0,
+  marginBottom: 0,
 };
 
-const ctaContainer: React.CSSProperties = {
-  margin: "40px 0 32px",
-  textAlign: "left" as const,
+const ctaSection: React.CSSProperties = {
+  padding: "32px 48px 56px",
 };
 
 const ctaLink: React.CSSProperties = {
@@ -205,32 +186,28 @@ const ctaLink: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 600,
   textTransform: "uppercase",
-  letterSpacing: "2px",
-  color: "#000000",
+  letterSpacing: "3px",
+  color: BLACK,
   textDecoration: "none",
-  borderBottom: "2px solid #000000",
-  paddingBottom: "4px",
+  borderBottom: `2px solid ${BLACK}`,
+  paddingBottom: "6px",
 };
 
 const footer: React.CSSProperties = {
-  padding: "32px 40px",
-  backgroundColor: "#fcfcfb",
-  borderTop: "1px solid rgba(0, 0, 0, 0.04)",
+  padding: "32px 48px 40px",
+  borderTop: `1px solid ${HAIRLINE}`,
 };
 
-const footerText: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#777777",
+const footerLine: React.CSSProperties = {
+  fontSize: "13px",
+  color: MUTED,
   lineHeight: "1.7",
-  marginBottom: "16px",
   marginTop: 0,
+  marginBottom: "4px",
 };
 
 const footerLink: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#777777",
+  color: INK,
   textDecoration: "none",
-  borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
-  textTransform: "uppercase",
-  letterSpacing: "1px",
+  borderBottom: `1px solid ${SUBTLE}`,
 };
