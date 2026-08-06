@@ -15,7 +15,15 @@ interface Props {
 }
 
 const { node } = Astro.props;
-const src = urlFor(node).width(1200).url();
+
+// GIFs die if you touch the CDN's transform pipeline (auto-format converts
+// to static WebP, resize keeps only the first frame). Serve the raw asset
+// URL with no transform so animation survives. Everything else stays at
+// width-1200 for responsive delivery.
+const isGif = node.asset._ref?.endsWith('-gif');
+const src = isGif
+  ? urlFor(node).url()
+  : urlFor(node).width(1200).url();
 ---
 
 <figure class="my-8 md:my-12">
