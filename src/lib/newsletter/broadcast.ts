@@ -30,7 +30,7 @@ export interface BroadcastPost {
   readonly title: string;
   readonly subtitle: string;
   readonly slug: string;
-  readonly readingTime: string;
+  readonly readTime: number;
   readonly excerpt?: string;
   readonly publishedAt: string;
 }
@@ -71,7 +71,7 @@ async function renderBroadcastEmail(
     postSubtitle: post.subtitle,
     postUrl: `${siteUrl}/sessions/${post.slug}`,
     postDate: formatPostDate(post.publishedAt),
-    readingTime: post.readingTime,
+    readTime: post.readTime,
     postExcerpt: post.excerpt,
     // Resend replaces this at send-time with the per-recipient unsubscribe
     // URL bound to the audience contact. Must be present in the rendered HTML.

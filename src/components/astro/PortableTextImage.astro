@@ -1,35 +1,36 @@
 ---
-import { urlFor } from '@/lib/sanity/client';
+import { urlFor } from "@/lib/sanity/client";
+import type { Props as PortableTextProps } from "astro-portabletext/types";
+import type { SanityImageBlock } from "@/lib/sanity/types";
 
-interface ImageNode {
-  _type: 'image';
-  asset: { _ref: string };
-  alt?: string;
-  caption?: string;
-}
-
-interface Props {
-  node: ImageNode;
-  index: number;
-  isInline: boolean;
-}
+type ImageNode = SanityImageBlock & { _zcFigure?: string };
+type Props = PortableTextProps<ImageNode>;
 
 const { node } = Astro.props;
+
+function hasAsset(
+  image: ImageNode,
+): image is ImageNode & { asset: NonNullable<SanityImageBlock["asset"]> } {
+  return Boolean(image.asset?._ref);
+}
 
 // GIFs die if you touch the CDN's transform pipeline (auto-format converts
 // to static WebP, resize keeps only the first frame). Serve the raw asset
 // URL with no transform so animation survives. Everything else stays at
 // width-1200 for responsive delivery.
-const isGif = node.asset._ref?.endsWith('-gif');
-const src = isGif
-  ? urlFor(node).url()
-  : urlFor(node).width(1200).url();
+let src = node.url;
+if (hasAsset(node)) {
+  const isGif = node.asset._ref.endsWith("-gif");
+  src = isGif ? urlFor(node).url() : urlFor(node).width(1200).url();
+}
 ---
 
-<figure class="my-8 md:my-12">
-  <img alt={node.alt || ''} class="w-full" src={src} loading="lazy" />
-  {node.caption && (
-    <figcaption class="text-[9px] tracking-[1.5px] uppercase text-[#777777] mt-3 font-[family-name:var(--font-space-grotesk)]">
+<figure class="article-figure">
+  {src && <img alt={node.alt ?? ""} src={src} loading="lazy" decoding="async" />}
+  {(node.caption || node._zcFigure) && (
+    <figcaption>
+      {node._zcFigure}
+      {node._zcFigure && node.caption ? " — " : ""}
       {node.caption}
     </figcaption>
   )}

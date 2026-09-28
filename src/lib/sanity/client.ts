@@ -1,9 +1,28 @@
 import { createClient } from "@sanity/client";
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 
 import { apiVersion, dataset, projectId } from "@/sanity/env";
 
 import type { SanityClient } from "@sanity/client";
+
+const technicalFields: Record<string, true> = {
+  timezone: true,
+  kind: true,
+  state: true,
+  toneOverride: true,
+  type: true,
+  status: true,
+  provider: true,
+  providerId: true,
+  authorSanityId: true,
+  twitterHandle: true,
+  slug: true,
+  href: true,
+  url: true,
+  label: true,
+  style: true,
+  language: true,
+};
 
 export const client = projectId
   ? createClient({
@@ -28,11 +47,18 @@ export function createPreviewClient(token: string | undefined): SanityClient | n
     useCdn: false,
     token,
     perspective: "drafts",
-    stega: { enabled: true, studioUrl: "/studio" },
+    stega: {
+      enabled: true,
+      studioUrl: "/studio",
+      filter: (props) =>
+        props.sourcePath.some((part) => typeof part === "string" && technicalFields[part])
+          ? false
+          : props.filterDefault(props),
+    },
   });
 }
 
-const builder = client ? imageUrlBuilder(client) : null;
+const builder = client ? createImageUrlBuilder(client) : null;
 
 export function urlFor(source: { asset: { _ref: string } }) {
   if (!builder) throw new Error("Sanity client not configured");

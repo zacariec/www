@@ -119,6 +119,20 @@ export default defineConfig([
       "react/jsx-no-useless-fragment": "off",
       "react/function-component-definition": "off",
       "react/no-array-index-key": "warn",
+      "jsx-a11y/label-has-associated-control": ["error", { assert: "either", depth: 3 }],
     },
+  },
+  {
+    // DOM and renderer state are intentionally updated in place.
+    files: ["src/scripts/*.ts", "src/lib/zc-gl.ts"],
+    rules: {
+      "no-param-reassign": ["error", { props: false }],
+      "@typescript-eslint/no-use-before-define": ["error", { functions: false }],
+    },
+  },
+  {
+    // Deterministic integer PRNG, Bayer indexing, and PNG CRC require bitwise arithmetic.
+    files: ["src/lib/zc-gl.ts", "scripts/build-cursors.ts"],
+    rules: { "no-bitwise": "off" },
   },
 ]);

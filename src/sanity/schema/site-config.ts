@@ -1,9 +1,12 @@
 import { defineField, defineType } from "sanity";
+import { HEADLINE_PRESETS, siteConfig } from "../../lib/constants";
+import { StudioSitePreview } from "../studio-components";
 
 export const siteConfigType = defineType({
   name: "siteConfig",
   title: "Site Config",
   type: "document",
+  components: { preview: StudioSitePreview },
   groups: [
     { name: "content", title: "Content" },
     { name: "newsletter", title: "Newsletter" },
@@ -27,58 +30,119 @@ export const siteConfigType = defineType({
       ],
     }),
     defineField({
-      name: "heroSubtitle",
-      title: "Hero Subtitle",
+      name: "headlinePreset",
+      title: "Headline",
       type: "string",
       group: "content",
-      description: 'e.g. "Journal — Est. 2024"',
+      initialValue: "getting-it-out-there",
+      options: {
+        list: [
+          ...Object.entries(HEADLINE_PRESETS).map(([value, lines]) => ({
+            title: lines.join(" / "),
+            value,
+          })),
+          { title: "Custom", value: "custom" },
+        ],
+      },
     }),
     defineField({
-      name: "heroHeading",
-      title: "Hero Heading Lines",
+      name: "headlineCustom",
+      title: "Custom headline lines",
       type: "array",
       group: "content",
       of: [{ type: "string" }],
-      description: 'Each string is a line, e.g. ["THOUGHTS,", "UNFILTERED."]',
+      hidden: ({ document }) => document?.headlinePreset !== "custom",
+      validation: (rule) =>
+        rule.custom((value, context) =>
+          context.document?.headlinePreset !== "custom" ||
+          (Array.isArray(value) &&
+            value.length === 2 &&
+            value.every((line) => typeof line === "string" && line.trim()))
+            ? true
+            : "Enter two headline lines.",
+        ),
     }),
     defineField({
-      name: "heroDescription",
-      title: "Hero Description",
+      name: "readme",
+      title: "README",
       type: "text",
       group: "content",
-      rows: 3,
+      initialValue: siteConfig.readme,
     }),
     defineField({
-      name: "heroImage",
-      title: "Hero Image",
-      type: "image",
+      name: "tickerEnabled",
+      title: "Latest ticker",
+      type: "boolean",
       group: "content",
-      options: { hotspot: true },
-      fields: [
-        defineField({ name: "alt", title: "Alt Text", type: "string" }),
-        defineField({ name: "caption", title: "Figure Caption", type: "string" }),
+      initialValue: true,
+    }),
+    defineField({
+      name: "socials",
+      title: "Elsewhere",
+      type: "array",
+      group: "content",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "label",
+              title: "Label",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "url",
+              title: "URL",
+              type: "url",
+              validation: (rule) => rule.required().uri({ scheme: ["https", "http"] }),
+            }),
+          ],
+        },
       ],
     }),
     defineField({
-      name: "marqueeText",
-      title: "Scrolling Marquee Text",
-      type: "string",
+      name: "toneShift",
+      title: "Tone shift",
+      type: "number",
       group: "content",
-      description: 'e.g. "CODE · SYSTEMS · TASTE · NOISE ·"',
+      initialValue: 1,
+      validation: (rule) => rule.integer().min(0).max(5),
     }),
     defineField({
-      name: "footerHeading",
-      title: "Footer Heading",
+      name: "displayVersion",
+      title: "Display version",
       type: "string",
       group: "content",
-      description: 'Use \\n for line breaks. e.g. "Thanks for\\nreading."',
+      initialValue: "0.26",
     }),
     defineField({
-      name: "footerSubtitle",
-      title: "Footer Subtitle",
+      name: "bio",
+      title: "Bio",
+      type: "text",
+      group: "content",
+      description: "Optional. Leave empty until Zac supplies the copy.",
+    }),
+    defineField({
+      name: "moderationDefault",
+      title: "New comments",
       type: "string",
       group: "content",
-      description: 'e.g. "— End"',
+      initialValue: "approved",
+      options: {
+        list: [
+          { title: "Publish immediately", value: "approved" },
+          { title: "Hold for approval", value: "pending" },
+        ],
+      },
+    }),
+    defineField({
+      name: "authorSanityId",
+      title: "Zac's Sanity user ID",
+      type: "string",
+      group: "content",
+      description:
+        "Verified Sanity user ID. Only this Studio identity may reply with the AUTHOR badge.",
     }),
 
     // Newsletter
@@ -208,24 +272,6 @@ export const siteConfigType = defineType({
       name: "author",
       title: "Author Name",
       type: "string",
-      group: "seo",
-    }),
-    defineField({
-      name: "linkedIn",
-      title: "LinkedIn URL",
-      type: "url",
-      group: "seo",
-    }),
-    defineField({
-      name: "github",
-      title: "GitHub URL",
-      type: "url",
-      group: "seo",
-    }),
-    defineField({
-      name: "twitter",
-      title: "X / Twitter URL",
-      type: "url",
       group: "seo",
     }),
     defineField({

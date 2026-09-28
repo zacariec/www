@@ -1,0 +1,52 @@
+---
+import { navigation, currentNavigation } from "@/lib/navigation";
+const current = currentNavigation(Astro.url.pathname);
+---
+
+<nav class="bottom-tabs mono" aria-label="Mobile navigation">
+  {navigation.map((item) => (
+    <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
+      <span>{item.number}</span>
+      {item.label}
+    </a>
+  ))}
+</nav>
+<style>
+  .bottom-tabs {
+    display: none;
+  }
+  @media (max-width: 720px) {
+    .bottom-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      position: sticky;
+      bottom: 0;
+      z-index: 40;
+      background: var(--paper);
+      border-top: 1px solid var(--ink);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      min-height: 60px;
+      border-right: 1px solid var(--rule);
+    }
+    a:last-child {
+      border-right: 0;
+    }
+    a span {
+      font-size: 9px;
+      color: var(--mute);
+    }
+    a[aria-current] {
+      background: color-mix(in oklab, var(--pink) 32%, var(--paper));
+    }
+    a[aria-current] span {
+      color: var(--pink-mute);
+    }
+  }
+</style>

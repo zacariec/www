@@ -1,0 +1,147 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHero from "@/components/astro/PageHero.astro";
+import Window from "@/components/astro/Window.astro";
+import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
+const glossary = [
+  [
+    "session",
+    "Me writing, just smashing out my thoughts and how I feel. They're not blogs, they're sessions.",
+  ],
+  ["tape", "A long-form session. A full build written up, start to finish."],
+  [
+    "cortex",
+    "One branch per session, longer sessions grow longer branches, tapes end in a square node.",
+  ],
+  ["thought", "Short posts from elsewhere, collected on the timeline."],
+];
+---
+
+<SiteLayout
+  config={config}
+  sessions={sessions}
+  canonicalUrl="/about"
+  title="About"
+  description="Code, systems & noise."
+>
+  <PageHero
+    title="Zacarie Carr."
+    eyebrow="[04] whoami"
+    description="Code, systems & noise."
+    sessions={sessions}
+    tone="sand"
+  />
+  <div class="about-grid zc-container">
+    <Window title="[a] bio">
+      <div class="window-copy">{config.bio && <p class="bio">{config.bio}</p>}</div>
+    </Window>
+    <Window title="[b] glossary">
+      <dl class="window-copy glossary">
+        {glossary.map(([term, definition]) => (
+          <>
+            <dt class="mono">{term}</dt>
+            <dd>{definition}</dd>
+          </>
+        ))}
+      </dl>
+    </Window>
+    <Window title="[c] colophon">
+      <dl class="window-copy colophon">
+        <dt class="mono">framework</dt>
+        <dd>Astro</dd>
+        <dt class="mono">content</dt>
+        <dd>Sanity</dd>
+        <dt class="mono">type</dt>
+        <dd>Host Grotesk, IBM Plex Mono</dd>
+        <dt class="mono">imagery</dt>
+        <dd>Ordered dither, 4×4 Bayer, 3px cells</dd>
+      </dl>
+    </Window>
+    <Window title="[d] elsewhere">
+      <div class="window-copy elsewhere">
+        {config.socials.map((social) => (
+          <a href={social.url} target="_blank" rel="me noopener noreferrer">
+            {social.label}
+            <span aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </div>
+    </Window>
+  </div>
+</SiteLayout>
+<style>
+  .about-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    padding-bottom: 150px;
+    align-items: start;
+  }
+  .window-copy {
+    padding: 28px;
+  }
+  .bio {
+    white-space: pre-line;
+    font-size: 22px;
+    line-height: 1.6;
+  }
+  .glossary dt {
+    color: var(--rose);
+    margin-bottom: 6px;
+  }
+  .glossary dd {
+    margin: 0 0 22px;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .glossary dd:last-child {
+    margin-bottom: 0;
+  }
+  .colophon {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 20px;
+  }
+  .colophon dt {
+    color: var(--mute);
+    padding-top: 6px;
+  }
+  .colophon dd {
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .elsewhere a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    min-height: 64px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 28px;
+    letter-spacing: -0.03em;
+  }
+  .elsewhere a:last-child {
+    border-bottom: 0;
+  }
+  @media (max-width: 720px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding-bottom: 100px;
+    }
+    .window-copy {
+      padding: 22px;
+    }
+    .bio {
+      font-size: 20px;
+    }
+    .colophon {
+      grid-template-columns: 80px 1fr;
+      gap: 16px;
+    }
+  }
+</style>

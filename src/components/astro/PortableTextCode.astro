@@ -2,39 +2,24 @@
 // Custom serializer for the `code` block inside PortableText content.
 // Uses the singleton shiki highlighter so we get syntax colouring on both
 // the static build and the Workers-runtime preview route.
-import {
-  getHighlighter,
-  isSupportedLanguage,
-  SHIKI_THEME,
-} from "@/lib/shiki/highlighter";
+import { getHighlighter, isSupportedLanguage, SHIKI_THEME } from "@/lib/shiki/highlighter";
+import type { Props as PortableTextProps } from "astro-portabletext/types";
+import type { SanityCodeBlock } from "@/lib/sanity/types";
 
-interface CodeNode {
-  _type: 'code';
-  _key?: string;
-  code: string;
-  language?: string;
-  filename?: string;
-  highlightedLines?: number[];
-}
-
-interface Props {
-  node: CodeNode;
-  index: number;
-  isInline: boolean;
-}
+type Props = PortableTextProps<SanityCodeBlock>;
 
 const { node } = Astro.props;
-const requestedLanguage = node.language || 'text';
-const lang = isSupportedLanguage(requestedLanguage) ? requestedLanguage : 'text';
-const code = node.code ?? '';
+const requestedLanguage = node.language || "text";
+const lang = isSupportedLanguage(requestedLanguage) ? requestedLanguage : "text";
+const code = node.code ?? "";
 
 function escapeHtml(input: string): string {
   return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 let html: string;
@@ -45,23 +30,17 @@ try {
   // Belt-and-braces: if the highlighter throws for any reason, render plain
   // escaped code on a tokyo-night-matching background so the post still
   // renders — it just misses the colours.
-  console.warn('[PortableTextCode] shiki failed, falling back:', err instanceof Error ? err.message : err);
+  console.warn(
+    "[PortableTextCode] shiki failed, falling back:",
+    err instanceof Error ? err.message : err,
+  );
   html = `<pre class="shiki" style="background-color:#1a1b26;color:#a9b1d6"><code>${escapeHtml(code)}</code></pre>`;
 }
 ---
 
-<figure class="my-8 md:my-12">
-  {node.filename && (
-    <figcaption
-      class="text-[9px] tracking-[1.5px] uppercase text-[#777777] mb-2 font-[family-name:var(--font-space-grotesk)]"
-    >
-      {node.filename}
-    </figcaption>
-  )}
-  <div
-    class="rounded-md overflow-hidden text-[13px] md:text-[14px] font-[family-name:var(--font-jetbrains-mono,monospace)]"
-    set:html={html}
-  />
+<figure class="article-code">
+  {node.filename && <figcaption>{node.filename}</figcaption>}
+  <div class="article-code__content" set:html={html} />
 </figure>
 
 <style is:global>

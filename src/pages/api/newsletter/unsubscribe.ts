@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { getAuth } from "@/lib/auth/auth";
 import { sendUnsubscribeConfirmation } from "@/lib/newsletter/send";
 
+import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;

@@ -1,32 +1,68 @@
-import type { PortableTextBlock } from "@portabletext/react";
+import type { PortableTextBlock, TypedObject } from "@portabletext/types";
+
+import type { Tone } from "../session";
+
+export interface SanityTextBlock extends PortableTextBlock {
+  _type: "block";
+}
+
+export interface SanityCodeBlock extends TypedObject {
+  _type: "code";
+  code?: string;
+  language?: string;
+  filename?: string;
+}
+
+export interface SanityImageBlock extends TypedObject {
+  _type: "image";
+  asset?: { _ref: string; _type?: "reference" };
+  url?: string;
+  alt?: string;
+  caption?: string;
+}
+
+export type SanityContentNode = SanityTextBlock | SanityCodeBlock | SanityImageBlock;
 
 export interface SanitySessionTape {
+  _id: string;
   title: string;
   slug: string;
   subtitle: string;
   date: string;
   dateModified?: string;
-  readingTime: string;
+  number: number;
+  readTime: number;
+  wordCount: number;
+  sections: { key: string; id: string; title: string }[];
+  kind: "session" | "tape";
+  state: "raw" | "edited";
+  coverSeed: number;
+  toneOverride?: Tone;
+  readTimeOverride?: number;
   excerpt: string;
-  content: PortableTextBlock[];
+  content: SanityContentNode[];
   sideNote?: string;
-  featuredImage?: {
-    asset: { _ref: string };
-    url?: string;
-    alt?: string;
-  };
+  featuredImage?: { asset: { _ref: string }; url?: string; alt?: string };
   comments: SanityComment[];
-  commentCount?: number;
+  commentCount: number;
 }
 
 export interface SanityComment {
   _id: string;
-  author: string;
-  authorImage?: string;
-  date: string;
-  text: string;
+  session: string;
+  anchorIndex: number | null;
+  parent: string | null;
+  body: string;
+  author: {
+    provider: string;
+    providerId: string;
+    handle: string;
+    avatarSeed: number;
+    isAuthor: boolean;
+  };
+  status: "pending" | "approved" | "hidden";
   likes: number;
-  parentCommentId?: string;
+  createdAt: string;
 }
 
 export interface SanityNewsletterCopy {
@@ -45,22 +81,21 @@ export interface SanityNewsletterCopy {
 
 export interface SanitySiteConfig {
   navItems: { label: string; href: string }[];
-  heroSubtitle: string;
-  heroHeading: string[];
-  heroDescription: string;
-  heroImage?: { url: string; alt?: string; caption?: string };
-  marqueeText: string;
-  footerHeading: string;
-  footerSubtitle: string;
+  headline: string[];
+  readme: string;
+  tickerEnabled: boolean;
+  socials: { label: string; url: string }[];
+  toneShift: number;
+  displayVersion: string;
+  bio?: string;
+  moderationDefault: "approved" | "pending";
+  authorSanityId?: string;
   newsletter?: SanityNewsletterCopy;
   siteName: string;
   siteDescription: string;
   siteUrl?: string;
   ogImage?: { url: string; alt?: string };
   author: string;
-  linkedIn?: string;
-  github?: string;
-  twitter?: string;
   twitterHandle?: string;
   timezone?: string;
 }
@@ -69,8 +104,9 @@ export interface SanityTimelineEntry {
   _id: string;
   text: string;
   date: string;
-  type: "thought" | "linkedin" | "reflection";
+  type: "thought" | "linkedin" | "reflection" | "x";
   likes: number;
   comments: number;
   url?: string;
+  board?: { visible: boolean; x: number; y: number; rotation: number; z: number };
 }

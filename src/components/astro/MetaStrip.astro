@@ -1,0 +1,67 @@
+---
+import Cover from "./Cover.astro";
+import { sessionId, type Tone } from "@/lib/session";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  session: SanitySessionTape;
+  tone: Tone;
+}
+const { session, tone } = Astro.props;
+const date = new Date(session.date);
+const day = date
+  .toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", timeZone: "UTC" })
+  .replace("/", ".");
+const weekday = date.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
+const comments = session.comments.filter((comment) => comment.status === "approved");
+const anchors = [
+  ...new Set(comments.flatMap((comment) => (comment.anchorIndex ? [comment.anchorIndex] : []))),
+].sort((a, b) => a - b);
+---
+
+<section class="meta-strip" aria-label="Session details">
+  <figure class="meta-strip__cover">
+    <Cover seed={session.coverSeed} tone={tone} />
+    <figcaption>
+      <span>Fig {sessionId(session.number)}</span>
+      <span>
+        {tone} · {session.toneOverride ? "override" : "formula"}
+      </span>
+    </figcaption>
+  </figure>
+  <div class="meta-cell meta-cell--read">
+    <span class="meta-cell__label">Read time</span>
+    <strong>{session.readTime} min</strong>
+    <span class="meta-cell__note">{session.wordCount.toLocaleString("en")} words</span>
+  </div>
+  <div class="meta-cell">
+    <span class="meta-cell__label">Written</span>
+    <strong>{day}</strong>
+    <span class="meta-cell__note">
+      {date.getUTCFullYear()} · {weekday}
+    </span>
+  </div>
+  <a class="meta-cell" href="#thread">
+    <span class="meta-cell__label">Replies</span>
+    <strong data-reply-count>{comments.length}</strong>
+    <span class="meta-cell__note" data-reply-note>
+      {anchors.length
+        ? `on ${anchors.map((index) => `¶${String(index).padStart(2, "0")}`).join(", ")}`
+        : "in the thread"}
+    </span>
+  </a>
+  <div class="meta-cell">
+    <span class="meta-cell__label">Highlights</span>
+    <strong data-highlight-count>0</strong>
+    <span class="meta-cell__note">click any ¶ to mark</span>
+  </div>
+  <div class="meta-cell">
+    <span class="meta-cell__label">Node</span>
+    <strong>{sessionId(session.number)}</strong>
+    <span class="meta-cell__note">lit in Fig 01</span>
+  </div>
+  <div class="meta-cell meta-cell--state" style={`--post-tone:var(--${tone})`}>
+    <span class="meta-cell__label">State</span>
+    <strong>{session.state === "edited" ? "Edited" : "Raw"}</strong>
+    <span class="meta-cell__note">{session.state === "edited" ? "edited" : "unedited"}</span>
+  </div>
+</section>

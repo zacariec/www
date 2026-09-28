@@ -11,16 +11,8 @@
  *   - Projection (keys deliberately don't start with `_` — avoids collisions
  *     with Sanity's internal metadata fields and copy/paste rendering foot-
  *     guns in Discord/Slack markdown):
- *       {
- *         "id": _id,
- *         "type": _type,
- *         "slug": slug.current,
- *         "title": title,
- *         "subtitle": subtitle,
- *         "excerpt": excerpt,
- *         "readingTime": readingTime,
- *         "publishedAt": publishedAt
- *       }
+ *       { "id": _id, "type": _type }
+ *     The server fetches the published session and derives its read time.
  *   - Secret:   generate one, then `wrangler secret put SANITY_WEBHOOK_SECRET`
  *
  * Idempotency: the post slug is a unique key in `broadcast_log`. A second
@@ -33,7 +25,9 @@ import { z } from "zod";
 
 import { createAndSendNewPostBroadcast } from "@/lib/newsletter/broadcast";
 import { verifySanityWebhook } from "@/lib/newsletter/sanity-webhook";
+import { getNewsletterSession } from "@/lib/newsletter/session";
 
+import type { D1Database } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
@@ -41,12 +35,6 @@ export const prerender = false;
 const payloadSchema = z.object({
   id: z.string().min(1),
   type: z.literal("sessionTape"),
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  subtitle: z.string(),
-  excerpt: z.string().optional(),
-  readingTime: z.string().min(1),
-  publishedAt: z.string().min(1),
 });
 
 type BroadcastPayload = z.output<typeof payloadSchema>;
@@ -92,31 +80,33 @@ async function releaseReservation(db: D1Database, slug: string): Promise<void> {
 async function handleBroadcast(
   payload: BroadcastPayload,
 ): Promise<{ readonly status: number; readonly body: unknown }> {
+  const session = await getNewsletterSession(payload.id);
+  if (!session) return { status: 404, body: { error: "Published session not found" } };
   const now = Date.now();
-  const reservation = await reserveSlug(env.DB, payload.slug, now);
+  const reservation = await reserveSlug(env.DB, session.slug, now);
 
   if (!reservation.reserved) {
-    console.log(`[broadcast] slug already sent — skipping: ${payload.slug}`);
+    console.log(`[broadcast] slug already sent — skipping: ${session.slug}`);
     return { status: 200, body: { success: true, skipped: "already-sent" } };
   }
 
   const result = await createAndSendNewPostBroadcast(env, {
-    title: payload.title,
-    subtitle: payload.subtitle,
-    slug: payload.slug,
-    readingTime: payload.readingTime,
-    excerpt: payload.excerpt,
-    publishedAt: payload.publishedAt,
+    title: session.title,
+    subtitle: session.subtitle,
+    slug: session.slug,
+    readTime: session.readTime,
+    excerpt: session.excerpt,
+    publishedAt: session.date,
   });
 
   if (!result.ok) {
-    console.error(`[broadcast] send failed for ${payload.slug}: ${result.error}`);
-    await releaseReservation(env.DB, payload.slug);
+    console.error(`[broadcast] send failed for ${session.slug}: ${result.error}`);
+    await releaseReservation(env.DB, session.slug);
     return { status: 502, body: { success: false, error: result.error } };
   }
 
-  await finaliseReservation(env.DB, payload.slug, result.broadcastId);
-  console.log(`[broadcast] sent ${result.broadcastId} for ${payload.slug}`);
+  await finaliseReservation(env.DB, session.slug, result.broadcastId);
+  console.log(`[broadcast] sent ${result.broadcastId} for ${session.slug}`);
   return { status: 200, body: { success: true, broadcastId: result.broadcastId } };
 }
 

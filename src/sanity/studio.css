@@ -1,0 +1,543 @@
+@import "../styles/tokens.css";
+
+[data-ui="AstroStudioLayout"] {
+  color-scheme: light;
+  background: var(--paper);
+  color: var(--ink);
+}
+[data-ui="AstroStudioLayout"] :where(button, input, textarea, select, [data-ui="Card"]) {
+  border-radius: 0 !important;
+}
+[data-ui="AstroStudioLayout"] :where(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--pink);
+}
+[data-ui="AstroStudioLayout"] [data-ui="Navbar"] {
+  border-bottom: 1px solid var(--ink);
+}
+.zc-studio-logo {
+  display: inline-flex;
+  align-items: baseline;
+  font: 600 27px/0.9 var(--font-host-grotesk);
+  letter-spacing: -0.075em;
+  color: var(--ink);
+}
+.zc-studio-logo > span {
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  background: var(--pink);
+  margin-left: 0.075em;
+}
+.zc-studio-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.zc-studio-meta,
+.zc-studio-window > header,
+.zc-studio-field,
+.zc-tool-actions,
+.zc-queue-tabs,
+.zc-board-sidebar h2,
+.zc-cortex-nodes h2 {
+  font: 400 11px/1.5 var(--font-ibm-plex-mono);
+}
+.zc-studio-meta {
+  color: var(--mute);
+}
+.zc-session-list input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  margin: 8px 0 20px;
+  padding: 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+.zc-session-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.zc-session-list li > a {
+  display: block;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+.zc-session-list li > a:hover,
+.zc-session-list li > a:focus-visible {
+  background: var(--panel);
+}
+.zc-session-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 4px;
+  font-family: var(--font-host-grotesk);
+}
+.zc-session-preview > canvas {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid var(--ink);
+}
+.zc-preview-copy {
+  flex: 1;
+  min-width: 0;
+}
+.zc-preview-copy strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  font-size: 14px;
+}
+.zc-preview-copy .zc-studio-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 9px;
+  margin-top: 5px;
+}
+.zc-id-chip {
+  border: 1px solid var(--ink);
+  padding: 1px 4px;
+  color: var(--ink);
+  white-space: nowrap;
+  font: 400 10px/1.4 var(--font-ibm-plex-mono);
+}
+.zc-publish-dot {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ink);
+  background: var(--sage);
+  flex: 0 0 auto;
+}
+.zc-publish-dot.is-draft {
+  background: var(--sand);
+}
+.zc-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--ink);
+  vertical-align: middle;
+}
+.zc-studio-pane,
+.zc-studio-tool {
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: 28px 32px 60px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--font-host-grotesk);
+}
+.zc-studio-pane *,
+.zc-studio-tool *,
+.zc-board-tool *,
+.zc-cortex-tool * {
+  box-sizing: border-box;
+}
+.zc-studio-pane h2,
+.zc-tool-heading h1 {
+  font: 500 32px/1.05 var(--font-host-grotesk);
+  letter-spacing: -0.05em;
+  margin: 0 0 16px;
+}
+.zc-studio-pane p,
+.zc-studio-tool p {
+  margin: 12px 0;
+}
+.zc-studio-pane button,
+.zc-studio-tool button,
+.zc-board-tool button {
+  min-height: 36px;
+  border: 1px solid var(--ink);
+  padding: 6px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  font: 400 11px/1.4 var(--font-ibm-plex-mono);
+}
+.zc-studio-pane button:hover,
+.zc-studio-tool button:hover,
+.zc-board-tool button:hover {
+  background: var(--panel);
+}
+.zc-studio-pane button:disabled,
+.zc-studio-tool button:disabled,
+.zc-board-tool button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.zc-studio-window {
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--ink);
+  margin: 20px 0;
+}
+.zc-studio-window > header {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ink);
+}
+.zc-window-body {
+  padding: 16px;
+}
+.zc-colour-cover {
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  margin-bottom: 24px;
+  border: 1px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.zc-swatch-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.zc-swatch-picker button {
+  min-width: 32px;
+  padding: 4px;
+}
+.zc-swatch-picker [aria-pressed="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.zc-studio-pane fieldset {
+  border: 0;
+  padding: 0;
+  margin: 16px 0;
+}
+.zc-studio-pane legend {
+  font: 11px var(--font-ibm-plex-mono);
+  margin-bottom: 8px;
+}
+.zc-studio-field {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0;
+}
+.zc-studio-field input,
+.zc-studio-field textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--font-host-grotesk);
+}
+.zc-studio-field textarea {
+  resize: vertical;
+}
+.zc-numbered-block {
+  position: relative;
+  padding-left: 44px;
+}
+.zc-paragraph-number {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  font: 10px/1.6 var(--font-ibm-plex-mono);
+  color: var(--mute);
+  user-select: none;
+}
+.zc-reply-count {
+  display: block;
+  color: var(--rose);
+}
+.zc-body-editor > .zc-studio-meta {
+  margin-bottom: 8px;
+}
+.zc-tool-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 24px;
+}
+.zc-queue-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 16px 0 32px;
+}
+.zc-queue-tabs button {
+  text-transform: capitalize;
+}
+.zc-queue-tabs button[aria-pressed="true"],
+.zc-board-tool button.zc-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.zc-queue-tabs button span {
+  background: var(--pink);
+  color: var(--ink);
+  margin-left: 8px;
+  padding: 1px 4px;
+}
+.zc-comment-group h2 {
+  font: 500 22px/1.2 var(--font-host-grotesk);
+  margin-top: 32px;
+}
+.zc-moderation-card > header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.zc-moderation-card > header canvas {
+  width: 28px;
+  height: 28px;
+}
+.zc-moderation-card time {
+  color: var(--mute);
+}
+.zc-author-badge {
+  background: var(--pink);
+  padding: 2px 5px;
+  border: 1px solid var(--ink);
+}
+.zc-moderation-card blockquote {
+  margin: 0;
+  padding: 12px;
+  background: var(--sand);
+  color: var(--ink);
+  border-left: 3px solid var(--ink);
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow: auto;
+}
+.zc-comment-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.zc-tool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.zc-board-tool,
+.zc-cortex-tool {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  height: 100%;
+  min-height: 0;
+  font: 400 14px/1.5 var(--font-host-grotesk);
+  color: var(--ink);
+  background: var(--paper);
+}
+.zc-board-main,
+.zc-cortex-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.zc-board-main {
+  background: var(--blue);
+  --mute: var(--blue-mute);
+}
+.zc-board-main > header,
+.zc-cortex-main > header {
+  padding: 20px 24px 0;
+  flex: 0 0 auto;
+}
+.zc-board-main .zc-tool-heading h1,
+.zc-cortex-main .zc-tool-heading h1 {
+  font-size: 22px;
+}
+.zc-studio-board {
+  position: relative;
+  flex: 1;
+  min-height: 540px;
+  overflow: hidden;
+}
+.zc-studio-board > canvas {
+  position: absolute;
+  inset: 0;
+}
+.zc-board-card {
+  position: absolute;
+  width: 260px;
+  max-width: calc(100% - 32px);
+  height: 174px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  cursor: grab;
+  touch-action: none;
+  transition: box-shadow 0.15s;
+}
+.zc-board-card::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--ink);
+  background: var(--sand);
+}
+.zc-board-card header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ink);
+  padding: 5px 10px;
+  font: 9px/1.5 var(--font-ibm-plex-mono);
+}
+.zc-board-card p {
+  margin: 10px 14px;
+  overflow: auto;
+  max-height: 122px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.zc-board-card.is-dragging {
+  cursor: grabbing;
+  box-shadow: 10px 12px 0 var(--ink);
+}
+.zc-board-sidebar,
+.zc-cortex-nodes {
+  border-left: 1px solid var(--ink);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.zc-board-sidebar h2,
+.zc-cortex-nodes h2 {
+  padding: 16px;
+  margin: 0;
+  border-bottom: 1px solid var(--ink);
+}
+.zc-thought-options {
+  overflow: auto;
+  flex: 1;
+}
+.zc-thought-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+}
+.zc-thought-options label span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.zc-thought-options input {
+  accent-color: var(--ink);
+  margin-top: 4px;
+}
+.zc-board-controls {
+  padding: 16px;
+  border-top: 1px solid var(--ink);
+  font-size: 12px;
+}
+.zc-board-controls > button {
+  margin-top: 12px;
+}
+.zc-board-empty {
+  position: relative;
+  margin: 32px;
+  padding: 12px;
+  background: var(--paper);
+  width: fit-content;
+}
+.zc-cortex-main {
+  position: relative;
+  overflow: hidden;
+}
+.zc-cortex-main > canvas {
+  flex: 1;
+  min-height: 300px;
+}
+.zc-cortex-caption {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  background: var(--paper);
+  padding: 6px;
+}
+.zc-cortex-nodes ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+.zc-cortex-nodes a {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+.zc-cortex-nodes a:hover,
+.zc-cortex-nodes a:focus-visible {
+  background: var(--panel);
+}
+.zc-cortex-nodes a > .zc-studio-meta {
+  grid-column: 2;
+}
+.zc-cortex-nodes .zc-id-chip {
+  align-self: start;
+}
+@media (max-width: 900px) {
+  .zc-board-tool,
+  .zc-cortex-tool {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+  .zc-studio-pane,
+  .zc-studio-tool {
+    padding: 20px 16px 48px;
+  }
+}
+@media (max-width: 640px) {
+  .zc-board-tool,
+  .zc-cortex-tool {
+    display: block;
+    overflow: auto;
+  }
+  .zc-board-main,
+  .zc-cortex-main {
+    min-height: 620px;
+  }
+  .zc-board-sidebar,
+  .zc-cortex-nodes {
+    border-left: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .zc-studio-pane button,
+  .zc-studio-tool button,
+  .zc-board-tool button {
+    min-height: 44px;
+  }
+  .zc-cortex-main > canvas {
+    min-height: 500px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="AstroStudioLayout"] *,
+  [data-ui="AstroStudioLayout"] *::before,
+  [data-ui="AstroStudioLayout"] *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

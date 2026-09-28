@@ -1,0 +1,84 @@
+---
+import Window from "./Window.astro";
+import Logo from "./Logo.astro";
+import { navigation, currentNavigation, publicPathname } from "@/lib/navigation";
+interface Props {
+  sessionCount: number;
+  timelineCount: number;
+}
+const { sessionCount, timelineCount } = Astro.props;
+const current = currentNavigation(Astro.url.pathname);
+const counts = ["/", String(sessionCount), String(timelineCount), "—"];
+---
+
+<div class="index-tool" data-index-tool>
+  <Window title="Index Tool 1.1">
+    <Logo slot="right" size={17} />
+    <nav aria-label="Index Tool" class="mono">
+      {navigation.map((item, index) => (
+        <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
+          <span>{item.number}</span>
+          <span>{item.label}</span>
+          <span>{counts[index]}</span>
+        </a>
+      ))}
+    </nav>
+    <div class="where mono">
+      <span>You are here</span>
+      <span>{publicPathname(Astro.url.pathname)}</span>
+    </div>
+  </Window>
+</div>
+<style>
+  .index-tool {
+    position: absolute;
+    right: max(32px, calc((100% - 1256px) / 2));
+    top: 28px;
+    width: 292px;
+    z-index: 8;
+    transition:
+      transform 240ms ease,
+      opacity 180ms ease;
+  }
+  :global(html.is-scrolled) .index-tool {
+    transform: translateY(-170%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  a {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  a[aria-current] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  a:not([aria-current]):hover {
+    background: var(--panel);
+  }
+  .where {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 9px 12px;
+    color: var(--mute);
+  }
+  .where span:last-child {
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 720px) {
+    .index-tool {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .index-tool {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+interface Props {
+  colors?: string;
+  seed?: number;
+  class?: string;
+  style?: string;
+}
+
+const { colors = "--pink,--sand,--sage", seed = 1, class: className, style, ...rest } = Astro.props;
+const palette = colors
+  .split(",")
+  .map((color) => {
+    const value = color.trim();
+    return value.startsWith("--") || value.startsWith("#") ? value : `--${value}`;
+  })
+  .join(",");
+---
+
+<canvas
+  {...rest}
+  class:list={["zc-lava", className]}
+  style={style}
+  data-zc="lava"
+  data-seed={seed}
+  data-colors={palette}
+  data-bg="transparent"
+  data-anim="true"
+  aria-hidden="true"
+></canvas>
+
+<style>
+  .zc-lava {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { scan } from "../../lib/zc-gl";
+  scan();
+</script>

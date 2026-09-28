@@ -1,14 +1,16 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import { ClientBlobCursor } from '@/components/organisms/client-blob-cursor';
-import { PageLoadingTransition } from '@/components/organisms/page-loading-transition';
-import { Navbar } from '@/components/organisms/navbar';
-import { Footer } from '@/components/organisms/footer';
-import NavbarFallback from '@/components/astro/NavbarFallback.astro';
-import FooterFallback from '@/components/astro/FooterFallback.astro';
-import { getSiteConfig } from '@/lib/sanity/fetch';
-
+import BaseLayout from "./BaseLayout.astro";
+import TopBar from "@/components/astro/TopBar.astro";
+import IndexTool from "@/components/astro/IndexTool.astro";
+import NavPill from "@/components/astro/NavPill.astro";
+import BottomTabs from "@/components/astro/BottomTabs.astro";
+import EndSection from "@/components/astro/EndSection.astro";
+import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
+  config?: SanitySiteConfig;
+  sessions?: SanitySessionTape[];
+  timeline?: SanityTimelineEntry[];
   title?: string;
   description?: string;
   ogImage?: string;
@@ -22,52 +24,56 @@ interface Props {
   articleModifiedTime?: string;
   articleAuthor?: string;
 }
-
-const props = Astro.props;
-const config = await getSiteConfig();
-
-const nl = config.newsletter ?? {};
-const footerNewsletterCopy = {
-  heading: nl.footerHeading,
-  description: nl.footerDescription,
-  buttonLabel: nl.buttonLabel,
-  placeholder: nl.placeholder,
-  successMessage: nl.successMessage,
-  alreadySubscribedMessage: nl.alreadySubscribedMessage,
-  unsubscribeLabel: nl.unsubscribeLabel,
-  unsubscribeConfirmedMessage: nl.unsubscribeConfirmedMessage,
-  errorMessage: nl.errorMessage,
-};
+const {
+  config: givenConfig,
+  sessions: givenSessions,
+  timeline: givenTimeline,
+  ...metadata
+} = Astro.props;
+const [config, sessions, timeline] = await Promise.all([
+  givenConfig ?? getSiteConfig(),
+  givenSessions ?? getAllSessions(),
+  givenTimeline ?? getAllTimelineEntries(),
+]);
+const sessionCount = sessions.length;
+const timelineCount = sessions.length + timeline.length;
 ---
 
-<BaseLayout {...props}>
-  <div transition:persist="blob-cursor" data-blob-cursor>
-    <ClientBlobCursor client:only="react" />
+<BaseLayout {...metadata} config={config}>
+  <a class="skip-link mono" href="#content">
+    Skip to content
+  </a>
+  <TopBar config={config} latest={sessions[0]} />
+  <div class="page-flow">
+    <IndexTool sessionCount={sessionCount} timelineCount={timelineCount} />
+    <main id="content">
+      <slot />
+    </main>
+    <EndSection config={config} />
+    <NavPill sessionCount={sessionCount} timelineCount={timelineCount} socials={config.socials} />
   </div>
-  <div transition:persist="page-transition">
-    <PageLoadingTransition client:only="react" />
-  </div>
-  <Navbar client:only="react" navItems={config.navItems} pathname={Astro.url.pathname}>
-    <NavbarFallback slot="fallback" navItems={config.navItems} pathname={Astro.url.pathname} />
-  </Navbar>
-  <main transition:name="page-content" class="pt-[56px] md:pt-[72px] pb-[64px] md:pb-0 max-w-[1440px] mx-auto">
-    <slot />
-  </main>
-  <Footer
-    client:only="react"
-    heading={config.footerHeading}
-    navItems={config.navItems}
-    newsletterCopy={footerNewsletterCopy}
-    pathname={Astro.url.pathname}
-    subtitle={config.footerSubtitle}
-  >
-    <FooterFallback
-      slot="fallback"
-      heading={config.footerHeading}
-      navItems={config.navItems}
-      newsletterCopy={footerNewsletterCopy}
-      pathname={Astro.url.pathname}
-      subtitle={config.footerSubtitle}
-    />
-  </Footer>
+  <BottomTabs />
 </BaseLayout>
+<style>
+  .page-flow {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+  }
+  main {
+    min-width: 0;
+  }
+  .skip-link {
+    position: absolute;
+    left: 16px;
+    top: 8px;
+    transform: translateY(-150%);
+    padding: 12px;
+    background: var(--pink);
+    color: var(--ink);
+    z-index: 100;
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+</style>

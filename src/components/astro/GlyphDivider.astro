@@ -1,0 +1,45 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div {...rest} class:list={["zc-glyph-divider", className]} aria-hidden="true">
+  <span>∵ ⩆</span>
+</div>
+
+<style>
+  .zc-glyph-divider {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-block: 48px;
+    color: var(--mute);
+    font-family: var(--font-ibm-plex-mono);
+    font-size: 22px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .zc-glyph-divider::before,
+  .zc-glyph-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .zc-glyph-divider span {
+    flex-shrink: 0;
+    letter-spacing: 0.2em;
+  }
+
+  @media (max-width: 720px) {
+    .zc-glyph-divider {
+      gap: 16px;
+      margin-block: 36px;
+    }
+  }
+</style>

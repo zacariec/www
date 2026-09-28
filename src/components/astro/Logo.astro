@@ -1,0 +1,51 @@
+---
+interface Props {
+  mode?: "mark" | "wordmark";
+  size?: number;
+  ink?: string;
+  accent?: string;
+  class?: string;
+}
+
+const {
+  mode = "mark",
+  size = 28,
+  ink = "var(--ink)",
+  accent = "var(--pink)",
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<span
+  {...rest}
+  class:list={["zc-logo", className]}
+  role="img"
+  aria-label="zcarr.dev"
+  style={`font-size: ${size}px; color: ${ink}; --logo-accent: ${accent}`}
+>
+  <span aria-hidden="true">{mode === "wordmark" ? "zcarr" : "zc"}</span>
+  <span class="zc-logo__node" aria-hidden="true"></span>
+</span>
+
+<style>
+  .zc-logo {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: baseline;
+    font-family: var(--font-host-grotesk);
+    font-weight: 600;
+    letter-spacing: -0.075em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .zc-logo__node {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 0.2em;
+    height: 0.2em;
+    margin-left: 0.09em;
+    background: var(--logo-accent);
+  }
+</style>

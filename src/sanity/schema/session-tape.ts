@@ -1,9 +1,12 @@
 import { defineField, defineType } from "sanity";
+import { TONES } from "../../lib/session";
+import { NumberedBodyInput, SessionBlock } from "../studio-components";
 
 export const sessionTapeType = defineType({
   name: "sessionTape",
-  title: "Session Tape",
+  title: "Session",
   type: "document",
+  initialValue: { kind: "session", state: "raw" },
   fields: [
     defineField({
       name: "title",
@@ -38,9 +41,50 @@ export const sessionTapeType = defineType({
         "Optional. Used for SEO/structured-data \u201ClastUpdated\u201D. Falls back to Published At.",
     }),
     defineField({
-      name: "readingTime",
-      title: "Reading Time",
+      name: "kind",
+      title: "Kind",
       type: "string",
+      options: {
+        list: [
+          { title: "Session", value: "session" },
+          { title: "Tape", value: "tape" },
+        ],
+      },
+      initialValue: "session",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "state",
+      title: "State",
+      type: "string",
+      options: {
+        list: [
+          { title: "Raw", value: "raw" },
+          { title: "Edited", value: "edited" },
+        ],
+      },
+      initialValue: "raw",
+    }),
+    defineField({
+      name: "toneOverride",
+      title: "Tone override",
+      type: "string",
+      options: { list: TONES.map((tone) => ({ title: tone, value: tone })) },
+      description: "Clear to use the formula. Applies to: cover square · hero blot · STATE cell.",
+    }),
+    defineField({
+      name: "coverSeed",
+      title: "Cover seed",
+      type: "number",
+      description: "Leave blank to use the derived session number.",
+      validation: (rule) => rule.integer(),
+    }),
+    defineField({
+      name: "readTimeOverride",
+      title: "Read time override (minutes)",
+      type: "number",
+      description: "Leave blank to calculate from the body word count.",
+      validation: (rule) => rule.integer().min(1),
     }),
     defineField({
       name: "excerpt",
@@ -52,9 +96,11 @@ export const sessionTapeType = defineType({
       name: "content",
       title: "Content",
       type: "array",
+      components: { input: NumberedBodyInput },
       of: [
         {
           type: "block",
+          components: { block: SessionBlock },
           // Restrict to the styles we actually have frontend serializers for
           // — H1 is reserved for the page title so we skip it here.
           styles: [
@@ -84,8 +130,7 @@ export const sessionTapeType = defineType({
                     name: "href",
                     type: "url",
                     title: "URL",
-                    validation: (rule) =>
-                      rule.uri({ scheme: ["http", "https", "mailto", "tel"] }),
+                    validation: (rule) => rule.uri({ scheme: ["http", "https", "mailto", "tel"] }),
                   },
                 ],
               },
@@ -148,9 +193,16 @@ export const sessionTapeType = defineType({
   ],
   preview: {
     select: {
+      documentId: "_id",
       title: "title",
-      subtitle: "subtitle",
-      media: "featuredImage",
+      slug: "slug",
+      kind: "kind",
+      publishedAt: "publishedAt",
+      toneOverride: "toneOverride",
+      coverSeed: "coverSeed",
+    },
+    prepare(selection) {
+      return selection;
     },
   },
 });

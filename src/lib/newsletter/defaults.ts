@@ -2,11 +2,6 @@
  * Default newsletter copy. Used as the canonical fallback when the Sanity
  * `siteConfig.newsletter` object (or any individual field) is empty.
  *
- * Imported by:
- *   - `src/components/molecules/newsletter-form.tsx` (React island)
- *   - `src/components/astro/FooterFallback.astro` (SSR static fallback)
- *
- * Keep these in sync by editing this file only.
  */
 
 export interface NewsletterCopy {

@@ -18,7 +18,7 @@ interface Props {
   postSubtitle: string;
   postUrl: string;
   postDate: string;
-  readingTime: string;
+  readTime: number;
   postExcerpt?: string;
   unsubscribeUrl: string;
 }
@@ -28,7 +28,7 @@ export default function NewPostNotificationEmail({
   postSubtitle = "A compelling subtitle",
   postUrl = "https://zcarr.dev/sessions/example",
   postDate = "April 9, 2026",
-  readingTime = "5 min read",
+  readTime,
   postExcerpt,
   unsubscribeUrl = "https://zcarr.dev/unsubscribe",
 }: Props) {
@@ -52,7 +52,7 @@ export default function NewPostNotificationEmail({
           <Section style={header}>
             <Text style={metaRow}>
               SESSIONS&nbsp;&nbsp;·&nbsp;&nbsp;{postDate.toUpperCase()}&nbsp;&nbsp;·&nbsp;&nbsp;
-              {readingTime.toUpperCase()}
+              {readTime} MIN READ
             </Text>
             <Heading as="h1" style={h1}>
               {postTitle}

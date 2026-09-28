@@ -1,0 +1,48 @@
+---
+interface Props {
+  number: string;
+  title: string;
+  class?: string;
+}
+
+const { number, title, class: className, ...rest } = Astro.props;
+---
+
+<div {...rest} class:list={["zc-section-head", className]}>
+  <span class="zc-section-head__number mono">[{number}]</span>
+  <h2>{title}</h2>
+</div>
+
+<style>
+  .zc-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .zc-section-head__number {
+    flex-shrink: 0;
+    color: var(--mute);
+  }
+
+  .zc-section-head h2 {
+    margin: 0;
+    font-family: var(--font-host-grotesk);
+    font-size: 44px;
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+
+  @media (max-width: 720px) {
+    .zc-section-head {
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .zc-section-head h2 {
+      font-size: 36px;
+    }
+  }
+</style>

@@ -1,46 +1,167 @@
 ---
-import SiteLayout from '../../layouts/SiteLayout.astro';
-import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
-import SessionList from '@/components/astro/SessionList.astro';
-import SessionsHeader from '@/components/astro/SessionsHeader.astro';
-import { getAllSessions, getSiteConfig } from '@/lib/sanity/fetch';
-import { sessionsIndexJsonLd } from '@/lib/seo/jsonld';
-import { pickOgImage } from '@/lib/seo/og-image';
-
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import PageHero from "@/components/astro/PageHero.astro";
+import SessionRow from "@/components/astro/SessionRow.astro";
+import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { resolveTone } from "@/lib/session";
+import { sessionsIndexJsonLd } from "@/lib/seo/jsonld";
+import { pickOgImage } from "@/lib/seo/og-image";
 const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
-
-const mappedSessions = sessions.map((s) => ({
-  slug: s.slug,
-  title: s.title,
-  subtitle: s.subtitle,
-  date: s.date,
-  readingTime: s.readingTime,
-  commentCount: s.commentCount,
-}));
-
-const jsonLd = sessionsIndexJsonLd(config);
+const groups: { month: string; sessions: typeof sessions }[] = [];
+for (const session of sessions) {
+  const month = new Date(session.date).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  let group = groups[groups.length - 1];
+  if (group?.month !== month) {
+    group = { month, sessions: [] };
+    groups.push(group);
+  }
+  group.sessions.push(session);
+}
+const params = new URLSearchParams(Astro.url.search);
+params.delete("tone");
 const og = pickOgImage(undefined, config);
 ---
 
 <SiteLayout
+  config={config}
+  sessions={sessions}
   canonicalUrl="/sessions"
+  title="Sessions"
   description="Long-form sessions on code, systems, and the patterns behind how things work."
-  jsonLd={jsonLd}
+  jsonLd={sessionsIndexJsonLd(config)}
   ogImage={og?.url}
   ogImageAlt={og?.alt}
   ogImageHeight={og?.height}
   ogImageWidth={og?.width}
-  title="Sessions"
 >
-  <div>
-    <div class="relative h-[30vh] md:h-[40vh] overflow-hidden">
-      <NeuralBlobNet client:only="react" nodeCount={mappedSessions.length} />
+  <PageHero
+    title="Sessions."
+    eyebrow="[02] Long-form"
+    description="Long-form sessions on code, systems, and the patterns behind how things work."
+    sessions={sessions}
+  />
+  <div class="sessions-list zc-container">
+    <div class="session-filters mono" role="group" aria-label="Filter sessions">
+      <button type="button" data-filter="all" aria-pressed="true">
+        All
+      </button>
+      <button type="button" data-filter="session" aria-pressed="false">
+        Sessions
+      </button>
+      <button type="button" data-filter="tape" aria-pressed="false">
+        Tapes
+      </button>
     </div>
-    <div class="px-5 md:px-16 pt-8 md:pt-16 pb-20 md:pb-32">
-      <SessionsHeader />
-      <div class="mt-16 md:mt-24">
-        <SessionList sessions={mappedSessions} variant="full" />
-      </div>
-    </div>
+    <p class="sr-only" role="status" data-filter-status></p>
+    {groups.map((group) => (
+      <section class="month-group" data-month-group aria-label={group.month}>
+        <h2 class="month-label mono">{group.month}</h2>
+        <div class="month-rows">
+          {group.sessions.map((session) => (
+            <SessionRow
+              session={session}
+              tone={resolveTone(session.number, config.toneShift, params, session.toneOverride)}
+            />
+          ))}
+        </div>
+      </section>
+    ))}
   </div>
 </SiteLayout>
+<style>
+  .sessions-list {
+    position: relative;
+    z-index: 2;
+    padding-bottom: 140px;
+  }
+  .month-group {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+  .month-group[hidden] {
+    display: none;
+  }
+  .month-label {
+    font-size: 12px;
+    color: var(--mute);
+    padding-top: 20px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .month-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+  .session-filters {
+    display: none;
+  }
+  @media (max-width: 924px) {
+    .month-group {
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 20px;
+    }
+  }
+  @media (max-width: 720px) {
+    .sessions-list {
+      padding-bottom: 100px;
+    }
+    .session-filters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--ink);
+      margin-bottom: 28px;
+    }
+    .session-filters button {
+      border: 0;
+      border-right: 1px solid var(--ink);
+      background: var(--paper);
+      min-height: 44px;
+    }
+    .session-filters button:last-child {
+      border-right: 0;
+    }
+    .session-filters button[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .month-group {
+      display: block;
+      margin-bottom: 28px;
+    }
+    .month-label {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--paper);
+      padding: 12px 0;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--rule);
+    }
+  }
+</style>
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
+  for (const button of buttons)
+    button.addEventListener("click", () => {
+      let shown = 0;
+      for (const peer of buttons) peer.setAttribute("aria-pressed", String(peer === button));
+      for (const row of document.querySelectorAll<HTMLElement>("[data-session-kind]")) {
+        row.hidden =
+          button.dataset.filter !== "all" && row.dataset.sessionKind !== button.dataset.filter;
+        if (!row.hidden) shown++;
+      }
+      for (const group of document.querySelectorAll<HTMLElement>("[data-month-group]"))
+        group.hidden = !group.querySelector("[data-session-kind]:not([hidden])");
+      const status = document.querySelector("[data-filter-status]");
+      if (status)
+        status.textContent = `${shown} ${button.dataset.filter === "tape" ? "tapes" : "sessions"}`;
+    });
+</script>

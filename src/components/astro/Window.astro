@@ -1,0 +1,55 @@
+---
+interface Props {
+  title: string;
+  class?: string;
+}
+
+const { title, class: className, ...rest } = Astro.props;
+---
+
+<div {...rest} class:list={["zc-window", className]}>
+  <div class="zc-window__bar mono">
+    <span>{title}</span>
+    {Astro.slots.has("right") && (
+      <div class="zc-window__right">
+        <slot name="right" />
+      </div>
+    )}
+  </div>
+  <div class="zc-window__body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .zc-window {
+    --mute: var(--paper-mute);
+    --rule: var(--paper-rule);
+    min-width: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: var(--hard-shadow);
+  }
+
+  .zc-window__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--ink);
+    font-size: 11px;
+  }
+
+  .zc-window__right {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .zc-window__body {
+    min-width: 0;
+  }
+</style>

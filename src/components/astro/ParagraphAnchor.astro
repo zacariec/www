@@ -1,0 +1,31 @@
+---
+interface Props {
+  index: number;
+  replies?: number;
+}
+const { index, replies = 0 } = Astro.props;
+const label = `¶${String(index).padStart(2, "0")}`;
+---
+
+<div class="paragraph-gutter">
+  <button
+    class="paragraph-anchor"
+    type="button"
+    data-paragraph-anchor={index}
+    aria-label={`${label} — actions for paragraph ${index}`}
+    aria-haspopup="dialog"
+    aria-controls="paragraph-dialog"
+    aria-expanded="false"
+  >
+    {label}
+  </button>
+  <a
+    class="paragraph-replies"
+    href="#thread"
+    data-paragraph-replies={index}
+    hidden={replies === 0}
+    aria-label={`↳ ${replies} replies to paragraph ${index}`}
+  >
+    ↳ {replies}
+  </a>
+</div>

@@ -1,0 +1,164 @@
+---
+import Window from "./Window.astro";
+import Chip from "./Chip.astro";
+import type { SanitySessionTape, SanityTimelineEntry } from "@/lib/sanity/types";
+type Props =
+  | { session: SanitySessionTape; tone: string; thought?: never }
+  | { thought: SanityTimelineEntry; session?: never; tone?: never };
+const { session, thought, tone } = Astro.props;
+const date = (session ?? thought).date.slice(0, 10);
+const source =
+  thought?.type === "linkedin"
+    ? "LinkedIn"
+    : thought?.type === "x"
+      ? "X"
+      : thought?.type === "reflection"
+        ? "Reflection"
+        : "Thought";
+---
+
+<article class="timeline-item" id={thought ? thought._id : undefined}>
+  <div class="item-meta mono">
+    <time datetime={(session ?? thought).date}>{date}</time>
+    {session ? (
+      <Chip kind="id" number={session.number} tone={tone} />
+    ) : (
+      <span class="thought-label">[thought]</span>
+    )}
+  </div>
+  {session ? (
+    <a
+      class="timeline-session"
+      href={`/sessions/${session.slug}`}
+      style={`--post-tone:var(--${tone})`}
+    >
+      <div>
+        <h2>{session.title}</h2>
+        <p>
+          {session.kind === "tape" ? "Tape" : "Session"} · {session.subtitle}
+        </p>
+      </div>
+      <Chip minutes={session.readTime} />
+    </a>
+  ) : (
+    <Window title={source}>
+      <span class="mono" slot="right">
+        ♥ {thought.likes} · {thought.comments} replies
+      </span>
+      <div class="thought-copy">
+        <p>{thought.text}</p>
+        {thought.url && (
+          <a class="mono" href={thought.url} target="_blank" rel="noopener noreferrer">
+            {source} ↗
+          </a>
+        )}
+      </div>
+    </Window>
+  )}
+</article>
+<style>
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 32px;
+    margin-bottom: 26px;
+    align-items: start;
+  }
+  .item-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 18px;
+    color: var(--mute);
+  }
+  .thought-label {
+    color: var(--moss);
+  }
+  .timeline-session {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 24px 28px;
+    border: 1px solid var(--ink);
+    border-left: 14px solid var(--post-tone);
+    background: color-mix(in oklab, var(--post-tone) 42%, var(--paper));
+    transition:
+      transform 150ms,
+      box-shadow 150ms;
+  }
+  .timeline-session:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  .timeline-session h2 {
+    font-size: 30px;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    font-weight: 500;
+    margin: 0 0 10px;
+  }
+  .timeline-session p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--mute);
+  }
+  .thought-copy {
+    padding: 26px;
+  }
+  .thought-copy p {
+    white-space: pre-line;
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .thought-copy a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 14px;
+    color: var(--navy);
+  }
+  @media (max-width: 924px) {
+    .timeline-item {
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 20px;
+    }
+    .timeline-session {
+      padding: 20px;
+      gap: 14px;
+    }
+  }
+  @media (max-width: 720px) {
+    .timeline-item {
+      display: block;
+      margin-bottom: 30px;
+    }
+    .item-meta {
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0;
+    }
+    .timeline-session {
+      padding: 18px 14px;
+      flex-wrap: wrap;
+    }
+    .timeline-session h2 {
+      font-size: 26px;
+    }
+    .thought-copy {
+      padding: 20px;
+    }
+    .thought-copy p {
+      font-size: 17px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-session {
+      transition: none;
+    }
+  }
+</style>

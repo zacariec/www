@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light;
+  --paper: #eeeae3;
+  --ink: #1e1e1e;
+  --paper-mute: #6a655e;
+  --paper-rule: #cfc9bf;
+  --mute: var(--paper-mute);
+  --rule: var(--paper-rule);
+  --panel: #e6e1d8;
+  --pink: #f386a1;
+  --blue: #abbab9;
+  --sand: #d8c7a4;
+  --sage: #b8c3a9;
+  --lilac: #c9b8da;
+  --apricot: #edb392;
+  --rose: #a83a55;
+  --navy: #4a5e5d;
+  --moss: #56644a;
+  --black-mute: #a39e96;
+  --black-rule: #3a3936;
+  --pink-mute: #4a2a33;
+  --pink-rule: #d9667f;
+  --blue-mute: #3a4645;
+  --sage-mute: #3d4236;
+  --font-host-grotesk: "Host Grotesk", sans-serif;
+  --font-ibm-plex-mono: "IBM Plex Mono", monospace;
+  --content-width: 1320px;
+  --gutter: 32px;
+  --hard-shadow: 6px 6px 0 var(--ink);
+}

@@ -1,0 +1,100 @@
+---
+import Cover from "./Cover.astro";
+import { sessionId, formatWritten } from "@/lib/session";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  session: SanitySessionTape;
+}
+const { session } = Astro.props;
+---
+
+<a class="tape-card" href={`/sessions/${session.slug}`}>
+  <div class="tape-bar mono">
+    <span>
+      Tape {sessionId(session.number)} · {String(session.sections.length).padStart(2, "0")} sections
+    </span>
+    <span class="tape-read">◷ {session.readTime} MIN</span>
+  </div>
+  <Cover seed={session.coverSeed} tone="blue" animated class="tape-cover" />
+  <div class="tape-copy">
+    <div class="tape-meta mono">
+      <time datetime={session.date}>Written {formatWritten(session.date, true)}</time>
+      <span>{session.wordCount.toLocaleString("en-US")} words</span>
+    </div>
+    <h3>{session.title}</h3>
+    <p>{session.subtitle}</p>
+  </div>
+</a>
+<style>
+  .tape-card {
+    display: block;
+    min-width: 0;
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--pink);
+    --mute: var(--black-mute);
+    transition: transform 150ms;
+  }
+  .tape-card:hover {
+    transform: translate(-3px, -3px);
+  }
+  .tape-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--black-rule);
+  }
+  .tape-read {
+    background: var(--pink);
+    color: var(--ink);
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+  .tape-cover {
+    aspect-ratio: 16/7;
+  }
+  .tape-copy {
+    padding: 24px;
+  }
+  .tape-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: var(--black-mute);
+    margin-bottom: 24px;
+  }
+  h3 {
+    font-size: 36px;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    font-weight: 500;
+    margin: 0 0 16px;
+  }
+  p {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--black-mute);
+    margin: 0;
+  }
+  @media (max-width: 720px) {
+    .tape-copy {
+      padding: 20px;
+    }
+    h3 {
+      font-size: 30px;
+    }
+    .tape-bar {
+      padding: 10px;
+      font-size: 10px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tape-card {
+      transition: none;
+    }
+  }
+</style>

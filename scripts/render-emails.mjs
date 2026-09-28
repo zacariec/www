@@ -32,7 +32,7 @@ const specs = [
         "every merchant story at summit had the same thing underneath it; if you want it bad enough it's plan a.",
       postUrl: "https://zcarr.dev/sessions/there-is-no-plan-b",
       postDate: "July 28, 2026",
-      readingTime: "3 min read",
+      readTime: 3,
       postExcerpt:
         "just got back from shopify summit and the merchant stories have been sitting with me since. every one of them, underneath the specifics, was the same belief i've held for years — there's never a plan b, if you want it bad enough it's plan a.",
       unsubscribeUrl: "https://zcarr.dev/unsubscribe",

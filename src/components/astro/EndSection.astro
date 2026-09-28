@@ -1,0 +1,259 @@
+---
+import Window from "./Window.astro";
+import Logo from "./Logo.astro";
+import Blot from "./Blot.astro";
+import SocialFlip from "./SocialFlip.astro";
+import { NewsletterForm } from "@/components/molecules/newsletter-form";
+import type { SanitySiteConfig } from "@/lib/sanity/types";
+interface Props {
+  config: SanitySiteConfig;
+}
+const { config } = Astro.props;
+const nl = config.newsletter ?? {};
+const copy = {
+  description: nl.footerDescription,
+  buttonLabel: nl.buttonLabel,
+  placeholder: nl.placeholder,
+  successMessage: nl.successMessage,
+  alreadySubscribedMessage: nl.alreadySubscribedMessage,
+  errorMessage: nl.errorMessage,
+};
+---
+
+<footer class="end-section zc-section--black" id="end">
+  <div class="end-blot end-blot--pink">
+    <Blot tone="pink" seed={8} />
+  </div>
+  <div class="end-blot end-blot--blue">
+    <Blot tone="blue" seed={9} />
+  </div>
+  <div class="zc-container end-content">
+    <p class="mono end-label">— End</p>
+    <div class="end-main">
+      <h2>
+        Thanks for
+        <br />
+        reading.
+      </h2>
+      <div class="updates">
+        <Window title="Updates 1.0">
+          <span slot="right" aria-hidden="true">
+            ⩆ ∵
+          </span>
+          <div class="updates-body">
+            <NewsletterForm client:visible copy={copy} />
+            <p class="mono rss">
+              or <a href="/rss.xml">rss</a> · <code>$ curl zcarr.dev/rss.xml</code>
+            </p>
+          </div>
+        </Window>
+      </div>
+    </div>
+    <div class="footer-grid">
+      <div>
+        <a href="/" aria-label="zcarr.dev — Index">
+          <Logo mode="wordmark" size={52} ink="var(--paper)" accent="var(--pink)" />
+        </a>
+        <p class="mono">
+          zcarr.dev · Version {config.displayVersion}
+          <br />© {new Date().getFullYear()} Zacarie Carr
+        </p>
+      </div>
+      <div class="footer-space" aria-hidden="true"></div>
+      <p class="mono encoded">
+        <span>[b.64]</span>
+        <br />
+        VGhvdWdodHMsIHVuZmlsdGVyZWQu
+      </p>
+      <div class="footer-socials">
+        <span class="mono">Elsewhere</span>
+        <SocialFlip socials={config.socials} large />
+        <a class="mono back-top" href="#top">
+          Back to top ↑
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+<style>
+  .end-section {
+    position: relative;
+    z-index: 2;
+    margin-top: -48px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 58px 0 42px;
+    overflow: clip;
+  }
+  .end-content {
+    position: relative;
+    z-index: 1;
+  }
+  .end-label {
+    color: var(--mute);
+    margin: 0 0 36px;
+  }
+  .end-main {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: end;
+    padding-bottom: 88px;
+  }
+  h2 {
+    font-size: clamp(64px, 10vw, 168px);
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    font-weight: 500;
+    margin: 0;
+  }
+  .updates {
+    --mute: var(--paper-mute);
+    --rule: var(--paper-rule);
+    margin-bottom: 4px;
+  }
+  .updates :global(.zc-window) {
+    box-shadow: 6px 6px 0 var(--pink);
+  }
+  .updates-body {
+    padding: 20px;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .updates-body :global(.newsletter-form > p) {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+  .updates-body :global(.newsletter-form form) {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+  }
+  .updates-body :global(.newsletter-form input[type="email"]) {
+    min-width: 0;
+    width: 100%;
+    border: 1px solid var(--ink);
+    padding: 12px;
+    background: transparent;
+    font-size: 13px;
+  }
+  .updates-body :global(.newsletter-form button) {
+    border: 1px solid var(--ink);
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-ibm-plex-mono);
+    font-size: 11px;
+  }
+  .updates-body :global(.newsletter-form button:disabled) {
+    cursor: var(--cur-not-allowed, not-allowed);
+    opacity: 0.6;
+  }
+  .updates-body :global(.newsletter-form a),
+  .rss a {
+    text-decoration: underline;
+  }
+  .rss {
+    margin: 16px 0 0;
+    color: var(--mute);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .rss code {
+    font: inherit;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    border-top: 1px solid var(--rule);
+    padding-top: 36px;
+  }
+  .footer-grid p,
+  .footer-socials > span {
+    color: var(--mute);
+    line-height: 1.8;
+  }
+  .encoded {
+    overflow-wrap: anywhere;
+    margin: 0;
+  }
+  .back-top {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .end-blot {
+    position: absolute;
+    width: 460px;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  .end-blot--pink {
+    right: 0;
+    top: -180px;
+  }
+  .end-blot--blue {
+    right: -240px;
+    bottom: -100px;
+  }
+  @media (max-width: 924px) {
+    .end-main {
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .footer-grid {
+      grid-template-columns: 1fr 0.3fr 1fr 1fr;
+    }
+  }
+  @media (max-width: 720px) {
+    .end-section {
+      padding-top: 36px;
+      margin-top: -40px;
+    }
+    .end-main {
+      grid-template-columns: 1fr;
+      gap: 36px;
+      padding-bottom: 44px;
+    }
+    h2 {
+      font-size: clamp(64px, 18vw, 100px);
+    }
+    .updates {
+      max-width: 480px;
+    }
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 32px 20px;
+    }
+    .footer-space {
+      display: none;
+    }
+    .encoded {
+      font-size: 9px;
+      align-self: end;
+    }
+    .footer-socials {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+    }
+    .footer-socials > span {
+      grid-column: 1 / -1;
+    }
+    .back-top {
+      justify-self: end;
+    }
+    .end-blot--pink {
+      right: -130px;
+      top: -130px;
+      width: 300px;
+    }
+    .updates-body {
+      padding: 16px;
+    }
+  }
+</style>

@@ -1,10 +1,24 @@
 ---
-// Custom serializer for "normal" block style — paragraphs in blog post body.
+import type { Block, Props as PortableTextProps } from "astro-portabletext/types";
+import ParagraphAnchor from "./ParagraphAnchor.astro";
+type Props = PortableTextProps<Block & { _zcParagraph?: number; _zcReplies?: number }>;
+const { node } = Astro.props;
 ---
 
-<p
-  class="text-[15px] md:text-[17px] text-[#1a1c1b] font-[family-name:var(--font-inter)]"
-  style="line-height: 1.9; font-weight: 400;"
->
-  <slot />
-</p>
+{node._zcParagraph ? (
+  <div
+    class="article-paragraph"
+    id={`p${node._zcParagraph}`}
+    data-paragraph={node._zcParagraph}
+    tabindex="-1"
+  >
+    <ParagraphAnchor index={node._zcParagraph} replies={node._zcReplies} />
+    <p class="article-paragraph__text">
+      <slot />
+    </p>
+  </div>
+) : (
+  <p>
+    <slot />
+  </p>
+)}

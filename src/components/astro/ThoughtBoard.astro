@@ -1,0 +1,49 @@
+---
+import type { SanityTimelineEntry } from "@/lib/sanity/types";
+import ThoughtCard from "./ThoughtCard.astro";
+import Lava from "./Lava.astro";
+import SectionHead from "./SectionHead.astro";
+import "@/styles/board.css";
+interface Props {
+  entries: SanityTimelineEntry[];
+}
+const { entries } = Astro.props;
+const visible = entries.filter((entry) => entry.board?.visible);
+---
+
+<section class="thoughts-section" data-thought-board aria-label="Recent thoughts">
+  <Lava
+    class="thoughts-section__lava"
+    colors="--pink,--sand,--sage,--lilac,--blue,--apricot"
+    seed={21}
+  />
+  <div class="thoughts-section__inner">
+    <header class="thoughts-section__heading">
+      <SectionHead number="03" title="Recent thoughts" />
+      <div class="thoughts-section__controls">
+        <span>Drag them around ✥</span>
+        <button type="button" data-board-shuffle>
+          Shuffle
+        </button>
+        <button type="button" data-board-tidy>
+          Tidy
+        </button>
+      </div>
+      <span class="thoughts-section__swipe">Swipe ⇄</span>
+    </header>
+    {visible.length > 0 && (
+      <div class="thought-board" data-board-canvas>
+        {visible.map((entry, index) => (
+          <ThoughtCard entry={entry} index={index} />
+        ))}
+      </div>
+    )}
+    <p class="thought-board-status" data-board-status role="status" aria-live="polite"></p>
+    <a class="thoughts-section__timeline" href="/timeline">
+      tail timeline <span>→</span>
+    </a>
+  </div>
+</section>
+<script>
+  import "@/scripts/board";
+</script>

@@ -1,0 +1,38 @@
+---
+interface Props {
+  tone: string;
+  seed?: number;
+  class?: string;
+  style?: string;
+}
+
+const { tone, seed = 1, class: className, style, ...rest } = Astro.props;
+const foreground = tone.startsWith("--") || tone.startsWith("#") ? tone : `--${tone}`;
+---
+
+<canvas
+  {...rest}
+  class:list={["zc-blot", className]}
+  style={style}
+  data-zc="blot"
+  data-seed={seed}
+  data-fg={foreground}
+  data-bg="transparent"
+  data-anim="true"
+  aria-hidden="true"
+></canvas>
+
+<style>
+  .zc-blot {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { scan } from "../../lib/zc-gl";
+  scan();
+</script>

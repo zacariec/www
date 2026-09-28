@@ -1,9 +1,11 @@
 import { defineField, defineType } from "sanity";
+import { StudioTimelinePreview } from "../studio-components";
 
 export const timelineEntryType = defineType({
   name: "timelineEntry",
   title: "Timeline Entry",
   type: "document",
+  components: { preview: StudioTimelinePreview },
   fields: [
     defineField({
       name: "text",
@@ -26,6 +28,7 @@ export const timelineEntryType = defineType({
         list: [
           { title: "Thought", value: "thought" },
           { title: "LinkedIn", value: "linkedin" },
+          { title: "X", value: "x" },
           { title: "Reflection", value: "reflection" },
         ],
       },
@@ -49,6 +52,44 @@ export const timelineEntryType = defineType({
       type: "url",
       description: "Link to original post (e.g. LinkedIn)",
     }),
+    defineField({
+      name: "board",
+      title: "Thoughts board",
+      type: "object",
+      description: "Default reader layout. Positions are editable in the Thoughts board tool.",
+      fields: [
+        defineField({
+          name: "visible",
+          title: "Show on board",
+          type: "boolean",
+          initialValue: false,
+        }),
+        defineField({
+          name: "x",
+          title: "Horizontal position (%)",
+          type: "number",
+          validation: (rule) => rule.min(0).max(100),
+        }),
+        defineField({
+          name: "y",
+          title: "Vertical position (px)",
+          type: "number",
+          validation: (rule) => rule.min(0),
+        }),
+        defineField({
+          name: "rotation",
+          title: "Rotation (degrees)",
+          type: "number",
+          validation: (rule) => rule.min(-180).max(180),
+        }),
+        defineField({
+          name: "z",
+          title: "Stacking order",
+          type: "number",
+          validation: (rule) => rule.integer().min(0),
+        }),
+      ],
+    }),
   ],
   orderings: [
     {
@@ -59,8 +100,12 @@ export const timelineEntryType = defineType({
   ],
   preview: {
     select: {
+      documentId: "_id",
       title: "text",
       subtitle: "type",
+    },
+    prepare(selection) {
+      return selection;
     },
   },
 });

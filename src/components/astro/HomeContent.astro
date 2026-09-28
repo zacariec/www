@@ -1,0 +1,194 @@
+---
+import PageHero from "./PageHero.astro";
+import SessionCard from "./SessionCard.astro";
+import TapeCard from "./TapeCard.astro";
+import SectionHead from "./SectionHead.astro";
+import Blot from "./Blot.astro";
+import ThoughtBoard from "./ThoughtBoard.astro";
+import { resolveTone } from "@/lib/session";
+import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
+interface Props {
+  sessions: SanitySessionTape[];
+  timeline: SanityTimelineEntry[];
+  config: SanitySiteConfig;
+}
+const { sessions, timeline, config } = Astro.props;
+const tapes = sessions.filter((session) => session.kind === "tape");
+const params = new URLSearchParams(Astro.url.search);
+params.delete("tone");
+---
+
+<PageHero title={config.headline} tone="pink" sessions={sessions} home />
+<section class="readme zc-container" aria-label="README">
+  <span class="mono">[00] README</span>
+  <p>{config.readme}</p>
+</section>
+<section class="latest-section zc-container">
+  <div class="section-heading">
+    <SectionHead number="01" title="Latest sessions" />
+    <a class="mono" href="/sessions">
+      ls sessions/ →
+    </a>
+  </div>
+  <div class="latest-grid">
+    {sessions.slice(0, 3).map((session) => (
+      <SessionCard
+        session={session}
+        tone={resolveTone(session.number, config.toneShift, params, session.toneOverride)}
+      />
+    ))}
+  </div>
+</section>
+<section class="tapes-section zc-section zc-section--pink zc-overlap">
+  <div class="tapes-blot">
+    <Blot tone="blue" seed={4} />
+  </div>
+  <div class="zc-container tapes-content">
+    <p class="mono tapes-label">[02] Long-form</p>
+    <h2>Session tapes.</h2>
+    <p class="tapes-description">
+      The long ones. A full build written up start to finish, with every wrong turn left in.
+    </p>
+    <div class="tapes-grid">
+      {tapes.map((session) => (
+        <TapeCard session={session} />
+      ))}
+    </div>
+  </div>
+</section>
+<ThoughtBoard entries={timeline} />
+<style>
+  .readme {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 2.3fr;
+    gap: 36px;
+    padding-top: 44px;
+    padding-bottom: 100px;
+  }
+  .readme > span {
+    color: var(--mute);
+    padding-top: 6px;
+  }
+  .readme p {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.22;
+    letter-spacing: -0.035em;
+    background: var(--paper);
+    box-decoration-break: clone;
+  }
+  .latest-section {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 128px;
+  }
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .section-heading > a {
+    flex-shrink: 0;
+  }
+  .latest-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .tapes-section {
+    padding-top: 72px;
+  }
+  .tapes-content {
+    position: relative;
+    z-index: 1;
+  }
+  .tapes-label {
+    margin: 0 0 20px;
+  }
+  .tapes-section h2 {
+    font-size: clamp(64px, 7vw, 112px);
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+    font-weight: 500;
+    margin: 0 0 24px;
+  }
+  .tapes-description {
+    max-width: 590px;
+    color: var(--mute);
+    margin-bottom: 42px;
+  }
+  .tapes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .tapes-blot {
+    position: absolute;
+    right: 0;
+    top: -50px;
+    width: 400px;
+    pointer-events: none;
+  }
+  @media (max-width: 924px) {
+    .readme {
+      grid-template-columns: 1fr 3fr;
+    }
+    .readme p {
+      font-size: 28px;
+    }
+    .latest-grid {
+      gap: 16px;
+    }
+    .tapes-grid {
+      gap: 24px;
+    }
+  }
+  @media (max-width: 720px) {
+    .readme {
+      display: block;
+      padding-top: 24px;
+      padding-bottom: 40px;
+      background: var(--paper);
+    }
+    .readme > span {
+      display: none;
+    }
+    .readme p {
+      font-size: 20px;
+      line-height: 1.28;
+      letter-spacing: -0.02em;
+    }
+    .latest-section {
+      padding-bottom: 96px;
+    }
+    .section-heading {
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .section-heading > a {
+      font-size: 10px;
+    }
+    .latest-grid,
+    .tapes-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .tapes-section {
+      padding-top: 46px;
+    }
+    .tapes-section h2 {
+      font-size: 58px;
+    }
+    .tapes-description {
+      font-size: 17px;
+    }
+    .tapes-blot {
+      width: 280px;
+      right: -50px;
+    }
+  }
+</style>

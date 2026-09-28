@@ -1,3 +1,5 @@
+import process from "node:process";
+
 import cloudflare from "@astrojs/cloudflare";
 import partytown from "@astrojs/partytown";
 import react from "@astrojs/react";
@@ -14,22 +16,10 @@ export default defineConfig({
   adapter: cloudflare({
     platformProxy: { enabled: true },
   }),
-  // /blog/* → /sessions/* permanent redirects preserve any existing inbound
-  // links (search results, newsletter archives, shared URLs) after the rename.
-  redirects: {
-    "/blog": {
-      status: 301,
-      destination: "/sessions",
-    },
-    "/blog/[slug]": {
-      status: 301,
-      destination: "/sessions/[slug]",
-    },
-  },
   integrations: [
     sanity({
-      projectId: "mrobamxo",
-      dataset: "production",
+      projectId: process.env.PUBLIC_SANITY_PROJECT_ID ?? "mrobamxo",
+      dataset: process.env.PUBLIC_SANITY_DATASET ?? "production",
       useCdn: false,
       studioBasePath: "/studio",
     }),
@@ -49,17 +39,28 @@ export default defineConfig({
       // Force a single copy of React across SSR + client. Without this,
       // @cloudflare/vite-plugin's workerd SSR runtime ends up with two
       // prebundled React copies and hook dispatchers come back as null.
-      dedupe: ["react", "react-dom", "motion", "motion/react"],
+      dedupe: ["react", "react-dom"],
     },
     ssr: {
       // Bundle these directly into the SSR module instead of externalising —
       // workerd cannot resolve from node_modules at runtime.
-      noExternal: ["@sanity/astro", "react", "react-dom", "motion", "better-auth", "shiki"],
+      noExternal: ["@sanity/astro", "react", "react-dom", "better-auth", "shiki"],
+      optimizeDeps: {
+        include: ["@sanity/preview-url-secret"],
+        // Let Astro compile component entry points without re-optimizing React mid-request.
+        exclude: ["astro-portabletext", "@sanity/astro/visual-editing"],
+      },
     },
     optimizeDeps: {
       // Warm the prebundle on startup so the first request can't race with
       // mid-request reoptimisation.
-      include: ["react", "react-dom", "react-dom/server", "motion/react"],
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/server",
+        "better-auth/react",
+        "@sanity/visual-editing/react",
+      ],
       // Exclude astro-portabletext — its dep scanner trips on .astro custom
       // serializer files (looks for default JS export, finds an Astro component).
       // Build is unaffected; this just silences the dev-server warning.

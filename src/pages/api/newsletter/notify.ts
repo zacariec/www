@@ -2,26 +2,21 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 
 import { sendNewPostNotification } from "@/lib/newsletter/send";
+import { getNewsletterSession } from "@/lib/newsletter/session";
 
+import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 const notifySchema = z.object({
   email: z.string().email().max(254),
-  post: z.object({
-    title: z.string(),
-    subtitle: z.string(),
-    slug: z.string(),
-    date: z.string(),
-    readingTime: z.string(),
-    excerpt: z.string().optional(),
-  }),
+  session: z.string().min(1),
 });
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const authHeader = request.headers.get("Authorization");
-  if (!authHeader || authHeader !== `Bearer ${env.RESEND_API_KEY}`) {
+  if (!env.RESEND_API_KEY || authHeader !== `Bearer ${env.RESEND_API_KEY}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -40,7 +35,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     );
   }
 
-  const { email, post } = parsed.data;
+  const { email, session } = parsed.data;
+  const post = await getNewsletterSession(session);
+  if (!post) return Response.json({ error: "Published session not found" }, { status: 404 });
   const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
 
   const emailPromise = sendNewPostNotification(email, post, env).then((result) => {

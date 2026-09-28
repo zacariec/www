@@ -1,0 +1,12 @@
+<script>
+  // Keep draft navigation inside the uncached, authenticated preview routes.
+  // Query tone/shift and paragraph hashes are left intact.
+  for (const link of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin) continue;
+    if (url.pathname === "/") url.pathname = "/preview";
+    else if (url.pathname.startsWith("/sessions/")) url.pathname = `/preview${url.pathname}`;
+    else continue;
+    link.href = `${url.pathname}${url.search}${url.hash}`;
+  }
+</script>

@@ -1,0 +1,68 @@
+---
+import Window from "./Window.astro";
+import { sessionId } from "@/lib/session";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  session: SanitySessionTape;
+  paragraphCount: number;
+  mobile?: boolean;
+}
+const { session, paragraphCount, mobile = false } = Astro.props;
+const current = paragraphCount ? "¶01" : "¶00";
+const total = `¶${String(paragraphCount).padStart(2, "0")}`;
+---
+
+{mobile ? (
+  <div class="mobile-reading-bar" aria-label="Reading progress">
+    <div class="mobile-reading-bar__meta">
+      <span>
+        {sessionId(session.number)} · <span data-reading-percent>0%</span>
+      </span>
+      <span data-reading-left>~{session.readTime} min left</span>
+      <span>
+        <span data-reading-paragraph>{current}</span> / {total}
+      </span>
+    </div>
+    <div
+      class="reading-progress"
+      role="progressbar"
+      aria-label="Article progress"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+      data-reading-progress
+    >
+      <span data-reading-bar></span>
+    </div>
+  </div>
+) : (
+  <Window title="Reading 1.1" class="reading-panel">
+    <span slot="right">{sessionId(session.number)}</span>
+    <div class="reading-panel__body">
+      <strong data-reading-percent>0%</strong>
+      <div
+        class="reading-progress"
+        role="progressbar"
+        aria-label="Article progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        data-reading-progress
+      >
+        <span data-reading-bar></span>
+      </div>
+      <div class="reading-panel__meta">
+        <span data-reading-left>~{session.readTime} min left</span>
+        <span>
+          <span data-reading-paragraph>{current}</span> / {total}
+        </span>
+      </div>
+    </div>
+    <a class="reading-panel__thread" href="#thread">
+      <span>
+        ↳ <span data-reply-count>{session.commentCount}</span> in thread
+      </span>
+      <span>↓</span>
+    </a>
+  </Window>
+)}

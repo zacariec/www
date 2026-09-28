@@ -1,0 +1,209 @@
+---
+import { navigation, currentNavigation, publicPathname } from "@/lib/navigation";
+import SocialFlip from "./SocialFlip.astro";
+interface Props {
+  sessionCount: number;
+  timelineCount: number;
+  socials: { label: string; url: string }[];
+}
+const { sessionCount, timelineCount, socials } = Astro.props;
+const current = currentNavigation(Astro.url.pathname);
+const counts = ["/", String(sessionCount), String(timelineCount), "—"];
+---
+
+<div class="pill-track">
+  <div class="nav-pill mono" data-nav-pill>
+    <div id="pill-menu" class="pill-menu" inert>
+      <div class="pill-menu-inner">
+        <div class="pill-title">
+          Index Tool 1.1 <span>∵ ⩆</span>
+        </div>
+        <nav aria-label="Page navigation">
+          {navigation.map((item, index) => (
+            <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
+              <span>{item.number}</span>
+              <span>{item.label}</span>
+              <span>{counts[index]}</span>
+            </a>
+          ))}
+        </nav>
+        <div class="pill-elsewhere">
+          <span>elsewhere</span>
+          <SocialFlip socials={socials} />
+        </div>
+      </div>
+    </div>
+    <button class="pill-toggle" type="button" aria-expanded="false" aria-controls="pill-menu">
+      <span class="pill-light" aria-hidden="true"></span>
+      <span>{current.number}</span>
+      <span>{current.label}</span>
+      <span class="pill-path">{publicPathname(Astro.url.pathname)}</span>
+      <span class="pill-caret" aria-hidden="true">
+        ▴
+      </span>
+    </button>
+  </div>
+</div>
+<style>
+  .pill-track {
+    position: absolute;
+    inset: 180px 0 24px;
+    pointer-events: none;
+    z-index: 30;
+  }
+  .nav-pill {
+    position: sticky;
+    top: calc(100dvh - 76px);
+    width: 320px;
+    margin: 0 auto;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(100px);
+    transition:
+      transform 200ms ease,
+      opacity 200ms ease;
+    view-transition-name: navigation-pill;
+  }
+  :global(html.is-scrolled) .nav-pill {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .pill-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    width: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    min-height: 48px;
+    text-align: left;
+  }
+  .pill-light {
+    width: 7px;
+    height: 7px;
+    background: var(--pink);
+    flex-shrink: 0;
+  }
+  .pill-path {
+    color: var(--rule);
+    margin-left: auto;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pill-caret {
+    transition: transform 150ms;
+  }
+  .pill-toggle[aria-expanded="true"] .pill-caret {
+    transform: rotate(180deg);
+  }
+  .pill-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 180ms ease;
+  }
+  .nav-pill[data-open] .pill-menu {
+    max-height: 360px;
+  }
+  .pill-menu-inner {
+    border: 1px solid var(--ink);
+    border-bottom: 0;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .pill-title,
+  .pill-elsewhere {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+  }
+  .pill-title {
+    border-bottom: 1px solid var(--ink);
+  }
+  nav a {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    min-height: 44px;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  nav a[aria-current] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  nav a:not([aria-current]):hover {
+    background: var(--panel);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pill-light {
+      animation: pill-blink 1.4s step-end infinite;
+    }
+  }
+  @keyframes pill-blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-pill,
+    .pill-menu,
+    .pill-caret {
+      transition: none;
+    }
+  }
+  @media (max-width: 720px) {
+    .pill-track {
+      display: none;
+    }
+  }
+</style>
+<script>
+  const pill = document.querySelector<HTMLElement>("[data-nav-pill]");
+  const toggle = pill?.querySelector<HTMLButtonElement>(".pill-toggle");
+  const menu = pill?.querySelector<HTMLElement>(".pill-menu");
+  const index = document.querySelector<HTMLElement>("[data-index-tool]");
+  function closeMenu(restoreFocus = false) {
+    if (!pill || !toggle || !menu) return;
+    pill.removeAttribute("data-open");
+    toggle.setAttribute("aria-expanded", "false");
+    menu.inert = true;
+    if (restoreFocus) toggle.focus();
+  }
+  function updateNavigation() {
+    const scrolled = window.scrollY > 180;
+    document.documentElement.classList.toggle("is-scrolled", scrolled);
+    if (index) index.inert = scrolled;
+    if (pill) pill.inert = !scrolled;
+    if (!scrolled) closeMenu();
+  }
+  toggle?.addEventListener("click", () => {
+    if (!pill || !menu) return;
+    const open = toggle.getAttribute("aria-expanded") !== "true";
+    toggle.setAttribute("aria-expanded", String(open));
+    pill.toggleAttribute("data-open", open);
+    menu.inert = !open;
+    if (open) menu.querySelector<HTMLAnchorElement>("a[aria-current]")?.focus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && pill?.hasAttribute("data-open")) closeMenu(true);
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
+  });
+  document.addEventListener("focusin", (event) => {
+    if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
+  });
+  window.addEventListener("scroll", updateNavigation, { passive: true });
+  window.addEventListener("pageshow", updateNavigation);
+  updateNavigation();
+</script>

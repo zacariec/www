@@ -14,9 +14,7 @@ function siteUrlOrEmpty(config: SanitySiteConfig): string {
 
 function person(config: SanitySiteConfig) {
   const siteUrl = siteUrlOrEmpty(config);
-  const sameAs = [config.linkedIn, config.github, config.twitter].filter((v): v is string =>
-    Boolean(v),
-  );
+  const sameAs = config.socials.map((social) => social.url);
   return {
     "@type": "Person",
     "@id": personId(siteUrl),
@@ -84,7 +82,6 @@ function breadcrumbs(items: { name: string; url: string }[]) {
 
 interface SessionTapePostingOpts {
   ogImageUrl?: string;
-  wordCount?: number;
 }
 
 // schema.org @type stays "BlogPosting" for SEO semantics even though the
@@ -111,7 +108,8 @@ function sessionTapePosting(
     inLanguage: "en",
     articleSection: "Sessions",
     isPartOf: { "@id": sessionsId(siteUrl) },
-    ...(opts.wordCount && opts.wordCount > 0 && { wordCount: opts.wordCount }),
+    wordCount: session.wordCount,
+    timeRequired: `PT${session.readTime}M`,
   };
 }
 

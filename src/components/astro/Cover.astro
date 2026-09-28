@@ -1,0 +1,39 @@
+---
+interface Props {
+  seed: number;
+  tone: string;
+  animated?: boolean;
+  class?: string;
+  style?: string;
+}
+
+const { seed, tone, animated = false, class: className, style, ...rest } = Astro.props;
+const background = tone.startsWith("--") || tone.startsWith("#") ? tone : `--${tone}`;
+---
+
+<canvas
+  {...rest}
+  class:list={["zc-cover", className]}
+  style={style}
+  data-zc="cover"
+  data-seed={seed}
+  data-fg="--ink"
+  data-bg={background}
+  data-anim={String(animated)}
+  aria-hidden="true"
+></canvas>
+
+<style>
+  :where(.zc-cover) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { scan } from "../../lib/zc-gl";
+  scan();
+</script>

@@ -5,6 +5,7 @@ import { addToResendAudience, getResendContact } from "@/lib/newsletter/resend";
 import { sendSubscriptionConfirmed } from "@/lib/newsletter/send";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;

@@ -1,0 +1,35 @@
+---
+import { VisualEditing } from "@sanity/astro/visual-editing";
+import SiteLayout from "@/layouts/SiteLayout.astro";
+import HomeContent from "@/components/astro/HomeContent.astro";
+import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import { isPreviewRequest } from "@/lib/sanity/preview";
+import PreviewLinks from "@/sanity/PreviewLinks.astro";
+
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "private, no-store");
+Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+if (!(await isPreviewRequest(Astro.cookies))) {
+  return new Response("Open Studio Presentation to authorize preview.", {
+    status: 401,
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+const [sessions, timeline, config] = await Promise.all([
+  getAllSessions({ preview: true }),
+  getAllTimelineEntries({ preview: true }),
+  getSiteConfig({ preview: true }),
+]);
+---
+
+<SiteLayout
+  config={config}
+  sessions={sessions}
+  timeline={timeline}
+  title="[Preview] zcarr.dev"
+  canonicalUrl="/"
+>
+  <HomeContent sessions={sessions} timeline={timeline} config={config} />
+  <VisualEditing enabled />
+  <PreviewLinks />
+</SiteLayout>

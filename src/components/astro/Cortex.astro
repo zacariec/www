@@ -1,0 +1,62 @@
+---
+import type { CortexSession } from "../../lib/zc-gl";
+
+interface Props {
+  sessions: CortexSession[];
+  highlight?: number;
+  ox?: number;
+  scale?: number;
+  fade?: number;
+  fadeBottom?: number;
+  drift?: boolean;
+  fg?: string;
+  class?: string;
+  style?: string;
+}
+
+const {
+  sessions,
+  highlight,
+  ox = 0.62,
+  scale = 1,
+  fade = 0,
+  fadeBottom = 0,
+  drift = true,
+  fg = "--ink",
+  class: className,
+  style,
+  ...rest
+} = Astro.props;
+---
+
+<canvas
+  {...rest}
+  class:list={["zc-cortex", className]}
+  style={style}
+  data-zc="cortex"
+  data-sessions={JSON.stringify(sessions, ["number", "readTime", "kind"])}
+  data-highlight={highlight}
+  data-ox={ox}
+  data-scale={scale}
+  data-fade={fade}
+  data-fadeb={fadeBottom}
+  data-drift={String(drift)}
+  data-fg={fg}
+  data-bg="transparent"
+  aria-hidden="true"
+></canvas>
+
+<style>
+  .zc-cortex {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { scan } from "../../lib/zc-gl";
+  scan();
+</script>

@@ -1,3 +1,5 @@
+import type { D1Database } from "@cloudflare/workers-types";
+
 /**
  * Sliding-window rate limiter backed by D1.
  *

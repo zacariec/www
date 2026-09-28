@@ -1,0 +1,136 @@
+---
+import Cover from "./Cover.astro";
+import Chip from "./Chip.astro";
+import { formatWritten } from "@/lib/session";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  session: SanitySessionTape;
+  tone: string;
+}
+const { session, tone } = Astro.props;
+---
+
+<a
+  class="session-row"
+  href={`/sessions/${session.slug}`}
+  style={`--post-tone:var(--${tone})`}
+  data-session-kind={session.kind}
+>
+  <div class="row-cover">
+    <Cover seed={session.coverSeed} tone={tone} animated={session.kind === "tape"} />
+  </div>
+  <div class="row-copy">
+    <div class="row-meta mono">
+      <Chip kind="id" number={session.number} tone={tone} />
+      <span>
+        · {session.kind === "tape" ? "Tape" : "Session"} · Written{" "}
+        <time datetime={session.date}>{formatWritten(session.date, true)}</time>
+      </span>
+    </div>
+    <h2>{session.title}</h2>
+    <p>{session.subtitle}</p>
+  </div>
+  <div class="row-read mono">
+    <Chip minutes={session.readTime} />
+    <span>read →</span>
+  </div>
+</a>
+<style>
+  .session-row {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr) auto;
+    gap: 20px;
+    padding: 20px;
+    align-items: start;
+    border: 1px solid var(--ink);
+    background: color-mix(in oklab, var(--post-tone) 42%, var(--paper));
+    transition:
+      transform 150ms,
+      box-shadow 150ms;
+  }
+  .session-row[hidden] {
+    display: none;
+  }
+  .session-row:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  .row-cover {
+    width: 112px;
+    height: 72px;
+  }
+  .row-cover :global(canvas) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  h2 {
+    font-size: 26px;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--mute);
+    margin: 0;
+  }
+  .row-read {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    gap: 18px;
+    white-space: nowrap;
+  }
+  @media (max-width: 924px) {
+    .session-row {
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 16px;
+    }
+    .row-cover {
+      width: 88px;
+      height: 68px;
+    }
+    .row-read {
+      grid-column: 2;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+  @media (max-width: 720px) {
+    .session-row {
+      padding: 14px;
+      gap: 12px;
+      grid-template-columns: 72px minmax(0, 1fr);
+    }
+    .row-cover {
+      width: 72px;
+      height: 72px;
+    }
+    h2 {
+      font-size: 24px;
+    }
+    .row-meta {
+      font-size: 9px;
+      gap: 4px;
+    }
+    p {
+      font-size: 14px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .session-row {
+      transition: none;
+    }
+  }
+</style>

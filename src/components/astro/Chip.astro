@@ -1,0 +1,60 @@
+---
+import { TONES, sessionId } from "@/lib/session";
+interface Props {
+  kind?: "read" | "id";
+  minutes?: number;
+  number?: number;
+  tone?: string;
+  class?: string;
+}
+
+const {
+  kind = "read",
+  minutes = 0,
+  number = 0,
+  tone = "sand",
+  class: className,
+  ...rest
+} = Astro.props;
+const color = TONES.find((value) => value === tone) ?? "sand";
+const id = sessionId(number);
+---
+
+<span
+  {...rest}
+  class:list={["zc-chip", `zc-chip--${kind}`, "mono", className]}
+  style={kind === "id" ? `--chip-tone: var(--${color})` : undefined}
+  aria-label={kind === "read" ? `${minutes} minute read` : `Session ${number}`}
+>
+  {kind === "read" ? (
+    <>
+      <span aria-hidden="true">◷</span> {minutes} MIN
+    </>
+  ) : (
+    id
+  )}
+</span>
+
+<style>
+  .zc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    width: max-content;
+    padding: 3px 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .zc-chip--read {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .zc-chip--id {
+    border: 1px solid var(--ink);
+    background: var(--chip-tone);
+    color: var(--ink);
+  }
+</style>

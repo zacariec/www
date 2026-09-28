@@ -1,135 +1,111 @@
-import { createClient } from "@sanity/client";
-import { env } from "cloudflare:workers";
-import { ZodError } from "zod";
+import { env, waitUntil } from "cloudflare:workers";
 
-import { getAuth } from "@/lib/auth/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { commentRequestSchema, sanityPostRefSchema } from "@/lib/schemas/comment";
-import { apiVersion, dataset, projectId } from "@/sanity/env";
+import {
+  CommentError,
+  commentFailure,
+  commentsClient,
+  getReader,
+  json,
+  limitMutation,
+  requestJson,
+  requireReader,
+  requireSameOrigin,
+  requireSession,
+  threadPayload,
+  visibleComments,
+} from "@/lib/comments/server";
+import { commentDocumentIdSchema, commentRequestSchema } from "@/lib/schemas/comment";
 
 import type { APIRoute } from "astro";
 
+import type { SanityComment } from "@/lib/sanity/types";
+
 export const prerender = false;
 
-function getWriteClient() {
-  if (!projectId) return null;
-  return createClient({
-    projectId,
-    dataset,
-    apiVersion,
-    token: import.meta.env.SANITY_API_TOKEN,
-    useCdn: false,
-  });
-}
-
-async function notifyNewComment(
-  author: string,
-  text: string,
-  postSlug: string,
-  isReply: boolean,
-): Promise<void> {
+async function notifyNewComment(comment: SanityComment, slug: string) {
   if (!env.RESEND_API_KEY) return;
   const siteUrl = (env.SITE_URL ?? "https://zcarr.dev").replace(/\/$/, "");
-  const subject = isReply
-    ? `Reply from ${author} on ${postSlug}`
-    : `New comment from ${author} on ${postSlug}`;
   try {
-    await fetch("https://api.resend.com/emails", {
+    const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ZC <signal@mail.zcarr.dev>",
+        from: env.RESEND_FROM_EMAIL ?? "ZC <signal@mail.zcarr.dev>",
         to: "signal@zcarr.dev",
-        subject,
-        text: `${author} commented on ${siteUrl}/sessions/${postSlug}:\n\n${text}`,
+        subject: `${comment.parent ? "Reply" : "New comment"} from ${comment.author.handle} on ${slug}`,
+        text: `${comment.author.handle} commented on ${siteUrl}/sessions/${slug}#thread:\n\n${comment.body}\n\nStatus: ${comment.status}`,
       }),
     });
-  } catch (err) {
-    console.error("[comment-notify] failed:", err);
+    if (!response.ok) console.error("[comment-notify] delivery failed:", response.status);
+  } catch {
+    console.error("[comment-notify] delivery unavailable");
   }
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
+export const GET: APIRoute = async ({ request, url }) => {
   try {
-    const auth = getAuth(env);
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user) {
-      return new Response(JSON.stringify({ error: "Sign in to comment" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const allowed = await checkRateLimit(env.DB, `comment:${session.user.email}`, 5, 60_000);
-    if (!allowed) {
-      return new Response(JSON.stringify({ error: "Too many comments, slow down" }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const body: unknown = await request.json();
-    const { text, postSlug, parentCommentId } = commentRequestSchema.parse(body);
-
-    const writeClient = getWriteClient();
-    if (!writeClient || !import.meta.env.SANITY_API_TOKEN) {
-      return new Response(JSON.stringify({ success: true, message: "Sanity not configured" }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const postResult: unknown = await writeClient.fetch(
-      `*[_type == "sessionTape" && slug.current == $slug][0]{ _id }`,
-      { slug: postSlug },
-    );
-
-    const post = sanityPostRefSchema.safeParse(postResult);
-    if (!post.success) {
-      return new Response(JSON.stringify({ error: "Session not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const comment = await writeClient.create({
-      _type: "comment",
-      post: { _type: "reference", _ref: post.data._id },
-      ...(parentCommentId && {
-        parentComment: { _type: "reference", _ref: parentCommentId },
-      }),
-      author: session.user.name || "Anonymous",
-      authorEmail: session.user.email,
-      authorImage: session.user.image,
-      text,
-      publishedAt: new Date().toISOString(),
-      likes: 0,
-    });
-
-    const emailPromise = notifyNewComment(
-      session.user.name || "Anonymous",
-      text,
-      postSlug,
-      Boolean(parentCommentId),
-    );
-    if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
-
-    return new Response(JSON.stringify({ success: true, comment }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    const parsed = commentDocumentIdSchema.safeParse(url.searchParams.get("session"));
+    if (!parsed.success) throw new CommentError(400, "A valid published session ID is required.");
+    const client = commentsClient(env);
+    await requireSession(client, parsed.data);
+    const reader = await getReader(request, env);
+    return json(await threadPayload(client, parsed.data, reader, env));
   } catch (error) {
-    if (error instanceof ZodError) {
-      return new Response(JSON.stringify({ error: "Invalid request", details: error.issues }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    return commentFailure(error);
+  }
+};
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    requireSameOrigin(request, env);
+    const reader = await requireReader(request, env);
+    await limitMutation(request, env, reader, "post");
+    const parsed = commentRequestSchema.safeParse(await requestJson(request));
+    if (!parsed.success)
+      throw new CommentError(400, parsed.error.issues[0]?.message ?? "Invalid comment.");
+    const input = parsed.data;
+    const client = commentsClient(env);
+    const session = await requireSession(client, input.session);
+    if (input.anchorIndex !== null && input.anchorIndex > session.paragraphCount) {
+      throw new CommentError(400, "That paragraph does not exist in this session.");
     }
-    return new Response(JSON.stringify({ error: "Failed to create comment" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
+    if (input.parent) {
+      const comments = await visibleComments(client, input.session, reader.key);
+      const parent = comments.find((comment) => comment._id === input.parent);
+      if (!parent) throw new CommentError(400, "That reply is not available in this session.");
+      if (parent.anchorIndex !== input.anchorIndex)
+        throw new CommentError(400, "Replies must use their parent's paragraph anchor.");
+    }
+    const moderation = await client.fetch<string | null>(
+      `*[_type == "siteConfig"][0].moderationDefault`,
+    );
+    const comment: SanityComment = {
+      _id: crypto.randomUUID(),
+      session: session._id,
+      anchorIndex: input.anchorIndex,
+      parent: input.parent,
+      body: input.body,
+      author: reader.author,
+      status: moderation === "pending" ? "pending" : "approved",
+      likes: 0,
+      createdAt: new Date().toISOString(),
+    };
+    // Text is stored literally and rendered as escaped text, never HTML/Portable Text.
+    await client.create({
+      ...comment,
+      _type: "comment",
+      session: { _type: "reference", _ref: comment.session },
+      parent: comment.parent ? { _type: "reference", _ref: comment.parent } : null,
+      readerId: reader.key,
+      likedBy: [],
     });
+    waitUntil(notifyNewComment(comment, session.slug));
+    // Explicit public contract, not the raw Sanity document (which includes private fields).
+    return json({ comment }, 201);
+  } catch (error) {
+    return commentFailure(error);
   }
 };

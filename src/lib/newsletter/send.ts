@@ -119,7 +119,7 @@ export interface NewPostInput {
   subtitle: string;
   slug: string;
   date: string;
-  readingTime: string;
+  readTime: number;
   excerpt?: string;
 }
 
@@ -144,7 +144,7 @@ export async function sendNewPostNotification(
         month: "long",
         day: "numeric",
       }),
-      readingTime: post.readingTime,
+      readTime: post.readTime,
       postExcerpt: post.excerpt,
       unsubscribeUrl,
     };

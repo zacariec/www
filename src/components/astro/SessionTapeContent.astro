@@ -1,57 +1,71 @@
 ---
-import { PortableText } from 'astro-portabletext';
+import { PortableText } from "astro-portabletext";
+import { Thread } from "@/components/organisms/thread";
+import { normalizeMarkdownShortcuts } from "@/lib/sanity/normalize-markdown";
+import { formatWritten, resolveTone, sectionId, sessionId } from "@/lib/session";
+import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import Blot from "./Blot.astro";
+import Cortex from "./Cortex.astro";
+import Cover from "./Cover.astro";
+import Chip from "./Chip.astro";
+import Window from "./Window.astro";
+import GlyphDivider from "./GlyphDivider.astro";
+import MetaStrip from "./MetaStrip.astro";
+import ReadingPanel from "./ReadingPanel.astro";
+import "@/styles/reading.css";
 
-import Reveal from './Reveal.astro';
-import { CommentSection } from '@/components/organisms/comment-section';
-import { NeuralBlobNet } from '@/components/organisms/neural-blob-net';
-import { normalizeMarkdownShortcuts } from '@/lib/sanity/normalize-markdown';
-import type { NewsletterCopy } from '@/components/molecules/newsletter-form';
-import type { SanitySessionTape } from '@/lib/sanity/types';
-
-// Dynamic imports so Vite's esbuild dep-scanner doesn't try to resolve
-// .astro files as JS modules (which causes a noisy "No matching export" warning).
-const PortableTextImage = (await import('./PortableTextImage.astro')).default;
-const PortableTextParagraph = (await import('./PortableTextParagraph.astro')).default;
-const PortableTextCode = (await import('./PortableTextCode.astro')).default;
-const PortableTextInlineCode = (await import('./PortableTextInlineCode.astro')).default;
-const PortableTextH2 = (await import('./PortableTextH2.astro')).default;
-const PortableTextH3 = (await import('./PortableTextH3.astro')).default;
-const PortableTextH4 = (await import('./PortableTextH4.astro')).default;
-const PortableTextBlockquote = (await import('./PortableTextBlockquote.astro')).default;
+// Dynamic imports keep Astro serializers out of Vite's JS dependency scanner.
+const PortableTextImage = (await import("./PortableTextImage.astro")).default;
+const PortableTextParagraph = (await import("./PortableTextParagraph.astro")).default;
+const PortableTextCode = (await import("./PortableTextCode.astro")).default;
+const PortableTextInlineCode = (await import("./PortableTextInlineCode.astro")).default;
+const PortableTextH2 = (await import("./PortableTextH2.astro")).default;
+const PortableTextH3 = (await import("./PortableTextH3.astro")).default;
+const PortableTextH4 = (await import("./PortableTextH4.astro")).default;
+const PortableTextBlockquote = (await import("./PortableTextBlockquote.astro")).default;
 
 interface Props {
   session: SanitySessionTape;
-  newsletterCopy?: NewsletterCopy;
+  sessions: SanitySessionTape[];
+  config: SanitySiteConfig;
 }
 
-const { session, newsletterCopy } = Astro.props;
-
-const comments = (session.comments || []).map((c, i) => ({
-  id: c._id || String(i),
-  author: c.author,
-  authorImage: c.authorImage,
-  date: c.date,
-  text: c.text,
-  likes: c.likes || 0,
-  parentCommentId: c.parentCommentId,
-}));
-
-const formattedDate = new Date(session.date).toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
+const { session, sessions, config } = Astro.props;
+const id = sessionId(session.number);
+const tone = resolveTone(
+  session.number,
+  config.toneShift,
+  Astro.url.searchParams,
+  session.toneOverride,
+);
+const isTape = session.kind === "tape";
+const comments = session.comments.filter((comment) => comment.status === "approved");
+const previous = sessions
+  .filter((item) => item.number < session.number)
+  .sort((a, b) => b.number - a.number)[0];
+const sections = new Map(session.sections.map((section) => [section.key, section.id]));
+let paragraphCount = 0;
+let figureCount = session.featuredImage?.url ? 1 : 0;
+const normalizedContent = normalizeMarkdownShortcuts(session.content).map((node, index) => {
+  if (node._type === "block" && (!node.style || node.style === "normal") && !node.listItem) {
+    const paragraphIndex = ++paragraphCount;
+    return {
+      ...node,
+      _zcParagraph: paragraphIndex,
+      _zcReplies: comments.filter((comment) => comment.anchorIndex === paragraphIndex).length,
+    };
+  }
+  if (node._type === "block" && node.style === "h2") {
+    const headingId =
+      (node._key ? sections.get(node._key) : undefined) ?? sectionId(node._key, index);
+    return { ...node, _zcHeading: headingId };
+  }
+  if (node._type === "image")
+    return { ...node, _zcFigure: isTape ? `Fig ${id}.${++figureCount}` : undefined };
+  return node;
 });
-
-// Convert author-typed `backticks` and **bold** into real decorator marks
-// before the PortableText renderer sees them. Spans with existing marks
-// are preserved untouched — see normalize-markdown.ts.
-const normalizedContent = normalizeMarkdownShortcuts(session.content);
-
 const ptComponents = {
-  type: {
-    image: PortableTextImage,
-    code: PortableTextCode,
-  },
+  type: { image: PortableTextImage, code: PortableTextCode },
   block: {
     normal: PortableTextParagraph,
     h2: PortableTextH2,
@@ -63,170 +77,193 @@ const ptComponents = {
 };
 ---
 
-<div class="pb-20 md:pb-32">
-  {/* Featured Image or Neural Net */}
-  <div class="relative h-[30vh] md:h-[40vh] overflow-hidden mb-8">
-    {session.featuredImage?.url ? (
-      <img
-        alt={session.featuredImage.alt || session.title}
-        class="object-cover w-full h-full absolute inset-0"
-        src={session.featuredImage.url}
-        loading="eager"
+<div
+  data-reading-root
+  data-slug={session.slug}
+  data-read-time={session.readTime}
+  data-paragraph-count={paragraphCount}
+>
+  <div class="article-shell">
+    <header class:list={["page-hero", "article-hero", { "article-hero--tape": isTape }]}>
+      <Blot tone={tone} seed={session.coverSeed + 33} class="article-hero__blot" />
+      <Cortex
+        sessions={sessions.map(({ number, readTime, kind }) => ({ number, readTime, kind }))}
+        highlight={session.number - 1}
+        class="article-hero__cortex"
+        ox={0.76}
+        scale={0.8}
+        fade={0.85}
+        fadeBottom={0.45}
+        drift
       />
-    ) : (
-      <NeuralBlobNet client:only="react" nodeCount={comments.length + 40} />
-    )}
-  </div>
-
-  {/* Header */}
-  <div class="px-5 md:px-16 pt-4 md:pt-8 pb-12 md:pb-16">
-    <Reveal>
-      <a
-        class="text-[10px] tracking-[2px] uppercase text-[#bbb] hover:text-black no-underline transition-colors duration-300 inline-flex items-center gap-2 mb-12 md:mb-16 font-[family-name:var(--font-space-grotesk)]"
-        href="/sessions"
-      >
-        <span aria-hidden="true">←</span>
-        Sessions
+      <a class="article-back" href="/sessions" data-sessions-back>
+        ← cd ../sessions
       </a>
-    </Reveal>
-
-    <div class="max-w-[900px]">
-      <Reveal delay={100}>
-        <p class="text-[10px] tracking-[3px] uppercase text-[#777777] mb-6 md:mb-8 font-[family-name:var(--font-space-grotesk)]">
-          {formattedDate} &mdash; {session.readingTime} read
-        </p>
-      </Reveal>
-      <Reveal variant="text">
-        <h1
-          class="text-[clamp(32px,7vw,72px)] text-[#000000] tracking-[-0.04em] font-[family-name:var(--font-space-grotesk)]"
-          style="font-weight: 700; line-height: 0.95;"
-        >
-          {session.title}
-        </h1>
-      </Reveal>
-      <Reveal delay={300}>
-        <p
-          class="text-[16px] md:text-[18px] text-[#777777] max-w-[500px] mt-6 md:mt-8 font-[family-name:var(--font-inter)]"
-          style="line-height: 1.6; font-weight: 300;"
-        >
-          {session.subtitle}
-        </p>
-      </Reveal>
-    </div>
-  </div>
-
-  {/* Content */}
-  <div class="px-5 md:px-16">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16">
-      {/* Left gutter */}
-      <div class="md:col-span-2 hidden md:block">
-        <Reveal delay={400}>
-          <div class="sticky top-[100px]">
-            <div class="mb-10">
-              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
-                Author
-              </p>
-              <p
-                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
-                style="font-weight: 500;"
-              >
-                ZC
-              </p>
-            </div>
-            <div class="mb-10">
-              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
-                Time
-              </p>
-              <p
-                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
-                style="font-weight: 500;"
-              >
-                {session.readingTime?.toUpperCase()}
-              </p>
-            </div>
-            <div>
-              <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-2 font-[family-name:var(--font-space-grotesk)]">
-                Replies
-              </p>
-              <p
-                class="text-[12px] text-[#000000] tracking-[0.5px] font-[family-name:var(--font-space-grotesk)]"
-                style="font-weight: 500;"
-              >
-                {comments.length}
-              </p>
-            </div>
-          </div>
-        </Reveal>
+      <h1>
+        <span>{session.title}</span>
+      </h1>
+      <div class="article-hero__meta">
+        {isTape ? (
+          <>
+            <span class="article-hero__id">Tape {id} · long-form</span>
+            <span>{session.readTime} mins read</span>
+            <span>{String(session.sections.length).padStart(2, "0")} sections</span>
+          </>
+        ) : (
+          <>
+            <span class="article-hero__id">{id}</span>
+            <span>Written {formatWritten(session.date, true)}</span>
+            <span>{session.readTime} min</span>
+            <span>{session.state === "edited" ? "Edited" : "Raw · unedited"}</span>
+            <span class="article-hero__node">Node lit in Fig 01</span>
+          </>
+        )}
       </div>
+    </header>
 
-      {/* Main content */}
-      <div class="md:col-span-7">
-        <div class="space-y-8">
+    {isTape ? (
+      <Window title={`Fig ${id} — cover, dithered`} class="tape-cover">
+        <span slot="right">Written {formatWritten(session.date, true)}</span>
+        <Cover seed={session.coverSeed} tone={tone} animated class="tape-cover__canvas" />
+      </Window>
+    ) : (
+      <MetaStrip session={session} tone={tone} />
+    )}
+
+    <section
+      class:list={["reading-layout", { "reading-layout--tape": isTape }]}
+      data-reading-article
+      aria-label="Session article"
+    >
+      <ReadingPanel session={session} paragraphCount={paragraphCount} mobile />
+      {isTape && session.sections.length > 0 && (
+        <nav class="article-contents article-contents--mobile" aria-label="Contents">
+          <Window title="Contents">
+            <span slot="right">{session.sections.length} sections</span>
+            <ol>
+              {session.sections.map((section, index) => (
+                <li>
+                  <a href={`#${section.id}`}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    {section.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </Window>
+        </nav>
+      )}
+      <article class="article-body" data-reading-body>
+        {session.subtitle && <p class="article-lede">{session.subtitle}</p>}
+        {session.featuredImage?.url && (
+          <figure class="article-figure">
+            <img
+              src={session.featuredImage.url}
+              alt={session.featuredImage.alt || ""}
+              loading="lazy"
+              decoding="async"
+            />
+            {(isTape || session.featuredImage.alt) && (
+              <figcaption>
+                {isTape && `Fig ${id}.1`}
+                {session.featuredImage.alt && `${isTape ? " — " : ""}${session.featuredImage.alt}`}
+              </figcaption>
+            )}
+          </figure>
+        )}
+        <div class="article-prose">
           <PortableText value={normalizedContent} components={ptComponents} />
         </div>
-      </div>
-
-      {/* Right gutter */}
-      <div class="md:col-span-3 hidden md:block">
-        <Reveal delay={500}>
-          <div class="border-l border-[rgba(0,0,0,0.04)] pl-8">
-            <p class="text-[9px] tracking-[2px] uppercase text-[#c6c6c6] mb-3 font-[family-name:var(--font-space-grotesk)]">
-              Note
-            </p>
-            <p
-              class="text-[12px] text-[#777777] italic font-[family-name:var(--font-inter)]"
-              style="line-height: 1.7;"
-            >
-              {session.sideNote || '\u201CIf you\u2019re still reading, you\u2019re my kind of person.\u201D'}
-            </p>
-          </div>
-        </Reveal>
-      </div>
-    </div>
+        <div class="article-eof">
+          <GlyphDivider />
+        </div>
+        {previous && (
+          <a class="article-previous" href={`/sessions/${previous.slug}`}>
+            <span>
+              <span class="article-previous__label">← Previous · {sessionId(previous.number)}</span>
+              <span class="article-previous__title">{previous.title}</span>
+            </span>
+            <Chip kind="read" minutes={previous.readTime} />
+          </a>
+        )}
+      </article>
+      <aside class="reading-sidebar" aria-label="Reading tools">
+        <div class="reading-sidebar__sticky">
+          {isTape && session.sections.length > 0 && (
+            <nav class="article-contents" aria-label="Contents">
+              <Window title="Contents">
+                <span slot="right">{session.sections.length} sections</span>
+                <ol>
+                  {session.sections.map((section, index) => (
+                    <li>
+                      <a href={`#${section.id}`}>
+                        <span>{String(index + 1).padStart(2, "0")}</span>
+                        {section.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </Window>
+            </nav>
+          )}
+          <ReadingPanel session={session} paragraphCount={paragraphCount} />
+        </div>
+      </aside>
+    </section>
   </div>
 
-  <CommentSection
-    client:only="react"
-    initialComments={comments}
-    newsletterCopy={newsletterCopy}
-    postSlug={session.slug}
+  <dialog
+    id="paragraph-dialog"
+    class="paragraph-dialog"
+    aria-labelledby="paragraph-dialog-title"
+    data-paragraph-dialog
   >
-    <div slot="fallback" class="px-5 md:px-16 mt-20 md:mt-32">
-      <div class="max-w-[720px] md:ml-[calc(16.666%+32px)]">
-        <div class="h-px bg-[rgba(0,0,0,0.08)] w-full"></div>
-        <div class="pt-12 md:pt-16">
-          <h3
-            class="text-[18px] md:text-[20px] tracking-[-1px] uppercase text-[#000000] mb-10 md:mb-12 font-[family-name:var(--font-space-grotesk)]"
-            style="font-weight: 700;"
-          >
-            Discussion ({comments.length})
-          </h3>
-          <div class="mb-16 py-6">
-            <span class="text-[12px] text-[#777777] font-[family-name:var(--font-inter)]">
-              Sign in to comment
-            </span>
-          </div>
-          {comments.filter((c) => !c.parentCommentId).map((comment) => (
-            <div class="py-6 border-b border-[rgba(0,0,0,0.04)]">
-              <div class="flex items-center gap-3 mb-3">
-                {comment.authorImage && (
-                  <img alt="" class="w-6 h-6 rounded-full" src={comment.authorImage} />
-                )}
-                <span
-                  class="text-[12px] text-[#000000] font-[family-name:var(--font-space-grotesk)]"
-                  style="font-weight: 500;"
-                >
-                  {comment.author}
-                </span>
-                <span class="text-[10px] text-[#c6c6c6]">{comment.date}</span>
-              </div>
-              <p class="text-[14px] text-[#1a1c1b] font-[family-name:var(--font-inter)]" style="line-height: 1.7;">
-                {comment.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div class="paragraph-dialog__title">
+      <span id="paragraph-dialog-title">
+        Anchor <span data-dialog-paragraph>¶01</span>
+      </span>
+      <button type="button" data-dialog-close aria-label="Close paragraph actions">
+        ×
+      </button>
     </div>
-  </CommentSection>
+    <div class="paragraph-dialog__actions">
+      <button type="button" data-highlight-toggle aria-pressed="false">
+        □ Highlight <span data-dialog-paragraph>¶01</span>
+      </button>
+      <button type="button" data-comment-open>
+        ↳ Comment on <span data-dialog-paragraph>¶01</span>
+      </button>
+      <button type="button" data-copy-anchor>
+        ⧉ Copy link to <span data-dialog-paragraph>¶01</span>
+      </button>
+    </div>
+    <form class="paragraph-dialog__composer" data-paragraph-composer hidden>
+      <label for="paragraph-draft">
+        Comment on <span data-dialog-paragraph>¶01</span>
+      </label>
+      <textarea
+        id="paragraph-draft"
+        name="body"
+        rows="3"
+        maxlength="5000"
+        placeholder="Say the thing"
+      ></textarea>
+      <button type="submit" disabled>
+        Post ↵
+      </button>
+    </form>
+    <p class="paragraph-dialog__status" data-dialog-status role="status"></p>
+  </dialog>
+
+  <Thread
+    client:visible
+    sessionId={session._id}
+    slug={session.slug}
+    paragraphCount={paragraphCount}
+    initialComments={comments}
+  />
 </div>
+
+<script>
+  import "@/scripts/reading";
+</script>

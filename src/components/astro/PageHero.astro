@@ -1,0 +1,180 @@
+---
+import Cortex from "./Cortex.astro";
+import Blot from "./Blot.astro";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  title: string | string[];
+  eyebrow?: string;
+  description?: string;
+  tone?: string;
+  sessions: SanitySessionTape[];
+  home?: boolean;
+}
+const { title, eyebrow, description, tone = "blue", sessions, home = false } = Astro.props;
+const lines = Array.isArray(title) ? title : [title];
+---
+
+<section class:list={["page-hero", { "page-hero--home": home }]}>
+  <div class="hero-blot">
+    <Blot tone={tone} seed={3} />
+  </div>
+  <div class="hero-cortex">
+    <Cortex
+      sessions={sessions}
+      drift
+      ox={0.63}
+      scale={home ? 1.05 : 0.9}
+      fade={0.8}
+      fadeBottom={0.5}
+    />
+  </div>
+  <div class="hero-copy zc-container">
+    {eyebrow && (
+      <p class="hero-eyebrow mono">
+        <span>{eyebrow}</span>
+      </p>
+    )}
+    <h1 class="zc-hero-title">
+      {lines.map((line, index) => (
+        <Fragment>
+          {index > 0 && <br />}
+          <span>{line}</span>
+        </Fragment>
+      ))}
+    </h1>
+    {description && (
+      <p class="hero-description">
+        <span>{description}</span>
+      </p>
+    )}
+    {home && (
+      <p class="hero-caption mono">
+        <span>Fig 01 — Cortex</span>
+        <span>
+          One branch per session · {sessions.length} nodes ·{" "}
+          {sessions.filter((s) => s.kind === "tape").length} tapes ■
+        </span>
+      </p>
+    )}
+  </div>
+</section>
+<style>
+  .page-hero {
+    position: relative;
+    min-height: 540px;
+    display: flex;
+    align-items: flex-end;
+    padding: 240px 0 68px;
+  }
+  .page-hero--home {
+    min-height: 680px;
+    padding-bottom: 40px;
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+  .hero-blot {
+    position: absolute;
+    top: 10px;
+    right: 24%;
+    width: 500px;
+    height: 420px;
+    pointer-events: none;
+  }
+  .hero-cortex {
+    position: absolute;
+    inset: 0 0 -150px;
+    pointer-events: none;
+  }
+  .hero-cortex :global(canvas) {
+    height: 100%;
+    width: 100%;
+    aspect-ratio: auto;
+  }
+  h1 {
+    max-width: 1050px;
+    margin: 0;
+    width: fit-content;
+    background: var(--paper);
+    box-shadow: 0 0 0 0.08em var(--paper);
+    view-transition-name: page-title;
+  }
+  .hero-eyebrow span,
+  .hero-description span,
+  .hero-caption {
+    background: var(--paper);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .hero-eyebrow {
+    margin: 0 0 24px;
+  }
+  .hero-description {
+    max-width: 660px;
+    font-size: 21px;
+    line-height: 1.45;
+    color: var(--mute);
+    margin: 28px 0 0;
+  }
+  .hero-caption {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    width: fit-content;
+    margin: 28px 0 0;
+    padding: 4px 8px;
+  }
+  .hero-caption span + span {
+    color: var(--mute);
+  }
+  @media (min-width: 1600px) {
+    .page-hero--home {
+      min-height: 820px;
+    }
+    .hero-blot {
+      right: 30%;
+      width: 580px;
+    }
+  }
+  @media (max-width: 720px) {
+    .page-hero {
+      min-height: 350px;
+      padding: 140px 0 38px;
+    }
+    .page-hero--home {
+      min-height: 470px;
+      padding: 240px 0 24px;
+    }
+    .hero-blot {
+      width: 360px;
+      height: 300px;
+      right: -90px;
+      top: 30px;
+    }
+    .hero-cortex {
+      bottom: -30px;
+    }
+    h1 {
+      font-size: 64px;
+      letter-spacing: -0.055em;
+    }
+    .hero-description {
+      font-size: 18px;
+      max-width: 340px;
+      margin-top: 22px;
+    }
+    .hero-caption {
+      gap: 4px 14px;
+      margin-top: 20px;
+      font-size: 10px;
+    }
+    .hero-caption span + span {
+      max-width: 230px;
+    }
+    .hero-eyebrow {
+      margin-bottom: 18px;
+    }
+  }
+</style>

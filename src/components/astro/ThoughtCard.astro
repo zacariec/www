@@ -1,0 +1,49 @@
+---
+import type { SanityTimelineEntry } from "@/lib/sanity/types";
+import { TONES } from "@/lib/session";
+interface Props {
+  entry: SanityTimelineEntry;
+  index: number;
+}
+const { entry, index } = Astro.props;
+const source = entry.type === "linkedin" ? "LinkedIn" : entry.type === "x" ? "X" : "Thought";
+const date = entry.date.slice(0, 10);
+const layout = entry.board;
+---
+
+<article
+  class="thought-card"
+  tabindex="0"
+  aria-label={`Thought ${date}. Use arrow keys to move; Shift for larger steps.`}
+  data-thought-card
+  data-thought-id={entry._id}
+  data-board-x={layout?.x ?? 0}
+  data-board-y={layout?.y ?? 0}
+  data-board-rotation={layout?.rotation ?? 0}
+  data-board-z={layout?.z ?? index}
+  style={`--pin:var(--${TONES[index % TONES.length]});--rotation:${layout?.rotation ?? 0}deg`}
+>
+  <span class="thought-card__pin" aria-hidden="true"></span>
+  <header class="thought-card__header">
+    <span>
+      Thought <time datetime={entry.date}>{date}</time>
+    </span>
+    <span>{source}</span>
+  </header>
+  <p class="thought-card__text">{entry.text}</p>
+  <footer class="thought-card__footer">
+    <span>
+      ♥ {entry.likes} · {entry.comments} {entry.comments === 1 ? "reply" : "replies"}
+    </span>
+    {entry.url && (
+      <a
+        href={entry.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Read thought from ${date} on ${source}`}
+      >
+        {source} ↗
+      </a>
+    )}
+  </footer>
+</article>

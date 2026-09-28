@@ -1,0 +1,67 @@
+.preferences-panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 240px 32px 140px;
+}
+.preferences-panel h1 {
+  font-size: clamp(44px, 7vw, 80px);
+  margin: 28px 0 24px;
+}
+.preferences-panel p {
+  margin: 0 0 18px;
+}
+.preference-window {
+  margin-top: 36px;
+  padding: 24px;
+  border: 1px solid var(--ink);
+  box-shadow: var(--hard-shadow);
+  background: var(--paper);
+}
+.preference-window h2 {
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  letter-spacing: 0;
+}
+.preference-window dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  margin: 0 0 24px;
+}
+.preference-window dt {
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 11px;
+  color: var(--mute);
+}
+.preference-window dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.preference-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.preferences-panel button {
+  padding: 12px 18px;
+  min-height: 44px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+.preferences-panel [role="alert"] {
+  color: var(--rose);
+  margin-top: 18px;
+}
+@media (max-width: 720px) {
+  .preferences-panel {
+    padding: 64px 16px 100px;
+  }
+  .preference-window {
+    padding: 20px;
+  }
+  .preference-window dl {
+    grid-template-columns: 85px 1fr;
+  }
+}

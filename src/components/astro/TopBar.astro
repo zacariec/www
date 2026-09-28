@@ -1,0 +1,182 @@
+---
+import Logo from "./Logo.astro";
+import SocialFlip from "./SocialFlip.astro";
+import { resolveTone, sessionId, formatWritten } from "@/lib/session";
+import { publicPathname } from "@/lib/navigation";
+import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+interface Props {
+  config: SanitySiteConfig;
+  latest?: SanitySessionTape;
+}
+const { config, latest } = Astro.props;
+const params = new URLSearchParams(Astro.url.search);
+params.delete("tone");
+const tone = latest
+  ? resolveTone(latest.number, config.toneShift, params, latest.toneOverride)
+  : "pink";
+---
+
+<header class="top-bar zc-container mono">
+  <a href="/" class="site-mark" aria-label="zcarr.dev — Index">
+    <Logo size={25} />
+    <span>zcarr.dev / {config.displayVersion}</span>
+  </a>
+  {config.tickerEnabled && latest && (
+    <a class="latest-ticker" href={`/sessions/${latest.slug}`}>
+      <span class="ticker-square" style={`--ticker-tone:var(--${tone})`} aria-hidden="true"></span>
+      <span>
+        Latest {sessionId(latest.number)} · {latest.title}
+      </span>
+      <time datetime={latest.date}>{formatWritten(latest.date)} →</time>
+    </a>
+  )}
+  <div class="top-elsewhere">
+    <span class="elsewhere-label">elsewhere</span>
+    <SocialFlip socials={config.socials} />
+    <time
+      data-site-clock
+      data-timezone={config.timezone ?? "Australia/Sydney"}
+      datetime={new Date().toISOString()}
+    >
+      {new Date().toLocaleDateString("en-AU", {
+        timeZone: config.timezone ?? "Australia/Sydney",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })}
+    </time>
+  </div>
+  <span class="mobile-path">{publicPathname(Astro.url.pathname)}</span>
+</header>
+<style>
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 64px;
+    position: relative;
+    z-index: 5;
+  }
+  .top-bar::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 32px;
+    right: 32px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .site-mark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+    view-transition-name: site-logo;
+  }
+  .site-mark span,
+  .elsewhere-label,
+  time,
+  .mobile-path {
+    color: var(--mute);
+  }
+  .latest-ticker {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+  .latest-ticker > span:not(.ticker-square) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .latest-ticker time {
+    white-space: nowrap;
+  }
+  .ticker-square {
+    width: 7px;
+    height: 7px;
+    background: var(--ticker-tone);
+    border: 1px solid var(--ink);
+    flex-shrink: 0;
+  }
+  .top-elsewhere {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .top-elsewhere time {
+    font-variant-numeric: tabular-nums;
+    min-width: 152px;
+  }
+  .mobile-path {
+    display: none;
+  }
+  @media (max-width: 1150px) {
+    .top-elsewhere time,
+    .latest-ticker time,
+    .elsewhere-label {
+      display: none;
+    }
+  }
+  @media (max-width: 720px) {
+    .top-bar {
+      height: 52px;
+      min-height: 52px;
+      gap: 8px;
+    }
+    .top-bar::after {
+      left: 16px;
+      right: 16px;
+    }
+    .site-mark {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .site-mark > span:last-child,
+    .latest-ticker {
+      display: none;
+    }
+    .mobile-path {
+      display: block;
+      order: 1;
+      max-width: 50%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .top-elsewhere {
+      order: 2;
+    }
+  }
+</style>
+<script>
+  const clocks = [...document.querySelectorAll<HTMLTimeElement>("[data-site-clock]")];
+  function updateClock() {
+    const now = new Date();
+    for (const clock of clocks) {
+      clock.dateTime = now.toISOString();
+      clock.textContent = now.toLocaleString("en-AU", {
+        timeZone: clock.dataset.timezone,
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+    }
+  }
+  let interval: number;
+  function startClock() {
+    clearInterval(interval);
+    updateClock();
+    interval = window.setInterval(updateClock, 1000);
+  }
+  window.addEventListener("pageshow", startClock);
+  window.addEventListener("pagehide", () => clearInterval(interval));
+  startClock();
+</script>

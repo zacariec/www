@@ -22,39 +22,21 @@
  * save.
  */
 
-// Minimal Portable Text types we need — avoids pulling in the full
-// @portabletext/types just for this helper.
-interface PortableTextSpan {
-  _type: "span";
-  _key?: string;
-  text: string;
-  marks?: string[];
-}
+import type { PortableTextSpan } from "@portabletext/types";
 
-interface PortableTextBlock {
-  _type: "block";
-  _key?: string;
-  style?: string;
-  children?: PortableTextSpan[];
-  markDefs?: unknown[];
-  [key: string]: unknown;
-}
-
-type PortableTextNode = PortableTextBlock | { _type: string; [key: string]: unknown };
+import type { SanityContentNode, SanityTextBlock } from "./types";
 
 const BACKTICK_PATTERN = /`([^`\n]+?)`/g;
 const STRONG_PATTERN = /\*\*([^*\n]+?)\*\*/g;
-
-function isBlock(node: PortableTextNode): node is PortableTextBlock {
-  return node._type === "block";
-}
 
 function isSpan(child: unknown): child is PortableTextSpan {
   return (
     typeof child === "object" &&
     child !== null &&
-    (child as { _type?: string })._type === "span" &&
-    typeof (child as { text?: unknown }).text === "string"
+    "_type" in child &&
+    child._type === "span" &&
+    "text" in child &&
+    typeof child.text === "string"
   );
 }
 
@@ -122,18 +104,18 @@ function applyMarkPattern(
   return result;
 }
 
-export function normalizeMarkdownShortcuts<T extends PortableTextNode>(
-  content: T[] | undefined | null,
-): T[] {
+export function normalizeMarkdownShortcuts(
+  content: SanityContentNode[] | undefined | null,
+): SanityContentNode[] {
   if (!content || content.length === 0) return [];
 
   return content.map((node) => {
-    if (!isBlock(node)) return node;
+    if (node._type !== "block") return node;
     const { children } = node;
     if (!children || children.length === 0) return node;
 
     const spans: PortableTextSpan[] = [];
-    const passthrough: { index: number; child: unknown }[] = [];
+    const passthrough: { index: number; child: SanityTextBlock["children"][number] }[] = [];
     children.forEach((child, childIndex) => {
       if (isSpan(child)) {
         spans.push(child);
@@ -152,7 +134,7 @@ export function normalizeMarkdownShortcuts<T extends PortableTextNode>(
     // Reinsert non-span children (hardBreak, etc.) at roughly their original
     // positions. Exact ordering for mixed content is ambiguous after a
     // split; this is close enough and in practice spans dominate.
-    const rebuilt: unknown[] = [...transformed];
+    const rebuilt: SanityTextBlock["children"] = [...transformed];
     passthrough.forEach((entry) => {
       rebuilt.splice(Math.min(entry.index, rebuilt.length), 0, entry.child);
     });

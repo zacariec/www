@@ -1,0 +1,25 @@
+/* Source and SIL Open Font Licenses: public/fonts/*-OFL.txt.
+   Regenerate with scripts/generate-brand-assets.py. */
+@font-face {
+  font-family: "Host Grotesk";
+  src: url("/fonts/host-grotesk-400-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}

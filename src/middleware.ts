@@ -1,5 +1,5 @@
 /**
- * Edge cache policy for SSR pages.
+ * Legacy route redirects and edge cache policy for SSR pages.
  *
  * Why this exists
  * ---------------
@@ -36,6 +36,13 @@ function shouldCache(pathname: string): boolean {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Redirect at runtime: generated asset rules append /index.html to dynamic
+  // destinations, but sessions are SSR routes rather than static HTML files.
+  const { pathname, search } = context.url;
+  if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+    return context.redirect(`/sessions${pathname.slice("/blog".length)}${search}`, 301);
+  }
+
   const response = await next();
 
   if (context.request.method !== "GET") return response;

@@ -1,132 +1,49 @@
-const groq = (strings: TemplateStringsArray, ...values: unknown[]) =>
-  String.raw(strings, ...values);
+import { HEADLINE_PRESETS } from "../constants";
 
-export const allSessionsQuery = groq`
-  *[_type == "sessionTape" && publishedAt <= now()] | order(publishedAt desc) {
-    title,
-    "slug": slug.current,
-    subtitle,
-    "date": publishedAt,
-    readingTime,
-    excerpt,
-    "commentCount": count(*[_type == "comment" && references(^._id)])
-  }
+export const COMMENT_PROJECTION = `
+  _id, "session": session._ref, "anchorIndex": coalesce(anchorIndex, null),
+  "parent": coalesce(parent._ref, null), body,
+  author { provider, providerId, handle, avatarSeed, isAuthor },
+  status, "likes": coalesce(likes, 0), createdAt
 `;
 
-export const sessionBySlugQuery = groq`
-  *[_type == "sessionTape" && slug.current == $slug][0] {
-    title,
-    "slug": slug.current,
-    subtitle,
-    "date": publishedAt,
-    "dateModified": coalesce(dateModified, publishedAt),
-    readingTime,
-    excerpt,
-    content,
-    sideNote,
-    featuredImage { asset, "url": asset->url, alt },
-    "comments": *[_type == "comment" && references(^._id)] | order(publishedAt asc) {
-      _id,
-      author,
-      authorImage,
-      "date": publishedAt,
-      text,
-      likes,
-      "parentCommentId": parentComment._ref
-    }
-  }
+// Body-derived values are finalized by deriveSession, shared with Studio and mail.
+// Number is projected against the complete chronology, never a paginated subset.
+export const SESSION_PROJECTION = `
+  _id, title, "slug": slug.current, subtitle, "date": publishedAt,
+  "dateModified": coalesce(dateModified, publishedAt), excerpt, content, sideNote,
+  "number": count(*[_type == "sessionTape" && !(_id in path("drafts.**")) &&
+    (publishedAt < ^.publishedAt || (publishedAt == ^.publishedAt && _id < ^._id))]) + 1,
+  kind, state, coverSeed, toneOverride, readTimeOverride,
+  featuredImage { asset, "url": asset->url, alt },
+  "commentCount": count(*[_type == "comment" && session._ref == ^._id && status == "approved"])
 `;
+const published = `_type == "sessionTape" && !(_id in path("drafts.**")) && publishedAt <= now()`;
+export const allSessionsQuery = `*[${published}] | order(publishedAt desc, _id desc) { ${SESSION_PROJECTION} }`;
+export const latestSessionsQuery = `*[${published}] | order(publishedAt desc, _id desc)[0...3] { ${SESSION_PROJECTION} }`;
+export const sessionBySlugQuery = `*[${published} && slug.current == $slug][0] {
+  ${SESSION_PROJECTION},
+  "comments": *[_type == "comment" && session._ref == ^._id && status == "approved"] | order(createdAt asc, _id asc) { ${COMMENT_PROJECTION} }
+}`;
+export const sessionByIdQuery = `*[${published} && _id == $id][0] { ${SESSION_PROJECTION} }`;
+export const sessionBySlugPreviewQuery = `*[_type == "sessionTape" && slug.current == $slug][0] { ${SESSION_PROJECTION} }`;
+export const allSessionSlugsQuery = `*[${published}] { "slug": slug.current }`;
+export const allSessionsPreviewQuery = `*[_type == "sessionTape"] | order(publishedAt desc, _id desc) { ${SESSION_PROJECTION} }`;
+export const sessionChronologyQuery = `*[${published}] | order(publishedAt asc, _id asc) { _id, "date": publishedAt }`;
 
-// Draft-friendly variant for Presentation preview. Drops the publishedAt guard
-// (drafts may have no publishedAt yet) and skips comments — drafts can't have
-// real references to a still-unpublished document.
-export const sessionBySlugPreviewQuery = groq`
-  *[_type == "sessionTape" && slug.current == $slug][0] {
-    title,
-    "slug": slug.current,
-    subtitle,
-    "date": publishedAt,
-    "dateModified": coalesce(dateModified, publishedAt),
-    readingTime,
-    excerpt,
-    content,
-    sideNote,
-    featuredImage { asset, "url": asset->url, alt },
-    "comments": []
-  }
-`;
+const timelineProjection = `_id, text, "date": publishedAt, type, "likes": coalesce(likes, 0), "comments": coalesce(comments, 0), url, board { visible, x, y, rotation, z }`;
+export const allTimelineEntriesQuery = `*[_type == "timelineEntry" && publishedAt <= now()] | order(publishedAt desc, _id desc) { ${timelineProjection} }`;
+export const latestTimelineQuery = `*[_type == "timelineEntry" && publishedAt <= now() && board.visible == true] | order(board.z asc, publishedAt desc)[0...4] { ${timelineProjection} }`;
+export const allTimelineEntriesPreviewQuery = `*[_type == "timelineEntry"] | order(publishedAt desc, _id desc) { ${timelineProjection} }`;
 
-export const allTimelineEntriesQuery = groq`
-  *[_type == "timelineEntry"] | order(publishedAt desc) {
-    _id,
-    text,
-    "date": publishedAt,
-    type,
-    likes,
-    comments,
-    url
-  }
-`;
-
-export const latestSessionsQuery = groq`
-  *[_type == "sessionTape" && publishedAt <= now()] | order(publishedAt desc) [0..2] {
-    title,
-    "slug": slug.current,
-    subtitle,
-    "date": publishedAt,
-    readingTime,
-    excerpt,
-    "commentCount": count(*[_type == "comment" && references(^._id)])
-  }
-`;
-
-export const latestTimelineQuery = groq`
-  *[_type == "timelineEntry"] | order(publishedAt desc) [0..3] {
-    _id,
-    text,
-    "date": publishedAt,
-    type,
-    likes,
-    comments
-  }
-`;
-
-export const allSessionSlugsQuery = groq`
-  *[_type == "sessionTape" && publishedAt <= now()] { "slug": slug.current }
-`;
-
-export const siteConfigQuery = groq`
-  *[_type == "siteConfig"][0] {
-    navItems[] { label, href },
-    heroSubtitle,
-    heroHeading,
-    heroDescription,
-    heroImage { "url": asset->url, alt, caption },
-    marqueeText,
-    footerHeading,
-    footerSubtitle,
-    newsletter {
-      footerHeading,
-      footerDescription,
-      inlineHeading,
-      inlineDescription,
-      buttonLabel,
-      placeholder,
-      successMessage,
-      alreadySubscribedMessage,
-      unsubscribeLabel,
-      unsubscribeConfirmedMessage,
-      errorMessage
-    },
-    siteName,
-    siteDescription,
-    siteUrl,
-    ogImage { "url": asset->url, alt },
-    author,
-    linkedIn,
-    github,
-    twitter,
-    twitterHandle,
-    timezone
-  }
-`;
+export const siteConfigQuery = `*[_type == "siteConfig"][0] {
+  navItems[] { label, href },
+  "headline": select(headlinePreset == "custom" => headlineCustom, ${Object.entries(
+    HEADLINE_PRESETS,
+  )
+    .map(([key, lines]) => `headlinePreset == ${JSON.stringify(key)} => ${JSON.stringify(lines)}`)
+    .join(", ")}, ["Getting it", "out there."]),
+  readme, tickerEnabled, socials[] { label, url }, toneShift, displayVersion, bio, moderationDefault, authorSanityId,
+  newsletter { footerHeading, footerDescription, inlineHeading, inlineDescription, buttonLabel, placeholder, successMessage, alreadySubscribedMessage, unsubscribeLabel, unsubscribeConfirmedMessage, errorMessage },
+  siteName, siteDescription, siteUrl, ogImage { "url": asset->url, alt }, author, twitterHandle, timezone
+}`;

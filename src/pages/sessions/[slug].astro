@@ -1,50 +1,28 @@
 ---
-import SiteLayout from '../../layouts/SiteLayout.astro';
-import SessionTapeContent from '@/components/astro/SessionTapeContent.astro';
-import { NewsletterToast } from '@/components/organisms/newsletter-toast';
-import { getSessionBySlug, getSiteConfig } from '@/lib/sanity/fetch';
-import { sessionTapeJsonLd } from '@/lib/seo/jsonld';
-import { pickOgImage } from '@/lib/seo/og-image';
-import { countWords } from '@/lib/seo/word-count';
-
-// Server-rendered per request so freshly-published sessions appear without a
-// redeploy. Cache-Control headers from middleware keep the edge cache hot.
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import SessionTapeContent from "@/components/astro/SessionTapeContent.astro";
+import { getSessionBySlug, getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { sessionTapeJsonLd } from "@/lib/seo/jsonld";
+import { pickOgImage } from "@/lib/seo/og-image";
 const { slug } = Astro.params;
-const [session, config] = await Promise.all([
+const [session, sessions, config] = await Promise.all([
   getSessionBySlug(slug!),
+  getAllSessions(),
   getSiteConfig(),
 ]);
-
-if (!session) {
-  return Astro.redirect('/404');
-}
-
-const nl = config.newsletter ?? {};
-const inlineNewsletterCopy = {
-  heading: nl.inlineHeading,
-  description: nl.inlineDescription,
-  buttonLabel: nl.buttonLabel,
-  placeholder: nl.placeholder,
-  successMessage: nl.successMessage,
-  alreadySubscribedMessage: nl.alreadySubscribedMessage,
-  unsubscribeLabel: nl.unsubscribeLabel,
-  unsubscribeConfirmedMessage: nl.unsubscribeConfirmedMessage,
-  errorMessage: nl.errorMessage,
-};
-
-const description = session.subtitle || session.excerpt || `${session.title} — a session tape by ${config.author}`;
-const canonical = `/sessions/${slug}`;
-
+if (!session) return Astro.redirect("/404");
+const description = session.subtitle || session.excerpt;
 const og = pickOgImage(session.featuredImage?.url, config);
-const wordCount = countWords(session.content);
-const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url, wordCount });
+const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url });
 ---
 
 <SiteLayout
+  config={config}
+  sessions={sessions}
   articleAuthor={config.author}
   articleModifiedTime={session.dateModified ?? session.date}
   articlePublishedTime={session.date}
-  canonicalUrl={canonical}
+  canonicalUrl={`/sessions/${slug}`}
   description={description}
   jsonLd={jsonLd}
   ogImage={og?.url}
@@ -54,6 +32,5 @@ const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url, wordCou
   ogType="article"
   title={session.title}
 >
-  <SessionTapeContent newsletterCopy={inlineNewsletterCopy} session={session} />
-  <NewsletterToast client:only="react" copy={inlineNewsletterCopy} />
+  <SessionTapeContent session={session} sessions={sessions} config={config} />
 </SiteLayout>

@@ -1,13 +1,18 @@
 /// <reference types="astro/client" />
-/// <reference types="@cloudflare/workers-types" />
 
 declare namespace Cloudflare {
   interface Env {
-    DB: D1Database;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Keep the project environment ambient without importing Worker DOM globals.
+    DB: import("@cloudflare/workers-types").D1Database;
     AUTH_GITHUB_ID?: string;
     AUTH_GITHUB_SECRET?: string;
     AUTH_GOOGLE_ID?: string;
     AUTH_GOOGLE_SECRET?: string;
+    AUTH_X_ID?: string;
+    AUTH_X_SECRET?: string;
+    AUTH_LINKEDIN_ID?: string;
+    AUTH_LINKEDIN_SECRET?: string;
+    COMMENT_AUTHOR_IDENTITIES?: string;
     AUTH_SECRET?: string;
     BETTER_AUTH_SECRET?: string;
     BETTER_AUTH_URL?: string;
@@ -21,4 +26,11 @@ declare namespace Cloudflare {
     SPOTIFY_CLIENT_SECRET?: string;
     SPOTIFY_REFRESH_TOKEN?: string;
   }
+}
+
+declare module "cloudflare:workers" {
+  import type { CloudflareWorkersModule } from "@cloudflare/workers-types";
+
+  export const env: Cloudflare.Env;
+  export const waitUntil: typeof CloudflareWorkersModule.waitUntil;
 }

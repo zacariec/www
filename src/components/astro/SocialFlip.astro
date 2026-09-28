@@ -1,0 +1,89 @@
+---
+interface Props {
+  socials: { label: string; url: string }[];
+  large?: boolean;
+}
+const { socials, large = false } = Astro.props;
+---
+
+<div class:list={["social-flip", { "social-flip--large": large }]} data-social-flip>
+  {socials.map((social, index) => (
+    <a href={social.url} rel="me noopener noreferrer" target="_blank" hidden={index !== 0}>
+      {social.label} ↗
+    </a>
+  ))}
+</div>
+<style>
+  .social-flip {
+    width: 104px;
+    height: 24px;
+    border: 1px solid currentColor;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    white-space: nowrap;
+  }
+  a[hidden] {
+    display: none;
+  }
+  .social-flip--large {
+    width: 100%;
+    height: 52px;
+    font-family: var(--font-host-grotesk);
+    font-size: 30px;
+    border: 0;
+  }
+  .social-flip--large a {
+    justify-content: flex-start;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a {
+      animation: social-enter 180ms ease-out;
+    }
+  }
+  @keyframes social-enter {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @media (max-width: 720px) {
+    .social-flip:not(.social-flip--large) {
+      height: 44px;
+      border: 0;
+    }
+  }
+</style>
+<script>
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const flippers = [...document.querySelectorAll<HTMLElement>("[data-social-flip]")];
+  let timer: number | undefined;
+  function startFlippers() {
+    clearInterval(timer);
+    if (motion.matches) return;
+    timer = window.setInterval(() => {
+      if (document.hidden) return;
+      for (const flipper of flippers) {
+        if (flipper.matches(":hover, :focus-within")) continue;
+        const links = [...flipper.querySelectorAll<HTMLAnchorElement>("a")];
+        if (links.length < 2) continue;
+        const current = links.findIndex((link) => !link.hidden);
+        links[current].hidden = true;
+        links[(current + 1) % links.length].hidden = false;
+      }
+    }, 2400);
+  }
+  motion.addEventListener("change", startFlippers);
+  window.addEventListener("pagehide", () => clearInterval(timer));
+  window.addEventListener("pageshow", startFlippers);
+  startFlippers();
+</script>
