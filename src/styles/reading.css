@@ -653,13 +653,22 @@
     border-bottom: 1px solid var(--ink);
   }
   .mobile-reading-bar__meta {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     padding: 10px 16px;
+    white-space: nowrap;
     font:
       10px/1.5 var(--font-ibm-plex-mono),
       monospace;
+  }
+  .mobile-reading-bar__meta [data-reading-left] {
+    justify-self: center;
+    min-width: 12ch;
+    text-align: right;
+  }
+  .mobile-reading-bar__meta > :last-child {
+    text-align: right;
   }
   .mobile-reading-bar .reading-progress {
     height: 3px;

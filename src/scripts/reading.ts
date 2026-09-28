@@ -43,6 +43,8 @@ function initializeReading(root: HTMLElement) {
   let trigger: HTMLButtonElement | undefined;
   let frame = 0;
   let lastPercent = -1;
+  let lastMinutesLeft = -1;
+  let lastParagraph = -1;
   let jumpTimeout: number | undefined;
   const minutes = Number(root.dataset.readTime) || 0;
   const percentages = root.querySelectorAll<HTMLElement>("[data-reading-percent]");
@@ -131,6 +133,13 @@ function initializeReading(root: HTMLElement) {
     const distance = Math.max(1, body.offsetHeight);
     const ratio = Math.min(1, Math.max(0, (readingLine - rect.top) / distance));
     const percent = Math.round(ratio * 100);
+    const minutesLeft = Math.ceil(minutes * (1 - ratio));
+    // Finish geometry reads before changing any progress text or bar widths.
+    let current = paragraphs.length ? 1 : 0;
+    for (let index = 0; index < paragraphs.length; index++) {
+      if (paragraphs[index].getBoundingClientRect().top <= readingLine) current = index + 1;
+      else break;
+    }
     if (percent !== lastPercent) {
       percentages.forEach((node) => {
         node.textContent = `${percent}%`;
@@ -139,19 +148,20 @@ function initializeReading(root: HTMLElement) {
         node.style.width = `${percent}%`;
       });
       progress.forEach((node) => node.setAttribute("aria-valuenow", String(percent)));
-      remaining.forEach((node) => {
-        node.textContent = `~${Math.ceil(minutes * (1 - ratio))} min left`;
-      });
       lastPercent = percent;
     }
-    let current = paragraphs.length ? 1 : 0;
-    for (let index = 0; index < paragraphs.length; index++) {
-      if (paragraphs[index].getBoundingClientRect().top <= readingLine) current = index + 1;
-      else break;
+    if (minutesLeft !== lastMinutesLeft) {
+      remaining.forEach((node) => {
+        node.textContent = `~${minutesLeft} min left`;
+      });
+      lastMinutesLeft = minutesLeft;
     }
-    ordinals.forEach((node) => {
-      node.textContent = `¶${String(current).padStart(2, "0")}`;
-    });
+    if (current !== lastParagraph) {
+      ordinals.forEach((node) => {
+        node.textContent = `¶${String(current).padStart(2, "0")}`;
+      });
+      lastParagraph = current;
+    }
     positionDialog();
   }
   function scheduleProgress() {
