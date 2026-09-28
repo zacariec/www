@@ -1,7 +1,7 @@
 ---
 import Cover from "./Cover.astro";
 import Chip from "./Chip.astro";
-import { formatWritten } from "@/lib/session";
+import { formatWritten, postToneStyle } from "@/lib/session";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   session: SanitySessionTape;
@@ -13,11 +13,11 @@ const { session, tone } = Astro.props;
 <a
   class="session-row"
   href={`/sessions/${session.slug}`}
-  style={`--post-tone:var(--${tone})`}
+  style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}
   data-session-kind={session.kind}
 >
   <div class="row-cover">
-    <Cover seed={session.coverSeed} tone={tone} animated={session.kind === "tape"} />
+    <Cover seed={session.coverSeed} tone="--post-tone" animated={session.kind === "tape"} />
   </div>
   <div class="row-copy">
     <div class="row-meta mono">

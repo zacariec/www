@@ -4,6 +4,7 @@ import "../styles/cursors.css";
 import type { SanitySiteConfig } from "@/lib/sanity/types";
 import { getSiteConfig } from "@/lib/sanity/fetch";
 import { defaultOgImage, siteOrigin, type OgImage } from "@/lib/seo/og-image";
+import { bootstrapPreferences, DEFAULT_PREFERENCES } from "@/lib/preferences";
 
 interface Props {
   config?: SanitySiteConfig;
@@ -53,10 +54,11 @@ const twitterHandle = config.twitterHandle;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-device-preferences data-tone-shift={config.toneShift}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script is:inline set:html={`(${bootstrapPreferences.toString()})(${JSON.stringify(DEFAULT_PREFERENCES)});`} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}

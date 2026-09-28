@@ -1,144 +1,65 @@
-import { env } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 import { z } from "zod";
 
-import { addToResendAudience, getResendContact } from "@/lib/newsletter/resend";
+import { getAuth } from "@/lib/auth/auth";
+import {
+  getNewsletterPreferences,
+  getSubscriber,
+  setNewsletterPreferences,
+} from "@/lib/newsletter/preferences";
+import { newsletterJson, newsletterSameOrigin } from "@/lib/newsletter/request";
 import { sendSubscriptionConfirmed } from "@/lib/newsletter/send";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 const subscribeSchema = z.object({
   email: z.string().email().max(254),
-  company: z.string().optional(), // honeypot
+  company: z.string().optional(),
 });
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
+export const POST: APIRoute = async ({ request }) => {
+  if (!newsletterSameOrigin(request))
+    return newsletterJson({ error: "Same-origin request required" }, 403);
   const ip =
     request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
   const allowed = await checkRateLimit(env.DB, `subscribe:${ip}`, 3, 60_000);
-  if (!allowed) {
-    return Response.json({ error: "Too many requests, try again later" }, { status: 429 });
-  }
-
-  if (!env.RESEND_AUDIENCE_ID) {
-    console.warn("[newsletter] RESEND_AUDIENCE_ID not set — skipping Resend sync");
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const parsed = subscribeSchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json({ error: "Invalid email" }, { status: 400 });
-  }
-
-  // Honeypot — silently succeed
-  if (parsed.data.company && parsed.data.company.length > 0) {
-    return Response.json({ success: true, status: "new" });
-  }
+  if (!allowed) return newsletterJson({ error: "Too many requests, try again later" }, 429);
+  const parsed = subscribeSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return newsletterJson({ error: "Invalid email" }, 400);
+  if (parsed.data.company) return newsletterJson({ success: true, status: "new" });
 
   const email = parsed.data.email.toLowerCase();
-  const now = Date.now();
-
-  // 1. Check D1 — but treat 'unsubscribed' rows as re-subscriptions, not duplicates
-  let alreadySubscribed = false;
-  let isResubscription = false;
   try {
-    const existing = await env.DB.prepare(
-      `SELECT id, status FROM subscriber WHERE email = ? LIMIT 1`,
-    )
-      .bind(email)
-      .first<{ id: string; status: string }>();
-    if (existing) {
-      if (existing.status === "unsubscribed") {
-        isResubscription = true;
-      } else {
-        alreadySubscribed = true;
+    const existing = await getSubscriber(env, email);
+    const current = await getNewsletterPreferences(env, email);
+    // Duplicate footer submissions must not turn tapes-only into all updates.
+    if (current.preference !== "none") return newsletterJson({ success: true, status: "already" });
+    const reconciled = await getSubscriber(env, email);
+    if (existing?.status === "unsubscribed" || reconciled?.status === "unsubscribed") {
+      const session = await getAuth(env).api.getSession({ headers: request.headers });
+      if (!session?.user?.emailVerified || session.user.email.toLowerCase() !== email) {
+        return newsletterJson(
+          {
+            error:
+              "Sign in with this verified email to re-subscribe and change your delivery preferences",
+          },
+          403,
+        );
       }
     }
-  } catch {
-    return Response.json({ error: "Failed to query" }, { status: 500 });
+    await setNewsletterPreferences(env, email, "all");
+    const emailPromise = sendSubscriptionConfirmed(email, env)
+      .then((result) => {
+        if (!result.ok) console.error("Welcome email failed:", result.error);
+      })
+      .catch((error) => console.error("Welcome email failed:", error));
+    waitUntil(emailPromise);
+    return newsletterJson({ success: true, status: "new" });
+  } catch (error) {
+    console.error("[newsletter] signup failed", error);
+    return newsletterJson({ error: "Subscription could not be saved. Please try again." }, 502);
   }
-
-  // 2. If not in D1 but Resend is configured, double-check Resend in case
-  // a contact was created out-of-band (manual import, dashboard add, etc.)
-  if (!alreadySubscribed && !isResubscription && env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID) {
-    const contact = await getResendContact(env.RESEND_API_KEY, env.RESEND_AUDIENCE_ID, email);
-    if (contact.exists) {
-      alreadySubscribed = true;
-      // Backfill into D1 so next time we don't have to round-trip
-      try {
-        await env.DB.prepare(
-          `INSERT OR IGNORE INTO subscriber (id, email, created_at, resend_contact_id, status) VALUES (?, ?, ?, ?, 'confirmed')`,
-        )
-          .bind(crypto.randomUUID(), email, now, contact.id ?? null)
-          .run();
-      } catch {
-        // non-fatal
-      }
-    }
-  }
-
-  if (alreadySubscribed) {
-    return Response.json({ success: true, status: "already" });
-  }
-
-  // 3. Insert or re-activate in D1
-  if (isResubscription) {
-    try {
-      await env.DB.prepare(
-        `UPDATE subscriber SET status = 'pending', created_at = ? WHERE email = ?`,
-      )
-        .bind(now, email)
-        .run();
-    } catch {
-      return Response.json({ error: "Failed to update" }, { status: 500 });
-    }
-  } else {
-    const id = crypto.randomUUID();
-    try {
-      await env.DB.prepare(
-        `INSERT INTO subscriber (id, email, created_at, status) VALUES (?, ?, ?, 'pending')`,
-      )
-        .bind(id, email, now)
-        .run();
-    } catch {
-      return Response.json({ error: "Failed to save" }, { status: 500 });
-    }
-  }
-
-  // 4. Best-effort sync to Resend (works for both new + re-subscriptions)
-  if (env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID) {
-    const result = await addToResendAudience(env.RESEND_API_KEY, env.RESEND_AUDIENCE_ID, email);
-    if (result.id) {
-      try {
-        await env.DB.prepare(
-          `UPDATE subscriber SET resend_contact_id = ?, status = 'confirmed' WHERE email = ?`,
-        )
-          .bind(result.id, email)
-          .run();
-      } catch {
-        // non-fatal
-      }
-    }
-  }
-
-  // 5. Best-effort welcome email — use waitUntil so workerd doesn't kill
-  // the isolate before the async render + Resend POST finishes.
-  const emailPromise = sendSubscriptionConfirmed(email, env)
-    .then((result) => {
-      if (!result.ok) console.error("Welcome email failed:", result.error);
-    })
-    .catch((err) => console.error("Welcome email threw:", err));
-  if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
-
-  return Response.json({ success: true, status: "new" });
 };

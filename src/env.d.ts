@@ -20,9 +20,11 @@ declare namespace Cloudflare {
     BETTER_AUTH_URL?: string;
     RESEND_API_KEY?: string;
     RESEND_AUDIENCE_ID?: string;
+    RESEND_SESSIONS_TOPIC_ID?: string;
     RESEND_FROM_EMAIL?: string;
     SANITY_API_TOKEN?: string;
     SANITY_WEBHOOK_SECRET?: string;
+    COMMENT_WEBHOOK_SECRET?: string;
     SITE_URL?: string;
     SPOTIFY_CLIENT_ID?: string;
     SPOTIFY_CLIENT_SECRET?: string;

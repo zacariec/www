@@ -51,7 +51,7 @@ params.delete("tone");
     </p>
     <div class="tapes-grid">
       {tapes.map((session) => (
-        <TapeCard session={session} />
+        <TapeCard session={session} tone={resolveTone(session.number, config.toneShift, params, session.toneOverride)} />
       ))}
     </div>
   </div>

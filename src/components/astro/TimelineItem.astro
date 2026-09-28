@@ -1,6 +1,7 @@
 ---
 import Window from "./Window.astro";
 import Chip from "./Chip.astro";
+import { postToneStyle } from "@/lib/session";
 import type { SanitySessionTape, SanityTimelineEntry } from "@/lib/sanity/types";
 type Props =
   | { session: SanitySessionTape; tone: string; thought?: never }
@@ -17,7 +18,7 @@ const source =
         : "Thought";
 ---
 
-<article class="timeline-item" id={thought ? thought._id : undefined}>
+<article class="timeline-item" id={thought ? thought._id : undefined} style={session ? postToneStyle(session.number, tone, Boolean(session.toneOverride)) : undefined}>
   <div class="item-meta mono">
     <time datetime={(session ?? thought).date}>{date}</time>
     {session ? (
@@ -30,7 +31,6 @@ const source =
     <a
       class="timeline-session"
       href={`/sessions/${session.slug}`}
-      style={`--post-tone:var(--${tone})`}
     >
       <div>
         <h2>{session.title}</h2>

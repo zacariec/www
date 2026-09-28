@@ -66,7 +66,12 @@ export async function getSessionBySlug(
     ]);
     return source ? derivePreviewSessions([source], chronology)[0] : null;
   }
-  const source = await client.fetch<SessionSource | null>(sessionBySlugQuery, { slug });
+  // Reader anchor-display changes must be reflected on the first server render.
+  const source = await client.fetch<SessionSource | null>(
+    sessionBySlugQuery,
+    { slug },
+    { useCdn: false },
+  );
   return source ? deriveSession(source) : null;
 }
 

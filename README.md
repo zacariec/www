@@ -12,7 +12,7 @@ Sessions, tapes and thoughts. An Astro multi-page site with an embedded Sanity S
 - Better Auth and Cloudflare D1 for reader sessions; Resend for newsletters
 - bun for dependency management and commands
 
-Public routes remain `/`, `/sessions`, `/sessions/[slug]` and `/timeline`; `/about` and `/rss.xml` are available. Legacy `/blog` URLs redirect to `/sessions`.
+Public routes remain `/`, `/sessions`, `/sessions/[slug]` and `/timeline`; `/about`, `/preferences` and `/rss.xml` are available. Legacy `/blog` URLs redirect to `/sessions`.
 
 ## Development
 
@@ -54,6 +54,7 @@ BETTER_AUTH_URL=https://zcarr.dev
 BETTER_AUTH_SECRET=
 SANITY_API_TOKEN=
 SANITY_WEBHOOK_SECRET=
+COMMENT_WEBHOOK_SECRET=
 
 AUTH_GITHUB_ID=
 AUTH_GITHUB_SECRET=
@@ -69,6 +70,7 @@ AUTH_GOOGLE_SECRET=
 
 RESEND_API_KEY=
 RESEND_AUDIENCE_ID=
+RESEND_SESSIONS_TOPIC_ID=
 RESEND_FROM_EMAIL=
 ```
 
@@ -76,7 +78,7 @@ OAuth callback URLs are `/api/auth/callback/github`, `/api/auth/callback/twitter
 
 `COMMENT_AUTHOR_IDENTITIES` is a JSON array of verified provider identities, for example `[{"provider":"github","providerId":"<actual-provider-id>"}]`. Use immutable provider IDs, not handles or email addresses. Studio author replies separately require Site Config's `authorSanityId` to match the actual signed-in Sanity user. Being an administrator alone does not grant an AUTHOR badge.
 
-The server-side `SANITY_API_TOKEN` must permit comment creation and updates for posting and likes. A read-only token can render draft previews but cannot support reader mutations. Keep this token server-only; Studio's signed-in browser credentials do not grant the Worker write access.
+The server-side `SANITY_API_TOKEN` must permit comment creation/updates and `readerPreferences` document writes for posting, likes and anchor visibility. A read-only token can render draft previews but cannot support reader mutations. Keep this token server-only; Studio's signed-in browser credentials do not grant the Worker write access.
 
 Site Config controls the headline, README copy, ticker, socials, display version, tone shift, newsletter copy and moderation default. New comments publish immediately by the chosen default. Add Zac's actual bio before considering `/about` editorially complete; no mock bio is supplied. Timeline entries, including X entries, are entered manually.
 
@@ -88,6 +90,27 @@ Site Config controls the headline, README copy, ticker, socials, display version
 - Tone order is pink, blue, sand, sage, lilac, apricot. Formula: `(number × 5 + shift) mod 6`, default shift 1. A document override beats the formula; `?tone` beats the document override on a detail page. Valid `?shift` and `?tone` persist through internal links.
 - Reader highlights and board layouts persist locally. Studio's Thoughts board saves the canonical `board` fields; reader dragging never writes to Sanity.
 - Reader comments use same-origin authenticated API routes, plain-text validation, per-user/IP rate limits and server-only Sanity writes. Public queries expose approved comments and explicit public author fields only.
+
+## Reader preferences
+
+`/preferences` separates device settings from authenticated account and delivery settings. Device choices persist in `zc.prefs` and apply before first paint: text size, paragraph numbers, desktop reading panel, motion, social-link cycling, cursor accent and palette shift. Explicit URL parameters retain precedence; CMS tone overrides remain pinned. Untouched mobile body text stays 17px; selecting S/M/L explicitly applies 17/19/21px. Hidden paragraph labels retain keyboard-focusable actions. Personal settings never affect OG images.
+
+Highlight and board resets are device-only and require confirmation; clearing all does not sign out, delete comments, or unsubscribe. Comment export requires sign-in and includes only the reader's own comments, including moderation states and original anchors. The public anchor-display choice masks paragraph labels without discarding stored relationships.
+
+Apply D1 migrations `0006_reader_preferences.sql` and `0007_newsletter_preferences.sql` before deployment. Reply emails default off and require a verified email. Set `COMMENT_WEBHOOK_SECRET` on the Worker and a Sanity document webhook pointing to `/api/comments/notify`, API version `2026-03-26`, create/update events, projection `{_id}`, with this filter:
+
+```groq
+_type == "comment" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) &&
+status == "approved" && (delta::operation() == "create" || delta::changedAny(status))
+```
+
+Sanity's webhook retries use a persisted D1 delivery ledger and stable Resend idempotency keys. Only approved public replies to verified opted-in readers send mail; self-replies and pre-opt-in history do not. Ambiguous deliveries older than 23 hours or with changed payloads fail for operator review rather than risk duplicate mail. Existing owner moderation alerts remain separate.
+
+Newsletter delivery uses the existing Resend segment (`RESEND_AUDIENCE_ID`) and a public **Sessions** topic with `default_subscription: opt_in`, identified by `RESEND_SESSIONS_TOPIC_ID`. Every session opts into that topic; tapes only opts out of it while staying in the segment; nothing globally unsubscribes the contact. Session broadcasts specify the topic, while tape broadcasts target the segment. Existing subscribers retain all updates. Provider state is authoritative; failed synchronization is an error, never a successful opt-out.
+
+Anonymous new signup remains available. Delivery changes and deliberate re-subscription after opting out require the matching verified account; duplicate signup never broadens tapes-only delivery. Signed email unsubscribe links and RFC8058 POST work without sign-in. The middleware preserves Astro's form-origin protection, except for POST to the exact HMAC-verified unsubscribe endpoint so mail clients can omit `Origin`. Newsletter opt-out does not change separately opted-in reply emails.
+
+Browser verification covered desktop/mobile controls, persisted navigation, keyboard paragraph access, live/static canvas frames, flipper behavior, palette precedence, data-clear confirmation, the downloaded comment export, signed-in newsletter saves/unsubscribe confirmation and canonical OG rendering. Isolated HTTP checks used real D1, a temporary Sanity dataset and Resend-owned test inboxes for ownership export, anchor masking, reply opt-in/delivery/deduplication, all/tapes/none provider state, signed-link and RFC8058 unsubscribe, and retained cross-origin form rejection. Headless browsers reported no fine pointer, so cursor bitmap appearance on physical pointer hardware was not verified.
 
 ## Redesign migration and rollout
 

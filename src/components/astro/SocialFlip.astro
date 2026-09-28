@@ -42,7 +42,7 @@ const { socials, large = false } = Astro.props;
     justify-content: flex-start;
   }
   @media (prefers-reduced-motion: no-preference) {
-    a {
+    :global(:root:not([data-pref-motion="still"]):not([data-pref-flip="false"])) a {
       animation: social-enter 180ms ease-out;
     }
   }
@@ -64,12 +64,12 @@ const { socials, large = false } = Astro.props;
   }
 </style>
 <script>
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  import { getPreferences, subscribePreferences } from "@/lib/preferences";
   const flippers = [...document.querySelectorAll<HTMLElement>("[data-social-flip]")];
   let timer: number | undefined;
   function startFlippers() {
     clearInterval(timer);
-    if (motion.matches) return;
+    if (!getPreferences().flip || document.documentElement.dataset.prefMotion === "still") return;
     timer = window.setInterval(() => {
       if (document.hidden) return;
       for (const flipper of flippers) {
@@ -82,7 +82,7 @@ const { socials, large = false } = Astro.props;
       }
     }, 2400);
   }
-  motion.addEventListener("change", startFlippers);
+  subscribePreferences(startFlippers);
   window.addEventListener("pagehide", () => clearInterval(timer));
   window.addEventListener("pageshow", startFlippers);
   startFlippers();

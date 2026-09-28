@@ -91,6 +91,7 @@ async function handleBroadcast(
   }
 
   const result = await createAndSendNewPostBroadcast(env, {
+    kind: session.kind,
     title: session.title,
     subtitle: session.subtitle,
     slug: session.slug,

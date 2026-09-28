@@ -8,7 +8,7 @@ interface Props {
 }
 const { sessionCount, timelineCount } = Astro.props;
 const current = currentNavigation(Astro.url.pathname);
-const counts = ["/", String(sessionCount), String(timelineCount), "—"];
+const counts = ["/", String(sessionCount), String(timelineCount), "—", "↗"];
 ---
 
 <div class="index-tool" data-index-tool>

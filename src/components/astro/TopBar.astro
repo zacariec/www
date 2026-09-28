@@ -1,7 +1,7 @@
 ---
 import Logo from "./Logo.astro";
 import SocialFlip from "./SocialFlip.astro";
-import { resolveTone, sessionId, formatWritten } from "@/lib/session";
+import { resolveTone, postToneStyle, sessionId, formatWritten } from "@/lib/session";
 import { publicPathname } from "@/lib/navigation";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
@@ -22,8 +22,8 @@ const tone = latest
     <span>zcarr.dev / {config.displayVersion}</span>
   </a>
   {config.tickerEnabled && latest && (
-    <a class="latest-ticker" href={`/sessions/${latest.slug}`}>
-      <span class="ticker-square" style={`--ticker-tone:var(--${tone})`} aria-hidden="true"></span>
+    <a class="latest-ticker" href={`/sessions/${latest.slug}`} style={postToneStyle(latest.number, tone, Boolean(latest.toneOverride))}>
+      <span class="ticker-square" style="--ticker-tone:var(--post-tone)" aria-hidden="true"></span>
       <span>
         Latest {sessionId(latest.number)} · {latest.title}
       </span>

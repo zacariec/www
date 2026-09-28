@@ -1,3 +1,5 @@
+import { getPreferences, subscribePreferences } from "./preferences";
+
 export interface CortexSession {
   number: number;
   readTime: number;
@@ -886,7 +888,10 @@ function initialize(): void {
   if (initialized) return;
   initialized = true;
   const preference = matchMedia("(prefers-reduced-motion: reduce)");
-  reduced = preference.matches;
+  const canonical = Boolean(document.querySelector("[data-og-frame]"));
+  const personal = document.documentElement.hasAttribute("data-device-preferences") && !canonical;
+  const motion = personal ? getPreferences().motion : "System";
+  reduced = canonical || motion === "Still" || (motion === "System" && preference.matches);
   gpu = createGraphics();
   pulse = document.createElement("canvas");
   pulse.width = 20;
@@ -899,13 +904,21 @@ function initialize(): void {
     context.fillStyle = gradient;
     context.fillRect(0, 0, 20, 20);
   }
-  preference.addEventListener("change", () => {
-    reduced = preference.matches;
-    // A static cortex is complete; turning animation back on must not regrow it.
-    for (const state of states.values()) state.started = elapsed - 2800;
-    last = 0;
+  const preferencesChanged = () => {
+    const nextMotion = personal ? getPreferences().motion : "System";
+    const nextReduced =
+      canonical || nextMotion === "Still" || (nextMotion === "System" && preference.matches);
+    if (nextReduced !== reduced) {
+      reduced = nextReduced;
+      // A static cortex is complete; turning animation back on must not regrow it.
+      for (const state of states.values()) state.started = elapsed - 2800;
+      last = 0;
+    }
+    // Palette and layout preferences also need a fresh static frame.
     refresh();
-  });
+  };
+  if (personal) subscribePreferences(preferencesChanged);
+  else preference.addEventListener("change", preferencesChanged);
   mutationObserver = new MutationObserver((records) => {
     let layoutChanged = false;
     for (const record of records) {

@@ -9,6 +9,53 @@
     --cur-anchor: url('/cursors/anchor.png') 14 14, crosshair;
     --cur-not-allowed: url('/cursors/not-allowed.png') 16 16, not-allowed;
     --cur-progress: url('/cursors/progress.png') 0 0, progress;
+  }
+
+  :root[data-cursor-accent='blue'] {
+    --cur-default: url('/cursors/blue-default.png') 0 0, default;
+    --cur-pointer: url('/cursors/blue-pointer.png') 8 0, pointer;
+    --cur-text: url('/cursors/blue-text.png') 14 16, text;
+    --cur-grab: url('/cursors/blue-grab.png') 16 16, grab;
+    --cur-grabbing: url('/cursors/blue-grabbing.png') 16 16, grabbing;
+    --cur-anchor: url('/cursors/blue-anchor.png') 14 14, crosshair;
+    --cur-not-allowed: url('/cursors/blue-not-allowed.png') 16 16, not-allowed;
+    --cur-progress: url('/cursors/blue-progress.png') 0 0, progress;
+  }
+
+  :root[data-cursor-accent='sand'] {
+    --cur-default: url('/cursors/sand-default.png') 0 0, default;
+    --cur-pointer: url('/cursors/sand-pointer.png') 8 0, pointer;
+    --cur-text: url('/cursors/sand-text.png') 14 16, text;
+    --cur-grab: url('/cursors/sand-grab.png') 16 16, grab;
+    --cur-grabbing: url('/cursors/sand-grabbing.png') 16 16, grabbing;
+    --cur-anchor: url('/cursors/sand-anchor.png') 14 14, crosshair;
+    --cur-not-allowed: url('/cursors/sand-not-allowed.png') 16 16, not-allowed;
+    --cur-progress: url('/cursors/sand-progress.png') 0 0, progress;
+  }
+
+  :root[data-cursor-accent='sage'] {
+    --cur-default: url('/cursors/sage-default.png') 0 0, default;
+    --cur-pointer: url('/cursors/sage-pointer.png') 8 0, pointer;
+    --cur-text: url('/cursors/sage-text.png') 14 16, text;
+    --cur-grab: url('/cursors/sage-grab.png') 16 16, grab;
+    --cur-grabbing: url('/cursors/sage-grabbing.png') 16 16, grabbing;
+    --cur-anchor: url('/cursors/sage-anchor.png') 14 14, crosshair;
+    --cur-not-allowed: url('/cursors/sage-not-allowed.png') 16 16, not-allowed;
+    --cur-progress: url('/cursors/sage-progress.png') 0 0, progress;
+  }
+
+  :root[data-pref-cursors='false'] {
+    --cur-default: default;
+    --cur-pointer: pointer;
+    --cur-text: text;
+    --cur-grab: grab;
+    --cur-grabbing: grabbing;
+    --cur-anchor: crosshair;
+    --cur-not-allowed: not-allowed;
+    --cur-progress: progress;
+  }
+
+  :root {
     cursor: var(--cur-default, default);
   }
 

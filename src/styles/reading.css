@@ -185,7 +185,7 @@
   text-wrap: pretty;
 }
 .article-prose {
-  font-size: 19px;
+  font-size: var(--read-size, 19px);
   line-height: 1.68;
   overflow-wrap: anywhere;
 }
@@ -241,6 +241,18 @@
   color: var(--ink);
   border-color: var(--ink);
   background: var(--sand);
+}
+/* Keep the hit target and accessible name available when margin numbers are off. */
+:root[data-pref-nums="false"] .paragraph-anchor {
+  opacity: 0;
+}
+:root[data-pref-nums="false"] .paragraph-anchor:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  opacity: 1;
+}
+@media (min-width: 721px) {
+  :root[data-pref-panel="false"] .reading-panel {
+    display: none;
+  }
 }
 .paragraph-replies {
   display: flex;
@@ -686,7 +698,7 @@
     line-height: 1.28;
   }
   .article-prose {
-    font-size: 17px;
+    font-size: var(--read-size-mobile, 17px);
     line-height: 1.62;
   }
   .article-paragraph {

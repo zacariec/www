@@ -13,6 +13,8 @@ export default defineConfig({
   // Individual routes can still opt into build-time rendering with
   // `export const prerender = true` where freshness doesn't matter.
   output: "server",
+  // Middleware retains form-origin protection with a signed RFC 8058 unsubscribe exception.
+  security: { checkOrigin: false },
   adapter: cloudflare({
     platformProxy: { enabled: true },
   }),

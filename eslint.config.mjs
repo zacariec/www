@@ -106,6 +106,8 @@ export default defineConfig([
       "import-x/prefer-default-export": "off",
       "react/require-default-props": "off",
       "react/react-in-jsx-scope": "off",
+      // React islands use Astro navigation, not Next.js Link.
+      "@next/next/no-html-link-for-pages": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "warn",

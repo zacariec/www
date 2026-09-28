@@ -51,6 +51,13 @@ export function resolveTone(
   return TONES[(((number * 5 + effectiveShift) % 6) + 6) % 6];
 }
 
+/** Formula aliases are set before paint; pinned CMS and URL tones stay canonical. */
+export function postToneStyle(number: number, tone: string, fixed = false): string {
+  const color = TONES.includes(tone as Tone) ? tone : "pink";
+  const slot = (((number * 5) % 6) + 6) % 6;
+  return `--post-tone:${fixed ? `var(--${color})` : `var(--post-palette-${slot},var(--${color}))`}`;
+}
+
 export function formatWritten(date: string, long = false): string {
   const parsed = new Date(date);
   if (!Number.isFinite(parsed.getTime())) return "";

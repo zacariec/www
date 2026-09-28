@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default function UnsubscribeConfirmationEmail({
-  resubscribeUrl = "https://zcarr.dev/?subscribe=",
+  resubscribeUrl = "https://zcarr.dev/preferences",
 }: Props) {
   return (
     <Html lang="en">
@@ -34,14 +34,14 @@ export default function UnsubscribeConfirmationEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={p}>you&apos;re off. no more emails from me.</Text>
+            <Text style={p}>you&apos;re off the newsletter list. no more sessions or tapes by email.</Text>
           </Section>
 
           <Section style={footer}>
             <Text style={footerLine}>
               changed your mind?{" "}
               <Link href={resubscribeUrl} style={footerLink}>
-                resubscribe
+                sign in to resubscribe
               </Link>
               .
             </Text>

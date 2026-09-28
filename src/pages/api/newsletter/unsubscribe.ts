@@ -1,73 +1,41 @@
-import { env } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 
-import { getAuth } from "@/lib/auth/auth";
+import { setNewsletterPreferences } from "@/lib/newsletter/preferences";
+import { newsletterIdentity, newsletterJson, newsletterSameOrigin } from "@/lib/newsletter/request";
 import { sendUnsubscribeConfirmation } from "@/lib/newsletter/send";
 
-import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
-async function removeFromResendAudience(
-  apiKey: string,
-  audienceId: string,
-  email: string,
-): Promise<boolean> {
+export async function performUnsubscribe(email: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch(
-      `https://api.resend.com/audiences/${audienceId}/contacts/${encodeURIComponent(email)}`,
-      {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${apiKey}` },
-      },
-    );
-    return res.ok || res.status === 404;
-  } catch {
-    return false;
+    await setNewsletterPreferences(env, email, "none");
+  } catch (error) {
+    console.error("[newsletter] unsubscribe failed", error);
+    return { ok: false, error: "Unsubscribe could not be completed. Please try again." };
   }
-}
-
-export async function performUnsubscribe(
-  email: string,
-  ctx?: ExecutionContext,
-): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await env.DB.prepare(`UPDATE subscriber SET status = 'unsubscribed' WHERE email = ?`)
-      .bind(email)
-      .run();
-  } catch {
-    return { ok: false, error: "Failed to update" };
-  }
-
-  if (env.RESEND_API_KEY && env.RESEND_AUDIENCE_ID) {
-    await removeFromResendAudience(env.RESEND_API_KEY, env.RESEND_AUDIENCE_ID, email);
-  }
-
-  const emailPromise = sendUnsubscribeConfirmation(email, env)
-    .then((result) => {
-      if (!result.ok) console.error("Unsubscribe email failed:", result.error);
-    })
-    .catch((err) => console.error("Unsubscribe email threw:", err));
-  if (ctx?.waitUntil) ctx.waitUntil(emailPromise);
-
+  waitUntil(
+    sendUnsubscribeConfirmation(email, env)
+      .then((result) => {
+        if (!result.ok) console.error("Unsubscribe confirmation failed:", result.error);
+      })
+      .catch((error) => console.error("Unsubscribe confirmation failed:", error)),
+  );
   return { ok: true };
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
-
-  const auth = getAuth(env);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user?.email) {
-    return Response.json({ error: "Sign in to manage preferences" }, { status: 401 });
+export const POST: APIRoute = async ({ request }) => {
+  if (!newsletterSameOrigin(request))
+    return newsletterJson({ error: "Same-origin request required" }, 403);
+  try {
+    const email = await newsletterIdentity(env, request);
+    if (email instanceof Response) return email;
+    const result = await performUnsubscribe(email);
+    if (!result.ok) return newsletterJson({ error: result.error }, 502);
+    return newsletterJson({ success: true });
+  } catch (error) {
+    console.error("[newsletter] unsubscribe request failed", error);
+    return newsletterJson({ error: "Unsubscribe is unavailable. Please try again." }, 502);
   }
-
-  const email = session.user.email.toLowerCase();
-  const result = await performUnsubscribe(email, ctx);
-
-  if (!result.ok) {
-    return Response.json({ error: result.error }, { status: 500 });
-  }
-
-  return Response.json({ success: true });
 };

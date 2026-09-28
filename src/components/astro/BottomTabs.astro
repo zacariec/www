@@ -7,7 +7,7 @@ const current = currentNavigation(Astro.url.pathname);
   {navigation.map((item) => (
     <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
       <span>{item.number}</span>
-      {item.label}
+      {item.href === "/preferences" ? "Prefs" : item.label}
     </a>
   ))}
 </nav>
@@ -18,7 +18,7 @@ const current = currentNavigation(Astro.url.pathname);
   @media (max-width: 720px) {
     .bottom-tabs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       position: sticky;
       bottom: 0;
       z-index: 40;

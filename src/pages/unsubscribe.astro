@@ -18,7 +18,7 @@ const error = Astro.url.searchParams.get("error");
         <h1>{success ? "Done" : error === "expired" ? "Link expired" : "Unable to unsubscribe"}</h1>
         <p>
           {success
-            ? "You've been unsubscribed. No more emails."
+            ? "You've been unsubscribed from new-post emails. Reply notifications, if enabled, are managed separately in preferences."
             : error === "expired"
               ? "This unsubscribe link has expired. Sign in to manage your preferences."
               : "Something went wrong. Sign in to manage your preferences directly."}

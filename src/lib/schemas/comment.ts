@@ -56,7 +56,7 @@ export const publicCommentSchema = z.object({
 
 export const threadResponseSchema = z.object({
   comments: z.array(publicCommentSchema),
-  viewer: z.object({ author: commentAuthorSchema }).nullable(),
+  viewer: z.object({ author: commentAuthorSchema, showAnchors: z.boolean() }).nullable(),
   providers: z.array(z.enum(["github", "twitter", "linkedin", "google"])),
   likedIds: z.array(z.string()),
 });

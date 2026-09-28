@@ -1,5 +1,5 @@
 /**
- * Resend broadcast API — create + send a broadcast to a full audience.
+ * Resend broadcast API — create + send to the existing newsletter segment.
  *
  * Why broadcasts (not per-subscriber fan-out):
  *  - One HTTP call to Resend, not N.
@@ -22,11 +22,13 @@ const createResponseSchema = z.object({
 interface BroadcastEnv {
   readonly RESEND_API_KEY?: string;
   readonly RESEND_AUDIENCE_ID?: string;
+  readonly RESEND_SESSIONS_TOPIC_ID?: string;
   readonly RESEND_FROM_EMAIL?: string;
   readonly SITE_URL?: string;
 }
 
 export interface BroadcastPost {
+  readonly kind: "session" | "tape";
   readonly title: string;
   readonly subtitle: string;
   readonly slug: string;
@@ -89,6 +91,9 @@ async function createBroadcast(env: BroadcastEnv, post: BroadcastPost): Promise<
   if (env.RESEND_AUDIENCE_ID === undefined || env.RESEND_AUDIENCE_ID === "") {
     return { ok: false, error: "RESEND_AUDIENCE_ID not set" };
   }
+  if (!env.RESEND_SESSIONS_TOPIC_ID) {
+    return { ok: false, error: "RESEND_SESSIONS_TOPIC_ID not set" };
+  }
 
   const { html, text } = await renderBroadcastEmail(post, getSiteUrl(env));
 
@@ -99,7 +104,10 @@ async function createBroadcast(env: BroadcastEnv, post: BroadcastPost): Promise<
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      audience_id: env.RESEND_AUDIENCE_ID,
+      segment_id: env.RESEND_AUDIENCE_ID,
+      // Tapes go to every subscribed reader. Sessions additionally require
+      // the public, default-opt-in topic, preserving all legacy subscribers.
+      ...(post.kind === "session" ? { topic_id: env.RESEND_SESSIONS_TOPIC_ID } : {}),
       from: getFrom(env),
       subject: `New: ${post.title}`,
       html,

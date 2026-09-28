@@ -1,7 +1,11 @@
 import { HEADLINE_PRESETS } from "../constants";
 
 export const COMMENT_PROJECTION = `
-  _id, "session": session._ref, "anchorIndex": coalesce(anchorIndex, null),
+  _id, "session": session._ref,
+  "anchorIndex": select(
+    *[_id == "readerPreferences." + ^.readerId][0].showAnchors == false => null,
+    coalesce(anchorIndex, null)
+  ),
   "parent": coalesce(parent._ref, null), body,
   author { provider, providerId, handle, avatarSeed, isAuthor },
   status, "likes": coalesce(likes, 0), createdAt

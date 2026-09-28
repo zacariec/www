@@ -27,6 +27,7 @@ interface AnchorIntent {
 
 interface Viewer {
   author: SanityComment["author"];
+  showAnchors: boolean;
 }
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -225,7 +226,7 @@ export function Thread({ sessionId, slug, paragraphCount, initialComments }: Thr
       const optimistic: SanityComment = {
         _id: id,
         session: sessionId,
-        anchorIndex: targetAnchor,
+        anchorIndex: viewer.showAnchors ? targetAnchor : null,
         parent,
         body: text.trim(),
         author: viewer.author,
@@ -432,7 +433,7 @@ export function Thread({ sessionId, slug, paragraphCount, initialComments }: Thr
             <time dateTime={comment.createdAt} title={new Date(comment.createdAt).toUTCString()}>
               {relativeTime(comment.createdAt, now)}
             </time>
-            <span className="thread-comment__anchor">on {paragraph ?? "whole session"}</span>
+            <span className="thread-comment__anchor">on {paragraph ?? "this session"}</span>
           </header>
           <p className="thread-comment__body">{comment.body}</p>
           {comment.status === "pending" && (

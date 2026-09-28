@@ -1,11 +1,53 @@
 ---
 export const prerender = false;
+import { env } from "cloudflare:workers";
 import SiteLayout from "../layouts/SiteLayout.astro";
+import Blot from "@/components/astro/Blot.astro";
+import Cortex from "@/components/astro/Cortex.astro";
 import { PreferencesPanel } from "@/components/organisms/preferences-panel";
-import { getSiteConfig } from "@/lib/sanity/fetch";
-const config = await getSiteConfig();
+import { configuredProviders } from "@/lib/auth/auth";
+import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import "@/styles/preferences.css";
+const [config, sessions] = await Promise.all([getSiteConfig(), getAllSessions()]);
+const sampleText = sessions[0]?.content.find(
+  (block) => block._type === "block" && block.style === "normal",
+);
+const sample =
+  sampleText?._type === "block"
+    ? sampleText.children.map((span) => span.text).join("")
+    : (sessions[0]?.excerpt ?? config.readme);
 ---
 
-<SiteLayout config={config} title={`Preferences — ${config.siteName}`} noindex>
-  <PreferencesPanel client:only="react" />
+<SiteLayout config={config} sessions={sessions} title={`Preferences — ${config.siteName}`} noindex>
+  <section class="preferences-hero zc-container">
+    <div class="preferences-hero__blot">
+      <Blot seed={120} tone="sage" />
+    </div>
+    <Cortex
+      class="preferences-hero__cortex"
+      sessions={sessions}
+      ox={0.74}
+      scale={0.85}
+      fade={0.65}
+      fadeBottom={0.34}
+    />
+    <p class="preferences-hero__eyebrow mono">[05] prefs</p>
+    <h1>Preferences.</h1>
+    <p class="preferences-hero__description">
+      Saved on this device. Sign in for replies and email preferences.
+    </p>
+  </section>
+  <noscript>
+    <p class="zc-container">
+      JavaScript is needed to change preferences. Unsubscribe links in your emails still work
+      without it.
+    </p>
+  </noscript>
+  <PreferencesPanel
+    client:load
+    sessions={sessions.slice(0, 6).map(({ number, toneOverride }) => ({ number, toneOverride }))}
+    toneShift={config.toneShift}
+    sampleText={sample}
+    providers={configuredProviders(env)}
+  />
 </SiteLayout>

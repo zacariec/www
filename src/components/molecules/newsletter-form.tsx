@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { useStore } from "@nanostores/react";
 
 import { useSession } from "@/lib/auth/client";
 import { withNewsletterDefaults } from "@/lib/newsletter/defaults";
 import { $newsletterStatus, $subscribedEmail } from "@/lib/newsletter/store";
+import "@/styles/newsletter.css";
 
 import type { NewsletterCopy } from "@/lib/newsletter/defaults";
 
@@ -19,23 +20,25 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
   const { data: session } = useSession();
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const emailId = useId();
   const status = useStore($newsletterStatus);
 
   useEffect(() => {
     const userEmail = session?.user?.email;
-    if (!userEmail || $newsletterStatus.get() !== "idle") return;
+    if (!userEmail || !session.user.emailVerified || $newsletterStatus.get() !== "idle") return;
     setEmail(userEmail);
     const controller = new AbortController();
-    fetch(`/api/newsletter/status?email=${encodeURIComponent(userEmail)}`, {
+    fetch("/api/newsletter/preferences", {
       signal: controller.signal,
     })
       .then(async (res) => {
         if (!res.ok) return null;
-        const data: { subscribed: boolean } = await res.json();
+        const data: { preference: "all" | "tapes" | "none" } = await res.json();
         return data;
       })
       .then((data) => {
-        if (data?.subscribed) {
+        if (data && data.preference !== "none") {
           $subscribedEmail.set(userEmail);
           $newsletterStatus.set("already");
         }
@@ -44,11 +47,12 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
         /* Subscription entry remains usable if status lookup is unavailable. */
       });
     return () => controller.abort();
-  }, [session?.user?.email]);
+  }, [session?.user?.email, session?.user?.emailVerified]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!email.trim() || status === "loading") return;
+    setErrorMessage("");
     $newsletterStatus.set("loading");
     try {
       const res = await fetch("/api/newsletter/subscribe", {
@@ -56,12 +60,13 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, company }),
       });
-      if (!res.ok) throw new Error("Subscription failed");
       const data = await res.json();
+      if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : c.errorMessage);
       $subscribedEmail.set(email);
       $newsletterStatus.set(data.status === "already" ? "already" : "success");
       setEmail("");
-    } catch {
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : c.errorMessage);
       $newsletterStatus.set("error");
     }
   };
@@ -85,13 +90,13 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
             tabIndex={-1}
             value={company}
           />
-          <label className="sr-only" htmlFor="updates-email">
+          <label className="sr-only" htmlFor={emailId}>
             Email address
           </label>
           <input
             required
             autoComplete="email"
-            id="updates-email"
+            id={emailId}
             name="email"
             onChange={(event) => setEmail(event.target.value)}
             placeholder={c.placeholder}
@@ -103,7 +108,7 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
           </button>
         </form>
       )}
-      {status === "error" && <p role="alert">{c.errorMessage}</p>}
+      {status === "error" && <p role="alert">{errorMessage || c.errorMessage}</p>}
     </div>
   );
 };

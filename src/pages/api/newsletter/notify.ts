@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 
+import { getNewsletterPreferences } from "@/lib/newsletter/preferences";
 import { sendNewPostNotification } from "@/lib/newsletter/send";
 import { getNewsletterSession } from "@/lib/newsletter/session";
 
@@ -38,6 +39,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const { email, session } = parsed.data;
   const post = await getNewsletterSession(session);
   if (!post) return Response.json({ error: "Published session not found" }, { status: 404 });
+  try {
+    const { preference } = await getNewsletterPreferences(env, email.toLowerCase());
+    if (preference === "none" || (preference === "tapes" && post.kind !== "tape")) {
+      return Response.json({ success: true, skipped: "delivery-preference" });
+    }
+  } catch (error) {
+    console.error("[newsletter] notification preference lookup failed", error);
+    return Response.json({ error: "Newsletter preferences unavailable" }, { status: 502 });
+  }
   const ctx = (locals as { cfContext?: ExecutionContext }).cfContext;
 
   const emailPromise = sendNewPostNotification(email, post, env).then((result) => {

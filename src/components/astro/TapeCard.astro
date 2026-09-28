@@ -1,21 +1,22 @@
 ---
 import Cover from "./Cover.astro";
-import { sessionId, formatWritten } from "@/lib/session";
+import { sessionId, formatWritten, postToneStyle } from "@/lib/session";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   session: SanitySessionTape;
+  tone: string;
 }
-const { session } = Astro.props;
+const { session, tone } = Astro.props;
 ---
 
-<a class="tape-card" href={`/sessions/${session.slug}`}>
+<a class="tape-card" href={`/sessions/${session.slug}`} style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}>
   <div class="tape-bar mono">
     <span>
       Tape {sessionId(session.number)} · {String(session.sections.length).padStart(2, "0")} sections
     </span>
     <span class="tape-read">◷ {session.readTime} MIN</span>
   </div>
-  <Cover seed={session.coverSeed} tone="blue" animated class="tape-cover" />
+  <Cover seed={session.coverSeed} tone="--post-tone" animated class="tape-cover" />
   <div class="tape-copy">
     <div class="tape-meta mono">
       <time datetime={session.date}>Written {formatWritten(session.date, true)}</time>

@@ -22,6 +22,12 @@
 import { defineMiddleware } from "astro:middleware";
 
 const CACHE_CONTROL_VALUE = "public, s-maxage=60, stale-while-revalidate=300";
+const SAFE_METHODS: Record<string, true | undefined> = { GET: true, HEAD: true, OPTIONS: true };
+const FORM_CONTENT_TYPES = [
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/plain",
+];
 
 const NO_CACHE_PREFIXES = [
   "/studio",
@@ -46,6 +52,26 @@ function shouldCache(pathname: string): boolean {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Preserve Astro's form CSRF protection while allowing RFC 8058 mail clients,
+  // which cannot send a same-site Origin. That one route verifies a signed token.
+  const signedUnsubscribe =
+    context.request.method === "POST" &&
+    context.url.pathname === "/api/newsletter/unsubscribe-token";
+  if (
+    !context.isPrerendered &&
+    SAFE_METHODS[context.request.method] !== true &&
+    !signedUnsubscribe
+  ) {
+    const contentType = context.request.headers.get("content-type")?.toLowerCase();
+    const formLike =
+      contentType === undefined || FORM_CONTENT_TYPES.some((type) => contentType.includes(type));
+    if (formLike && context.request.headers.get("origin") !== context.url.origin) {
+      return new Response(`Cross-site ${context.request.method} form submissions are forbidden`, {
+        status: 403,
+      });
+    }
+  }
+
   // Redirect at runtime: generated asset rules append /index.html to dynamic
   // destinations, but sessions are SSR routes rather than static HTML files.
   const { pathname, search } = context.url;

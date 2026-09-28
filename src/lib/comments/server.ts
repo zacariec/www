@@ -219,6 +219,14 @@ export async function requireSession(client: SanityClient, id: string) {
   };
 }
 
+export async function showReaderAnchors(client: SanityClient, readerKey: string) {
+  return (
+    (await client.fetch<boolean | null>(`*[_id == $id][0].showAnchors`, {
+      id: `readerPreferences.${readerKey}`,
+    })) !== false
+  );
+}
+
 export async function visibleComments(
   client: SanityClient,
   session: string,
@@ -259,7 +267,9 @@ export async function threadPayload(
     : [];
   return {
     comments,
-    viewer: reader ? { author: reader.author } : null,
+    viewer: reader
+      ? { author: reader.author, showAnchors: await showReaderAnchors(client, reader.key) }
+      : null,
     providers: configuredProviders(env),
     likedIds,
   };

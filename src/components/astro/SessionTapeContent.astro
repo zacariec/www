@@ -2,7 +2,7 @@
 import { PortableText } from "astro-portabletext";
 import { Thread } from "@/components/organisms/thread";
 import { normalizeMarkdownShortcuts } from "@/lib/sanity/normalize-markdown";
-import { formatWritten, resolveTone, sectionId, sessionId } from "@/lib/session";
+import { formatWritten, resolveTone, postToneStyle, sectionId, sessionId, TONES, type Tone } from "@/lib/session";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 import Blot from "./Blot.astro";
 import Cortex from "./Cortex.astro";
@@ -38,6 +38,7 @@ const tone = resolveTone(
   Astro.url.searchParams,
   session.toneOverride,
 );
+const fixedTone = TONES.includes(Astro.url.searchParams.get("tone") as Tone) || Boolean(session.toneOverride);
 const isTape = session.kind === "tape";
 const comments = session.comments.filter((comment) => comment.status === "approved");
 const previous = sessions
@@ -82,10 +83,11 @@ const ptComponents = {
   data-slug={session.slug}
   data-read-time={session.readTime}
   data-paragraph-count={paragraphCount}
+  style={postToneStyle(session.number, tone, fixedTone)}
 >
   <div class="article-shell">
     <header class:list={["page-hero", "article-hero", { "article-hero--tape": isTape }]}>
-      <Blot tone={tone} seed={session.coverSeed + 33} class="article-hero__blot" />
+      <Blot tone="--post-tone" seed={session.coverSeed + 33} class="article-hero__blot" />
       <Cortex
         sessions={sessions.map(({ number, readTime, kind }) => ({ number, readTime, kind }))}
         highlight={session.number - 1}
@@ -124,10 +126,10 @@ const ptComponents = {
     {isTape ? (
       <Window title={`Fig ${id} — cover, dithered`} class="tape-cover">
         <span slot="right">Written {formatWritten(session.date, true)}</span>
-        <Cover seed={session.coverSeed} tone={tone} animated class="tape-cover__canvas" />
+        <Cover seed={session.coverSeed} tone="--post-tone" animated class="tape-cover__canvas" />
       </Window>
     ) : (
-      <MetaStrip session={session} tone={tone} />
+      <MetaStrip session={session} tone={tone} fixedTone={fixedTone} />
     )}
 
     <section

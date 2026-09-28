@@ -98,7 +98,7 @@ export async function sendUnsubscribeConfirmation(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const siteUrl = getSiteUrl(env);
-    const resubscribeUrl = `${siteUrl}/?subscribe=${encodeURIComponent(email)}`;
+    const resubscribeUrl = `${siteUrl}/preferences`;
     const html = await render(UnsubscribeConfirmationEmail({ resubscribeUrl }));
     const text = await render(UnsubscribeConfirmationEmail({ resubscribeUrl }), {
       plainText: true,

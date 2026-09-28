@@ -5,8 +5,9 @@ import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   session: SanitySessionTape;
   tone: Tone;
+  fixedTone?: boolean;
 }
-const { session, tone } = Astro.props;
+const { session, tone, fixedTone = false } = Astro.props;
 const date = new Date(session.date);
 const day = date
   .toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", timeZone: "UTC" })
@@ -20,11 +21,12 @@ const anchors = [
 
 <section class="meta-strip" aria-label="Session details">
   <figure class="meta-strip__cover">
-    <Cover seed={session.coverSeed} tone={tone} />
+    <Cover seed={session.coverSeed} tone="--post-tone" />
     <figcaption>
       <span>Fig {sessionId(session.number)}</span>
       <span>
-        {tone} · {session.toneOverride ? "override" : "formula"}
+        <span data-post-tone-label data-post-number={session.number} data-fixed-tone={fixedTone ? tone : undefined}>{tone}</span>
+        {" · "}{fixedTone ? "override" : "formula"}
       </span>
     </figcaption>
   </figure>
@@ -59,7 +61,7 @@ const anchors = [
     <strong>{sessionId(session.number)}</strong>
     <span class="meta-cell__note">lit in Fig 01</span>
   </div>
-  <div class="meta-cell meta-cell--state" style={`--post-tone:var(--${tone})`}>
+  <div class="meta-cell meta-cell--state">
     <span class="meta-cell__label">State</span>
     <strong>{session.state === "edited" ? "Edited" : "Raw"}</strong>
     <span class="meta-cell__note">{session.state === "edited" ? "edited" : "unedited"}</span>

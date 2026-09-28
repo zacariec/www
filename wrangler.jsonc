@@ -16,6 +16,7 @@
     "PUBLIC_SANITY_PROJECT_ID": "mrobamxo",
     "PUBLIC_SANITY_DATASET": "production",
     "PUBLIC_SANITY_API_VERSION": "2026-03-26",
+    "RESEND_SESSIONS_TOPIC_ID": "f7a65d28-ccf5-4422-ba42-a0c31fdc50e5",
   },
   "browser": {
     "binding": "BROWSER",

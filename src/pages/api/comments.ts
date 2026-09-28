@@ -11,6 +11,7 @@ import {
   requireReader,
   requireSameOrigin,
   requireSession,
+  showReaderAnchors,
   threadPayload,
   visibleComments,
 } from "@/lib/comments/server";
@@ -72,20 +73,30 @@ export const POST: APIRoute = async ({ request }) => {
     if (input.anchorIndex !== null && input.anchorIndex > session.paragraphCount) {
       throw new CommentError(400, "That paragraph does not exist in this session.");
     }
+    let { anchorIndex } = input;
     if (input.parent) {
       const comments = await visibleComments(client, input.session, reader.key);
       const parent = comments.find((comment) => comment._id === input.parent);
       if (!parent) throw new CommentError(400, "That reply is not available in this session.");
       if (parent.anchorIndex !== input.anchorIndex)
         throw new CommentError(400, "Replies must use their parent's paragraph anchor.");
+      // The public parent may hide its anchor. Inherit its real paragraph on the
+      // server, rather than requiring clients to discover a private display value.
+      const storedParent = await client.fetch<{ anchorIndex: number | null } | null>(
+        `*[_type == "comment" && _id == $id && session._ref == $session][0]{"anchorIndex": coalesce(anchorIndex, null)}`,
+        { id: input.parent, session: input.session },
+      );
+      if (!storedParent) throw new CommentError(400, "That reply is no longer available.");
+      anchorIndex = storedParent.anchorIndex;
     }
-    const moderation = await client.fetch<string | null>(
-      `*[_type == "siteConfig"][0].moderationDefault`,
-    );
+    const [moderation, showAnchors] = await Promise.all([
+      client.fetch<string | null>(`*[_type == "siteConfig"][0].moderationDefault`),
+      showReaderAnchors(client, reader.key),
+    ]);
     const comment: SanityComment = {
       _id: crypto.randomUUID(),
       session: session._id,
-      anchorIndex: input.anchorIndex,
+      anchorIndex,
       parent: input.parent,
       body: input.body,
       author: reader.author,
@@ -104,7 +115,12 @@ export const POST: APIRoute = async ({ request }) => {
     });
     waitUntil(notifyNewComment(comment, session.slug));
     // Explicit public contract, not the raw Sanity document (which includes private fields).
-    return json({ comment }, 201);
+    return json(
+      {
+        comment: { ...comment, anchorIndex: showAnchors ? comment.anchorIndex : null },
+      },
+      201,
+    );
   } catch (error) {
     return commentFailure(error);
   }
