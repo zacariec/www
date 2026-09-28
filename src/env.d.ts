@@ -4,6 +4,8 @@ declare namespace Cloudflare {
   interface Env {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Keep the project environment ambient without importing Worker DOM globals.
     DB: import("@cloudflare/workers-types").D1Database;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Match the browser client's binding contract in this ambient environment.
+    BROWSER: import("@cloudflare/puppeteer").BrowserWorker;
     AUTH_GITHUB_ID?: string;
     AUTH_GITHUB_SECRET?: string;
     AUTH_GOOGLE_ID?: string;

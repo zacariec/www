@@ -149,11 +149,11 @@ Production verification corrected two integration failures: Better Auth requires
 
 ## Social previews
 
-`bun run build` also runs `build:og`: Puppeteer installs its pinned Chrome, starts the built Astro Worker locally, and captures 1200×630 PNGs into `dist/client/og/`. The render routes reuse the site's self-hosted fonts, seeded dither engine, canonical tones and published Sanity content. Capture waits for fonts, fitted text and painted canvases with reduced motion enabled.
+`/og/*.png` and `/og/sessions/{slug}.png` are server-rendered endpoints, not build artifacts. The Worker's `BROWSER` binding uses Cloudflare Browser Run and `@cloudflare/puppeteer` to capture the existing Astro templates at 1200×630. The templates reuse the site's self-hosted fonts, seeded dither engine, canonical tones and published Sanity content. Capture waits for fonts, fitted text and painted canvases with reduced motion enabled. `bun run build` does not generate PNGs or install a capture browser.
 
 The generated images cover the site default, Sessions, Timeline, About, 404, and every published session or tape. Pages emit matching absolute Open Graph, Twitter and JSON-LD image URLs; article metadata includes the session ID, read time, publication date, author and section. Reader `shift`/`tone` parameters do not affect social previews. Studio remains `noindex, nofollow` without a share image, and `/og/render/*` is excluded from indexing and edge HTML caching.
 
-Images are build-time snapshots: rebuild after changing titles, covers, tones or the latest content. A session published since the last build uses the default PNG until its own image is generated; unknown session-image slugs return 404. The obsolete CMS default-OG-image field and SVG share image are no longer used.
+Every image request resolves current published content and hashes the resulting template HTML, including its versioned asset URLs. Matching images are reused from the Workers Cache API for up to 24 hours; changed visible content produces a new cache key immediately, without a rebuild or webhook. The browser receives the exact HTML used for that key. HTTP clients revalidate with a weak ETag; HEAD and unchanged conditional requests do not acquire a browser. New sessions and tapes render their own images on their first request; unknown routes/slugs return 404, never a default-image redirect. Browser Run usage and concurrency are subject to the account's [plan limits](https://developers.cloudflare.com/browser-run/limits/).
 
 ## Deployment
 

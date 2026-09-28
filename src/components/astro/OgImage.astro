@@ -92,9 +92,6 @@ const entries = [
     <main
       data-og-frame
       data-og={kind}
-      data-og-session-slugs={
-        kind === "default" ? JSON.stringify(sessions.map((entry) => entry.slug)) : undefined
-      }
       class={`og-frame og-${kind}`}
       style={`--post:var(--${tone})`}
     >

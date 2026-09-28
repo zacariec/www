@@ -5,32 +5,33 @@
   "observability": {
     "logs": {
       "enabled": true,
-      "invocation_logs": true
+      "invocation_logs": true,
     },
-    "traces": {}
+    "traces": {},
   },
-  "routes": [
-    { "pattern": "zcarr.dev", "custom_domain": true }
-  ],
+  "routes": [{ "pattern": "zcarr.dev", "custom_domain": true }],
   "vars": {
     "SITE_URL": "https://zcarr.dev",
     "BETTER_AUTH_URL": "https://zcarr.dev",
     "PUBLIC_SANITY_PROJECT_ID": "mrobamxo",
     "PUBLIC_SANITY_DATASET": "production",
-    "PUBLIC_SANITY_API_VERSION": "2026-03-26"
+    "PUBLIC_SANITY_API_VERSION": "2026-03-26",
+  },
+  "browser": {
+    "binding": "BROWSER",
   },
   "kv_namespaces": [
     {
       "binding": "SESSION",
-      "id": "90c7dd2f6d704b75b1c6bed80520d611"
-    }
+      "id": "90c7dd2f6d704b75b1c6bed80520d611",
+    },
   ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "zcarr-auth",
       "database_id": "d4f0fe39-43b4-45b0-8665-eea8c3488167",
-      "migrations_dir": "migrations"
-    }
-  ]
+      "migrations_dir": "migrations",
+    },
+  ],
 }

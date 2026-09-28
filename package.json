@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "bun scripts/build-cursors.ts && astro build && bun run build:og",
-    "build:og": "puppeteer browsers install chrome && bun scripts/generate-og.ts",
+    "build": "bun scripts/build-cursors.ts && astro build",
     "start": "astro preview",
     "lint": "eslint .",
     "check": "astro check",
@@ -17,6 +16,7 @@
     "@astrojs/partytown": "^2.1.6",
     "@astrojs/react": "^5.0.2",
     "@astrojs/sitemap": "^3.7.2",
+    "@cloudflare/puppeteer": "^1.4.0",
     "@nanostores/react": "^1.1.0",
     "@portabletext/react": "^3.2.0",
     "@react-email/components": "^1.0.11",
@@ -67,7 +67,6 @@
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^1.1.0",
-    "puppeteer": "^25.12.0",
     "react-email": "^5.2.10",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0"
