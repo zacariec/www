@@ -26,7 +26,9 @@ const [sessions, timeline, config] = await Promise.all([
   config={config}
   sessions={sessions}
   timeline={timeline}
-  title="[Preview] zcarr.dev"
+  title={`[Preview] ${config.siteName}`}
+  noindex
+  ogImage={null}
   canonicalUrl="/"
 >
   <HomeContent sessions={sessions} timeline={timeline} config={config} />

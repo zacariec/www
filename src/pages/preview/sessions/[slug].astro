@@ -37,7 +37,9 @@ if (!session) return new Response("Draft not found", { status: 404 });
   canonicalUrl={`/sessions/${slug}`}
   description={session.subtitle || session.excerpt || session.title}
   ogType="article"
-  title={`[Preview] ${session.title}`}
+  title={`[Preview] ${session.title} — ${config.siteName}`}
+  noindex
+  ogImage={null}
 >
   <SessionTapeContent session={session} sessions={sessions} config={config} />
   <VisualEditing enabled />

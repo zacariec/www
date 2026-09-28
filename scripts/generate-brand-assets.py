@@ -78,37 +78,9 @@ svg = '\n'.join([
     '</svg>',
     '',
 ])
-(ROOT / "public/icon.svg").write_text(svg)
+(ROOT / "public/favicon.svg").write_text(svg)
 for name, pixels in [("apple-touch-icon.png", 180), ("icon-192.png", 192), ("icon-512.png", 512)]:
     cairosvg.svg2png(bytestring=svg.encode(), write_to=str(ROOT / "public" / name), output_width=pixels, output_height=pixels)
 with Image.open(BytesIO(cairosvg.svg2png(bytestring=svg.encode(), output_width=64, output_height=64))) as image:
     image.save(ROOT / "public/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
-display_font = instantiateVariableFont(host, {"wght": 500}, inplace=False)
-display_glyphs = display_font.getGlyphSet()
-
-
-def outlined_text(text, pixels, left, baseline, letter_spacing=-0.055):
-    result = []
-    unit = pixels / em
-    for char in text:
-        glyph = display_glyphs[cmap[ord(char)]]
-        pen = SVGPathPen(display_glyphs)
-        glyph.draw(TransformPen(pen, (unit, 0, 0, -unit, left, baseline)))
-        result.append(f'<path d="{pen.getCommands()}"/>')
-        left += glyph.width * unit + letter_spacing * pixels
-    return "".join(result)
-
-
-og = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">'
-    '<title>zcarr.dev — Getting it out there.</title>'
-    '<rect width="1200" height="630" fill="#EEEAE3"/>'
-    '<rect x="1010" y="68" width="90" height="90" fill="#F386A1"/>'
-    '<g fill="#1E1E1E">'
-    + outlined_text("zcarr.dev", 48, 64, 110, -0.045)
-    + outlined_text("Getting it", 170, 60, 325)
-    + outlined_text("out there.", 170, 60, 475)
-    + "</g></svg>\n"
-)
-(ROOT / "public/og.svg").write_text(og)
-print("Generated self-hosted fonts, licenses, outlined icons, app PNGs, favicon and OG image.")
+print("Generated self-hosted fonts, licenses, outlined icons, app PNGs and favicon.")

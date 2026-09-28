@@ -1,9 +1,11 @@
 ---
 export const prerender = false;
-import SiteLayout from '../layouts/SiteLayout.astro';
-import { PreferencesPanel } from '@/components/organisms/preferences-panel';
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { PreferencesPanel } from "@/components/organisms/preferences-panel";
+import { getSiteConfig } from "@/lib/sanity/fetch";
+const config = await getSiteConfig();
 ---
 
-<SiteLayout title="Preferences">
+<SiteLayout config={config} title={`Preferences — ${config.siteName}`} noindex>
   <PreferencesPanel client:only="react" />
 </SiteLayout>

@@ -330,6 +330,13 @@ function resize(state: CanvasState, force = false): void {
     state.buffer.height = height;
     state.image = null;
   }
+  // Size the shared GPU surface before painting any canvas. Growing it mid-frame
+  // changes pixelated source-crop rounding, making the first static frame differ.
+  if (gpu && (gpu.canvas.width < width || gpu.canvas.height < height)) {
+    if (gpu.canvas.width < width) gpu.canvas.width = width;
+    if (gpu.canvas.height < height) gpu.canvas.height = height;
+    for (const mounted of states.values()) mounted.dirty = true;
+  }
   const context = state.bufferContext;
   state.leftGradient = null;
   state.bottomGradient = null;
@@ -521,8 +528,6 @@ function drawGraphics(state: CanvasState, time: number): void {
   const { gl, canvas, uniforms: u } = gpu;
   const { width } = state.buffer;
   const { height } = state.buffer;
-  if (canvas.width < width) canvas.width = width;
-  if (canvas.height < height) canvas.height = height;
   gl.viewport(0, 0, width, height);
   gl.uniform2f(u.uRes, width, height);
   gl.uniform1f(u.uT, time);

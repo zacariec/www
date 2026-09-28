@@ -5,7 +5,7 @@ import TimelineItem from "@/components/astro/TimelineItem.astro";
 import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import { resolveTone } from "@/lib/session";
 import { timelineJsonLd } from "@/lib/seo/jsonld";
-import { pickOgImage } from "@/lib/seo/og-image";
+import { generatedOgImage } from "@/lib/seo/og-image";
 const [sessions, timeline, config] = await Promise.all([
   getAllSessions(),
   getAllTimelineEntries(),
@@ -30,7 +30,10 @@ const last = entries[0]?.date.slice(0, 4);
 const eyebrow = first ? `[03] Log · ${first} → ${last}` : "[03] Log";
 const params = new URLSearchParams(Astro.url.search);
 params.delete("tone");
-const og = pickOgImage(undefined, config);
+const og = generatedOgImage(
+  "timeline",
+  "Timeline — sessions and thoughts in chronological order on a blue board with dithered lava.",
+);
 ---
 
 <SiteLayout
@@ -38,13 +41,10 @@ const og = pickOgImage(undefined, config);
   sessions={sessions}
   timeline={timeline}
   canonicalUrl="/timeline"
-  title="Timeline"
+  title={`Timeline — ${config.siteName}`}
   description="Sessions and thoughts, in the order they happened."
   jsonLd={timelineJsonLd(config)}
-  ogImage={og?.url}
-  ogImageAlt={og?.alt}
-  ogImageHeight={og?.height}
-  ogImageWidth={og?.width}
+  ogImage={og}
 >
   <PageHero
     title="Timeline."

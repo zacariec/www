@@ -1,19 +1,13 @@
+import { sessionOgImage, siteOrigin } from "./og-image";
+
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 
 const personId = (siteUrl: string) => `${siteUrl}/#person`;
 const websiteId = (siteUrl: string) => `${siteUrl}/#website`;
 const sessionsId = (siteUrl: string) => `${siteUrl}/sessions#blog`;
 
-function trimSlash(s: string): string {
-  return s.endsWith("/") ? s.slice(0, -1) : s;
-}
-
-function siteUrlOrEmpty(config: SanitySiteConfig): string {
-  return config.siteUrl ? trimSlash(config.siteUrl) : "";
-}
-
 function person(config: SanitySiteConfig) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   const sameAs = config.socials.map((social) => social.url);
   return {
     "@type": "Person",
@@ -26,7 +20,7 @@ function person(config: SanitySiteConfig) {
 }
 
 function website(config: SanitySiteConfig) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   return {
     "@type": "WebSite",
     "@id": websiteId(siteUrl),
@@ -42,7 +36,7 @@ function website(config: SanitySiteConfig) {
 // The customer-facing name is "Sessions" but the structured-data vocabulary
 // is unchanged so SEO semantics carry over cleanly.
 function sessionsObj(config: SanitySiteConfig) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   return {
     "@type": "Blog",
     "@id": sessionsId(siteUrl),
@@ -56,7 +50,7 @@ function sessionsObj(config: SanitySiteConfig) {
 }
 
 function collectionPage(config: SanitySiteConfig, name: string, url: string, description: string) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   return {
     "@type": "CollectionPage",
     name,
@@ -80,25 +74,17 @@ function breadcrumbs(items: { name: string; url: string }[]) {
   };
 }
 
-interface SessionTapePostingOpts {
-  ogImageUrl?: string;
-}
-
 // schema.org @type stays "BlogPosting" for SEO semantics even though the
 // customer-facing label is "Session Tape".
-function sessionTapePosting(
-  session: SanitySessionTape,
-  config: SanitySiteConfig,
-  opts: SessionTapePostingOpts,
-) {
-  const siteUrl = siteUrlOrEmpty(config);
+function sessionTapePosting(session: SanitySessionTape, config: SanitySiteConfig) {
+  const siteUrl = siteOrigin(config);
   const url = `${siteUrl}/sessions/${session.slug}`;
   return {
     "@type": "BlogPosting",
     "@id": `${url}#blogposting`,
     headline: session.title,
     description: session.subtitle || session.excerpt,
-    ...(opts.ogImageUrl && { image: opts.ogImageUrl }),
+    image: new URL(sessionOgImage(session).url, siteUrl).href,
     datePublished: session.date,
     dateModified: session.dateModified ?? session.date,
     author: { "@id": personId(siteUrl) },
@@ -106,7 +92,7 @@ function sessionTapePosting(
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
     inLanguage: "en",
-    articleSection: "Sessions",
+    articleSection: session.kind === "tape" ? "Tape" : "Session",
     isPartOf: { "@id": sessionsId(siteUrl) },
     wordCount: session.wordCount,
     timeRequired: `PT${session.readTime}M`,
@@ -123,7 +109,7 @@ export function homeJsonLd(config: SanitySiteConfig) {
 }
 
 export function sessionsIndexJsonLd(config: SanitySiteConfig) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -137,16 +123,12 @@ export function sessionsIndexJsonLd(config: SanitySiteConfig) {
   };
 }
 
-export function sessionTapeJsonLd(
-  session: SanitySessionTape,
-  config: SanitySiteConfig,
-  opts: SessionTapePostingOpts = {},
-) {
-  const siteUrl = siteUrlOrEmpty(config);
+export function sessionTapeJsonLd(session: SanitySessionTape, config: SanitySiteConfig) {
+  const siteUrl = siteOrigin(config);
   return {
     "@context": "https://schema.org",
     "@graph": [
-      sessionTapePosting(session, config, opts),
+      sessionTapePosting(session, config),
       person(config),
       breadcrumbs([
         { name: "Home", url: siteUrl },
@@ -158,7 +140,7 @@ export function sessionTapeJsonLd(
 }
 
 export function timelineJsonLd(config: SanitySiteConfig) {
-  const siteUrl = siteUrlOrEmpty(config);
+  const siteUrl = siteOrigin(config);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -166,7 +148,7 @@ export function timelineJsonLd(config: SanitySiteConfig) {
         config,
         "Timeline",
         `${siteUrl}/timeline`,
-        "Short-form noise. Thoughts, observations, and the things that don't need a whole essay.",
+        "Sessions and thoughts, in the order they happened.",
       ),
       person(config),
       breadcrumbs([

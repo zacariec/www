@@ -3,13 +3,11 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import HomeContent from "@/components/astro/HomeContent.astro";
 import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import { homeJsonLd } from "@/lib/seo/jsonld";
-import { pickOgImage } from "@/lib/seo/og-image";
 const [sessions, timeline, config] = await Promise.all([
   getAllSessions(),
   getAllTimelineEntries(),
   getSiteConfig(),
 ]);
-const og = pickOgImage(undefined, config);
 ---
 
 <SiteLayout
@@ -18,10 +16,6 @@ const og = pickOgImage(undefined, config);
   timeline={timeline}
   canonicalUrl="/"
   jsonLd={homeJsonLd(config)}
-  ogImage={og?.url}
-  ogImageAlt={og?.alt}
-  ogImageHeight={og?.height}
-  ogImageWidth={og?.width}
 >
   <HomeContent sessions={sessions} timeline={timeline} config={config} />
 </SiteLayout>

@@ -3,21 +3,23 @@ import "../app/globals.css";
 import "../styles/cursors.css";
 import type { SanitySiteConfig } from "@/lib/sanity/types";
 import { getSiteConfig } from "@/lib/sanity/fetch";
+import { defaultOgImage, siteOrigin, type OgImage } from "@/lib/seo/og-image";
 
 interface Props {
   config?: SanitySiteConfig;
   title?: string;
   description?: string;
-  ogImage?: string;
-  ogImageWidth?: number;
-  ogImageHeight?: number;
-  ogImageAlt?: string;
+  ogImage?: OgImage | null;
   ogType?: string;
   canonicalUrl?: string;
   jsonLd?: object;
   articlePublishedTime?: string;
   articleModifiedTime?: string;
   articleAuthor?: string;
+  articleSection?: "Session" | "Tape";
+  articleReadTime?: number;
+  articleWrittenDate?: string;
+  noindex?: boolean;
 }
 
 const {
@@ -25,35 +27,28 @@ const {
   config: suppliedConfig,
   description: descriptionProp,
   ogImage,
-  ogImageWidth = 1200,
-  ogImageHeight = 630,
-  ogImageAlt,
+  noindex = false,
   ogType = "website",
   canonicalUrl,
   jsonLd,
   articlePublishedTime,
   articleModifiedTime,
   articleAuthor,
+  articleSection,
+  articleReadTime,
+  articleWrittenDate,
 } = Astro.props;
 
 const config = suppliedConfig ?? (await getSiteConfig());
 
-const siteUrl = config.siteUrl ? config.siteUrl.replace(/\/$/, "") : "";
-function toAbsolute(url: string | undefined): string | undefined {
-  if (!url) return undefined;
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith("/")) return siteUrl ? `${siteUrl}${url}` : undefined;
-  return siteUrl ? `${siteUrl}/${url}` : undefined;
-}
+const siteUrl = siteOrigin(config);
 
-const description =
-  descriptionProp ?? config.siteDescription ?? "Code, systems, and unfiltered thinking.";
+const description = descriptionProp ?? config.siteDescription;
 const siteName = config.siteName || "zcarr.dev";
-const pageTitle = title ? `${title} | ${siteName}` : `${siteName} \u2014 Code, Systems & Noise`;
-
-const absoluteCanonical =
-  toAbsolute(canonicalUrl) ?? (siteUrl ? `${siteUrl}${Astro.url.pathname}` : undefined);
-const absoluteOgImage = toAbsolute(ogImage);
+const pageTitle = title ?? `${siteName} — ${config.headline.join(" ")}`;
+const absoluteCanonical = new URL(canonicalUrl ?? Astro.url.pathname, siteUrl).href;
+const image = ogImage === null ? undefined : (ogImage ?? defaultOgImage(config));
+const absoluteOgImage = image ? new URL(image.url, siteUrl).href : undefined;
 const twitterHandle = config.twitterHandle;
 ---
 
@@ -64,8 +59,9 @@ const twitterHandle = config.twitterHandle;
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -87,9 +83,10 @@ const twitterHandle = config.twitterHandle;
     <meta property="og:locale" content="en_US" />
     {absoluteOgImage && <meta property="og:image" content={absoluteOgImage} />}
     {absoluteOgImage && <meta property="og:image:secure_url" content={absoluteOgImage} />}
-    {absoluteOgImage && <meta property="og:image:width" content={String(ogImageWidth)} />}
-    {absoluteOgImage && <meta property="og:image:height" content={String(ogImageHeight)} />}
-    {absoluteOgImage && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+    {image && <meta property="og:image:width" content={String(image.width)} />}
+    {image && <meta property="og:image:height" content={String(image.height)} />}
+    {image && <meta property="og:image:type" content={image.type} />}
+    {image && <meta property="og:image:alt" content={image.alt} />}
 
     {ogType === "article" && articlePublishedTime && (
       <meta property="article:published_time" content={articlePublishedTime} />
@@ -100,13 +97,28 @@ const twitterHandle = config.twitterHandle;
     {ogType === "article" && articleAuthor && (
       <meta property="article:author" content={articleAuthor} />
     )}
-    {ogType === "article" && <meta property="article:section" content="Writing" />}
+    {ogType === "article" && articleSection && (
+      <meta property="article:section" content={articleSection} />
+    )}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     {absoluteOgImage && <meta name="twitter:image" content={absoluteOgImage} />}
+    {image && <meta name="twitter:image:alt" content={image.alt} />}
+    {ogType === "article" && articleReadTime !== undefined && (
+      <>
+        <meta name="twitter:label1" content="Read" />
+        <meta name="twitter:data1" content={`${articleReadTime} min`} />
+      </>
+    )}
+    {ogType === "article" && articleWrittenDate && (
+      <>
+        <meta name="twitter:label2" content="Written" />
+        <meta name="twitter:data2" content={articleWrittenDate} />
+      </>
+    )}
     {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
     {twitterHandle && <meta name="twitter:creator" content={twitterHandle} />}
 

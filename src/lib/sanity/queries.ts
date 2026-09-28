@@ -45,5 +45,5 @@ export const siteConfigQuery = `*[_type == "siteConfig"][0] {
     .join(", ")}, ["Getting it", "out there."]),
   readme, tickerEnabled, socials[] { label, url }, toneShift, displayVersion, bio, moderationDefault, authorSanityId,
   newsletter { footerHeading, footerDescription, inlineHeading, inlineDescription, buttonLabel, placeholder, successMessage, alreadySubscribedMessage, unsubscribeLabel, unsubscribeConfirmedMessage, errorMessage },
-  siteName, siteDescription, siteUrl, ogImage { "url": asset->url, alt }, author, twitterHandle, timezone
+  siteName, siteDescription, siteUrl, author, twitterHandle, timezone
 }`;

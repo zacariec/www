@@ -1,9 +1,22 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { getSiteConfig } from "@/lib/sanity/fetch";
+import { generatedOgImage } from "@/lib/seo/og-image";
+const config = await getSiteConfig();
 Astro.response.status = 404;
 ---
 
-<SiteLayout title="Not Found">
+<SiteLayout
+  config={config}
+  title={`Not found — ${config.siteName}`}
+  description="Page not found"
+  canonicalUrl="/404"
+  noindex
+  ogImage={generatedOgImage(
+    "404",
+    "404 — Page not found. Navigation back to zcarr.dev, sessions, and timeline.",
+  )}
+>
   <section class="not-found zc-container">
     <h1 class="zc-hero-title">404</h1>
     <p>Page not found</p>

@@ -147,6 +147,14 @@ The deployed Worker uses a dedicated write-capable Sanity token, the verified St
 
 Production verification corrected two integration failures: Better Auth requires an absolute same-origin callback to retain the thread fragment, and legacy `/blog` redirects run in middleware to avoid generated asset rules appending `/index.html` to SSR destinations. Legacy redirects return 301 and preserve query parameters. Final About biography copy is still required.
 
+## Social previews
+
+`bun run build` also runs `build:og`: Puppeteer installs its pinned Chrome, starts the built Astro Worker locally, and captures 1200×630 PNGs into `dist/client/og/`. The render routes reuse the site's self-hosted fonts, seeded dither engine, canonical tones and published Sanity content. Capture waits for fonts, fitted text and painted canvases with reduced motion enabled.
+
+The generated images cover the site default, Sessions, Timeline, About, 404, and every published session or tape. Pages emit matching absolute Open Graph, Twitter and JSON-LD image URLs; article metadata includes the session ID, read time, publication date, author and section. Reader `shift`/`tone` parameters do not affect social previews. Studio remains `noindex, nofollow` without a share image, and `/og/render/*` is excluded from indexing and edge HTML caching.
+
+Images are build-time snapshots: rebuild after changing titles, covers, tones or the latest content. A session published since the last build uses the default PNG until its own image is generated; unknown session-image slugs return 404. The obsolete CMS default-OG-image field and SVG share image are no longer used.
+
 ## Deployment
 
 The existing GitHub Actions workflow runs lint and build on pushes to `main`, then deploys with Wrangler. `wrangler.jsonc` defines the D1 and KV bindings; Astro emits the Worker deployment configuration under `dist/server`. Apply required D1 migrations and configure runtime secrets before release. Building or running the content migration in dry-run mode does not deploy or mutate production.

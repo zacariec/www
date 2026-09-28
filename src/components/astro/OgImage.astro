@@ -1,0 +1,383 @@
+---
+import Blot from "./Blot.astro";
+import Cortex from "./Cortex.astro";
+import Cover from "./Cover.astro";
+import Lava from "./Lava.astro";
+import Logo from "./Logo.astro";
+import { formatWritten, resolveTone, sessionId } from "@/lib/session";
+import type { SanitySessionTape, SanitySiteConfig, SanityTimelineEntry } from "@/lib/sanity/types";
+import "@/styles/fonts.css";
+import "@/styles/tokens.css";
+import "@/styles/og-image.css";
+
+interface Props {
+  kind: "default" | "session" | "tape" | "sessions" | "timeline" | "about" | "404";
+  config: SanitySiteConfig;
+  sessions: SanitySessionTape[];
+  timeline: SanityTimelineEntry[];
+  session?: SanitySessionTape;
+}
+
+const { kind, config, sessions, timeline, session } = Astro.props;
+const canonicalParams = new URLSearchParams();
+const toneFor = (entry: SanitySessionTape) =>
+  resolveTone(entry.number, config.toneShift, canonicalParams, entry.toneOverride);
+const chronology = [...sessions].sort((a, b) => a.number - b.number);
+const latest = [...sessions].sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number)[0];
+const strip = chronology.slice(-11);
+const tone = session ? toneFor(session) : "pink";
+const id = session ? sessionId(session.number) : "";
+const sectionCount = String(session?.sections.length ?? 0).padStart(2, "0");
+const titleLength = Array.from(session?.title ?? "").length;
+const titleSize = titleLength <= 24 ? 112 : titleLength <= 44 ? 100 : titleLength <= 70 ? 84 : 76;
+const dek = session?.subtitle || session?.excerpt;
+const written = session ? formatWritten(session.date) : "";
+const routeLabel = session || kind === "sessions" ? "sessions" : kind;
+const author = config.author.trim().split(/\s+/);
+const authorLast = author.pop() ?? "";
+const authorFirst = author.join(" ");
+const headline = config.headline.filter((line) => line.trim());
+const thought = [...timeline].sort(
+  (a, b) => b.date.localeCompare(a.date) || a._id.localeCompare(b._id),
+)[0];
+const thoughtSource =
+  thought?.type === "linkedin" ? "LinkedIn" : thought?.type === "x" ? "X" : "Thought";
+const isoDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
+};
+const entries = [
+  ...sessions.map((entry) => ({
+    id: entry._id,
+    date: entry.date,
+    title: entry.title,
+    session: entry,
+  })),
+  ...timeline
+    .filter((entry) => entry._id !== thought?._id)
+    .map((entry) => ({
+      id: entry._id,
+      date: entry.date,
+      title: entry.text,
+      session: undefined,
+    })),
+]
+  .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id))
+  .slice(0, 4);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1200, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{session?.title || kind} · OG render</title>
+    <link
+      rel="preload"
+      href="/fonts/host-grotesk-400-600.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/ibm-plex-mono-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body>
+    <main
+      data-og-frame
+      data-og={kind}
+      data-og-session-slugs={
+        kind === "default" ? JSON.stringify(sessions.map((entry) => entry.slug)) : undefined
+      }
+      class={`og-frame og-${kind}`}
+      style={`--post:var(--${tone})`}
+    >
+      {kind === "default" && (
+        <>
+          <Blot tone="pink" seed={3} class="og-blot og-default-pink" />
+          <Blot tone="blue" seed={8} class="og-blot og-default-blue" />
+          <Cortex
+            sessions={chronology}
+            ox={0.7}
+            fade={0.55}
+            fadeBottom={0.3}
+            drift={false}
+            class="og-full-canvas"
+          />
+        </>
+      )}
+      {kind === "session" && session && (
+        <>
+          <Blot tone={tone} seed={session.coverSeed * 3 + 11} class="og-blot og-session-blot" />
+          <Cortex
+            sessions={chronology}
+            highlight={chronology.findIndex((entry) => entry._id === session._id)}
+            ox={0.55}
+            scale={0.8}
+            fade={0.9}
+            fadeBottom={0.5}
+            drift={false}
+            class="og-full-canvas og-session-cortex"
+          />
+        </>
+      )}
+      {kind === "tape" && <Blot tone="blue" seed={140} class="og-blot og-tape-blot" />}
+      {kind === "sessions" && <Blot tone="pink" seed={99} class="og-blot og-index-blot" />}
+      {kind === "timeline" && (
+        <Lava seed={21} colors="pink,sand,sage,lilac,apricot,paper" class="og-full-canvas" />
+      )}
+      {kind === "about" && (
+        <>
+          <Blot tone="sand" seed={90} class="og-blot og-about-blot" />
+          <Cortex
+            sessions={chronology}
+            ox={0.74}
+            scale={0.9}
+            fade={0.7}
+            fadeBottom={0.4}
+            drift={false}
+            class="og-full-canvas"
+          />
+        </>
+      )}
+      {kind === "404" && <Blot tone="pink" seed={57} class="og-blot og-notfound-blot" />}
+
+      <header class="og-chrome">
+        <div class="og-brand">
+          <Logo
+            size={38}
+            ink="currentColor"
+            accent={kind === "tape" ? "var(--ink)" : "var(--pink)"}
+          />
+          <span class="og-route">
+            {config.siteName} / {kind === "default" ? config.displayVersion : routeLabel}
+          </span>
+        </div>
+        <div class="og-eyebrow">
+          {kind === "default" && <span class="og-paper-label">Sessions · Tapes · Thoughts</span>}
+          {kind === "session" && (
+            <>
+              <span class="og-id">{id}</span>
+              <span>Session</span>
+            </>
+          )}
+          {kind === "tape" && (
+            <>
+              <span class="og-square"></span>
+              <span>Tape · long-form</span>
+            </>
+          )}
+          {kind === "sessions" && <span>[02] Long-form</span>}
+          {kind === "timeline" && <span>[03] Log</span>}
+          {kind === "about" && <span>[04] whoami</span>}
+          {kind === "404" && <span>[??] Not found</span>}
+        </div>
+      </header>
+
+      {kind === "default" && (
+        <>
+          <h1
+            class="og-default-title"
+            data-og-fit
+            data-max-lines="3"
+            data-max-height="360"
+            data-min-size="72"
+          >
+            {headline.map((line) => (
+              <span>{line}</span>
+            ))}
+          </h1>
+          <p class="og-byline">Sessions, not blogs · by {config.author}</p>
+          {latest && (
+            <aside class="og-window og-latest" style={`--post:var(--${toneFor(latest)})`}>
+              <header class="og-window-bar">
+                <span>Latest</span>
+                <span class="og-id">{sessionId(latest.number)}</span>
+              </header>
+              <p class="og-latest-title" data-og-fit data-max-lines="3" data-min-size="22">
+                {latest.title}
+              </p>
+            </aside>
+          )}
+        </>
+      )}
+
+      {session && (
+        <>
+          <div class="og-session-copy">
+            <h1
+              class="og-session-title"
+              style={`font-size:${titleSize}px`}
+              data-og-fit
+              data-max-lines={kind === "tape" ? "4" : "3"}
+              data-max-height={kind === "tape" ? "354" : "270"}
+              data-min-size="24"
+            >
+              {session.title}
+            </h1>
+            {kind === "session" && dek && (
+              <p class="og-dek" data-og-fit data-max-lines="3" data-min-size="19">
+                {dek}
+              </p>
+            )}
+          </div>
+          {kind === "session" ? (
+            <figure class="og-window og-session-cover">
+              <Cover seed={session.coverSeed} tone={tone} />
+              <figcaption>
+                <span>Fig {id}</span>
+                <span class="og-muted">{tone}</span>
+              </figcaption>
+            </figure>
+          ) : (
+            <aside class="og-window og-tape-cover">
+              <header class="og-tape-bar">
+                <span>
+                  Tape {id} · {sectionCount} sections
+                </span>
+                <span class="og-read-label">◷ {session.readTime} MIN</span>
+              </header>
+              <Cover
+                seed={session.coverSeed}
+                tone="#1e1e1e"
+                style="--ink:var(--post);aspect-ratio:16/10"
+              />
+              {dek && (
+                <p class="og-tape-dek" data-og-fit data-max-lines="3" data-min-size="16">
+                  {dek}
+                </p>
+              )}
+            </aside>
+          )}
+          <div class="og-chips">
+            <span>◷ {session.readTime} MIN</span>
+            {kind === "tape" && <span>{sectionCount} sections</span>}
+            {written && <span>Written {written}</span>}
+            {kind === "session" && (
+              <span class="og-state">{session.state === "raw" ? "Raw · unedited" : "Edited"}</span>
+            )}
+          </div>
+        </>
+      )}
+
+      {kind === "sessions" && (
+        <>
+          <h1 class="og-index-title">Sessions.</h1>
+          <p class="og-index-description">
+            Long-form sessions on code, systems, and the patterns behind how things work.
+          </p>
+          {strip.length > 0 && (
+            <div class="og-cover-strip">
+              {strip.map((entry) => (
+                <figure>
+                  <Cover seed={entry.coverSeed} tone={toneFor(entry)} />
+                  <figcaption>{sessionId(entry.number)}</figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {kind === "timeline" && (
+        <>
+          <div class="og-timeline-heading">
+            <h1>Timeline.</h1>
+            <p>Sessions and thoughts, in the order they happened.</p>
+          </div>
+          {thought && (
+            <aside class="og-window og-thought">
+              <header class="og-window-bar">
+                <span>Thought {isoDate(thought.date)}</span>
+                <span class="og-muted">{thoughtSource}</span>
+              </header>
+              <p data-og-fit data-max-lines="4" data-min-size="18">
+                {thought.text}
+              </p>
+            </aside>
+          )}
+          <div class="og-timeline-rows">
+            {entries.map((entry) => (
+              <div
+                class:list={["og-timeline-row", { "og-timeline-row-session": !!entry.session }]}
+                style={entry.session ? `--post:var(--${toneFor(entry.session)})` : undefined}
+              >
+                <time datetime={entry.date}>{isoDate(entry.date)}</time>
+                {entry.session ? (
+                  <span class="og-id">{sessionId(entry.session.number)}</span>
+                ) : (
+                  <span class="og-thought-label">[thought]</span>
+                )}
+                <span class="og-row-title">{entry.title}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {kind === "about" && (
+        <>
+          <div class="og-about-heading">
+            <h1 data-og-fit data-max-lines="3" data-max-height="310" data-min-size="72">
+              {authorFirst && <span>{authorFirst}</span>}
+              <span>{authorLast.replace(/\.$/, "")}.</span>
+            </h1>
+            <p>Code, systems &amp; noise.</p>
+          </div>
+          <aside class="og-window og-glossary">
+            <header class="og-window-bar">
+              <span>[b] glossary</span>
+              <span class="og-muted">
+                <svg
+                  width="14"
+                  height="18"
+                  viewBox="0 0 16 20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  aria-hidden="true"
+                >
+                  <path d="M4 1v4a4 4 0 0 0 8 0V1M4 10v4a4 4 0 0 0 8 0v-4" />
+                </svg>
+                ∵
+              </span>
+            </header>
+            <dl>
+              <dt>session</dt>
+              <dd>not a blog</dd>
+              <dt>tape</dt>
+              <dd>the long ones</dd>
+              <dt>cortex</dt>
+              <dd>one branch per session</dd>
+              <dt>thought</dt>
+              <dd>short posts from elsewhere</dd>
+            </dl>
+          </aside>
+        </>
+      )}
+
+      {kind === "404" && (
+        <>
+          <div class="og-notfound-heading">
+            <h1>404.</h1>
+            <p>Page not found</p>
+          </div>
+          <div class="og-chips">
+            <span>cd /</span>
+            <span>ls sessions/</span>
+            <span>tail timeline</span>
+          </div>
+        </>
+      )}
+    </main>
+    <script>
+      import "@/scripts/og-image";
+    </script>
+  </body>
+</html>

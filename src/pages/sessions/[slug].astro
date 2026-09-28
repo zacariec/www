@@ -3,7 +3,8 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 import SessionTapeContent from "@/components/astro/SessionTapeContent.astro";
 import { getSessionBySlug, getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
 import { sessionTapeJsonLd } from "@/lib/seo/jsonld";
-import { pickOgImage } from "@/lib/seo/og-image";
+import { sessionOgImage } from "@/lib/seo/og-image";
+import { sessionId } from "@/lib/session";
 const { slug } = Astro.params;
 const [session, sessions, config] = await Promise.all([
   getSessionBySlug(slug!),
@@ -12,8 +13,14 @@ const [session, sessions, config] = await Promise.all([
 ]);
 if (!session) return Astro.redirect("/404");
 const description = session.subtitle || session.excerpt;
-const og = pickOgImage(session.featuredImage?.url, config);
-const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url });
+const og = sessionOgImage(session);
+const jsonLd = sessionTapeJsonLd(session, config);
+const writtenDate = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date(session.date));
 ---
 
 <SiteLayout
@@ -22,15 +29,15 @@ const jsonLd = sessionTapeJsonLd(session, config, { ogImageUrl: og?.url });
   articleAuthor={config.author}
   articleModifiedTime={session.dateModified ?? session.date}
   articlePublishedTime={session.date}
+  articleSection={session.kind === "tape" ? "Tape" : "Session"}
+  articleReadTime={session.readTime}
+  articleWrittenDate={writtenDate}
   canonicalUrl={`/sessions/${slug}`}
   description={description}
   jsonLd={jsonLd}
-  ogImage={og?.url}
-  ogImageAlt={session.featuredImage?.alt ?? session.title}
-  ogImageHeight={og?.height}
-  ogImageWidth={og?.width}
+  ogImage={og}
   ogType="article"
-  title={session.title}
+  title={`${session.title} — ${sessionId(session.number)} · ${config.siteName}`}
 >
   <SessionTapeContent session={session} sessions={sessions} config={config} />
 </SiteLayout>

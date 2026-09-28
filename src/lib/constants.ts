@@ -15,7 +15,8 @@ export const HEADLINE_PRESETS = {
 
 export const siteConfig = {
   name: "zcarr.dev",
-  description: "Code, systems, taste, and whatever else is rattling around in my head.",
+  description:
+    "Sessions are me writing. Code, systems, work, and whatever else won't leave me alone. Not blogs. Mostly unedited.",
   author: "Zacarie Carr",
   timezone: "Australia/Sydney",
   headline: HEADLINE_PRESETS["getting-it-out-there"],

@@ -258,15 +258,7 @@ export const siteConfigType = defineType({
       title: "Site URL",
       type: "url",
       group: "seo",
-      description: "Canonical URL (e.g. https://zacariec.com)",
-    }),
-    defineField({
-      name: "ogImage",
-      title: "Default OG Image",
-      type: "image",
-      group: "seo",
-      description: "Default social sharing image (1200x630 recommended)",
-      fields: [defineField({ name: "alt", title: "Alt Text", type: "string" })],
+      description: "Canonical site origin (e.g. https://zcarr.dev)",
     }),
     defineField({
       name: "author",

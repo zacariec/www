@@ -97,6 +97,7 @@ export default defineConfig([
     rules: {
       "no-await-in-loop": "off",
       "no-console": "off",
+      "import-x/no-extraneous-dependencies": ["error", { devDependencies: true }],
     },
   },
   // Project overrides

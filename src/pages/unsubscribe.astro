@@ -2,11 +2,13 @@
 export const prerender = false;
 import SiteLayout from "../layouts/SiteLayout.astro";
 import Window from "@/components/astro/Window.astro";
+import { getSiteConfig } from "@/lib/sanity/fetch";
+const config = await getSiteConfig();
 const success = Astro.url.searchParams.get("success") === "true";
 const error = Astro.url.searchParams.get("error");
 ---
 
-<SiteLayout title="Unsubscribe">
+<SiteLayout config={config} title={`Unsubscribe — ${config.siteName}`} noindex>
   <div class="utility-page zc-container">
     <a class="mono" href="/">
       ← Home

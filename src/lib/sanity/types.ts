@@ -94,7 +94,6 @@ export interface SanitySiteConfig {
   siteName: string;
   siteDescription: string;
   siteUrl?: string;
-  ogImage?: { url: string; alt?: string };
   author: string;
   twitterHandle?: string;
   timezone?: string;

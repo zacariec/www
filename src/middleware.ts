@@ -29,7 +29,17 @@ const NO_CACHE_PREFIXES = [
   "/preview/",
   "/preferences",
   "/unsubscribe",
+  "/og/render",
 ] as const;
+
+const NO_INDEX_ROUTES = [
+  "/studio",
+  "/preview",
+  "/api",
+  "/preferences",
+  "/unsubscribe",
+  "/og/render",
+];
 
 function shouldCache(pathname: string): boolean {
   return !NO_CACHE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -43,7 +53,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect(`/sessions${pathname.slice("/blog".length)}${search}`, 301);
   }
 
-  const response = await next();
+  let response = await next();
+  if (
+    response.status === 404 ||
+    NO_INDEX_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+  ) {
+    // Auth handlers may return immutable redirect headers; preserve the response while adding policy.
+    response = new Response(response.body, response);
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   if (context.request.method !== "GET") return response;
   if (response.status !== 200) return response;

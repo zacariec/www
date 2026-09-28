@@ -5,7 +5,7 @@ import SessionRow from "@/components/astro/SessionRow.astro";
 import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
 import { resolveTone } from "@/lib/session";
 import { sessionsIndexJsonLd } from "@/lib/seo/jsonld";
-import { pickOgImage } from "@/lib/seo/og-image";
+import { generatedOgImage } from "@/lib/seo/og-image";
 const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
 const groups: { month: string; sessions: typeof sessions }[] = [];
 for (const session of sessions) {
@@ -23,20 +23,20 @@ for (const session of sessions) {
 }
 const params = new URLSearchParams(Astro.url.search);
 params.delete("tone");
-const og = pickOgImage(undefined, config);
+const og = generatedOgImage(
+  "sessions",
+  "Sessions — long-form writing on code and systems, with a dithered stack of session cards.",
+);
 ---
 
 <SiteLayout
   config={config}
   sessions={sessions}
   canonicalUrl="/sessions"
-  title="Sessions"
+  title={`Sessions — ${config.siteName}`}
   description="Long-form sessions on code, systems, and the patterns behind how things work."
   jsonLd={sessionsIndexJsonLd(config)}
-  ogImage={og?.url}
-  ogImageAlt={og?.alt}
-  ogImageHeight={og?.height}
-  ogImageWidth={og?.width}
+  ogImage={og}
 >
   <PageHero
     title="Sessions."

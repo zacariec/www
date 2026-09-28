@@ -1,36 +1,36 @@
-import type { SanitySiteConfig } from "@/lib/sanity/types";
+import { formatWritten, sessionId } from "@/lib/session";
 
-const OG_W = 1200;
-const OG_H = 630;
-
-/** Append Sanity image transform params for OG-shaped previews. */
-export function ogImageFromSanityUrl(url: string): string {
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}w=${OG_W}&h=${OG_H}&fit=crop&auto=format`;
-}
+import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 
 export interface OgImage {
   url: string;
-  width: number;
-  height: number;
-  alt?: string;
+  width: 1200;
+  height: 630;
+  type: "image/png";
+  alt: string;
 }
 
-/**
- * Returns an OG-cropped image: prefer the post's own featured image, fall
- * back to the site default. Returns undefined if neither is configured so
- * the layout can omit the og:image tag entirely.
- */
-export function pickOgImage(
-  postImageUrl: string | undefined,
-  config: SanitySiteConfig,
-): OgImage | undefined {
-  const raw = postImageUrl ?? config.ogImage?.url;
-  if (!raw) return undefined;
-  return {
-    url: ogImageFromSanityUrl(raw),
-    width: OG_W,
-    height: OG_H,
-    alt: config.ogImage?.alt,
-  };
+type OgRoute = "default" | "sessions" | "timeline" | "about" | "404" | `sessions/${string}`;
+
+export function siteOrigin(config: SanitySiteConfig): string {
+  return config.siteUrl ? new URL(config.siteUrl).origin : "https://zcarr.dev";
+}
+
+/** Generated assets are canonical: reader tone query parameters never enter their URLs. */
+export function generatedOgImage(route: OgRoute, alt: string): OgImage {
+  return { url: `/og/${route}.png`, width: 1200, height: 630, type: "image/png", alt };
+}
+
+export function defaultOgImage(config: SanitySiteConfig, latest?: SanitySessionTape): OgImage {
+  return generatedOgImage(
+    "default",
+    `${config.siteName} — "${config.headline.join(" ")}" over a dithered cortex${latest ? `, latest session ${sessionId(latest.number)}` : ""}`,
+  );
+}
+
+export function sessionOgImage(session: SanitySessionTape): OgImage {
+  return generatedOgImage(
+    `sessions/${encodeURIComponent(session.slug)}`,
+    `${sessionId(session.number)} "${session.title}", ${session.readTime} min read, written ${formatWritten(session.date)}`,
+  );
 }

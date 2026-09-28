@@ -3,6 +3,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import PageHero from "@/components/astro/PageHero.astro";
 import Window from "@/components/astro/Window.astro";
 import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { generatedOgImage } from "@/lib/seo/og-image";
 const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
 const glossary = [
   [
@@ -22,7 +23,11 @@ const glossary = [
   config={config}
   sessions={sessions}
   canonicalUrl="/about"
-  title="About"
+  title={`Zacarie Carr — ${config.siteName}`}
+  ogImage={generatedOgImage(
+    "about",
+    "Zacarie Carr — Code, systems & noise. A paper card with a glossary of sessions, tapes, cortex, and thoughts.",
+  )}
   description="Code, systems & noise."
 >
   <PageHero

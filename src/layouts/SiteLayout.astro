@@ -7,22 +7,24 @@ import BottomTabs from "@/components/astro/BottomTabs.astro";
 import EndSection from "@/components/astro/EndSection.astro";
 import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
+import { defaultOgImage, type OgImage } from "@/lib/seo/og-image";
 interface Props {
   config?: SanitySiteConfig;
   sessions?: SanitySessionTape[];
   timeline?: SanityTimelineEntry[];
   title?: string;
   description?: string;
-  ogImage?: string;
-  ogImageWidth?: number;
-  ogImageHeight?: number;
-  ogImageAlt?: string;
+  ogImage?: OgImage | null;
   ogType?: string;
   canonicalUrl?: string;
   jsonLd?: object;
   articlePublishedTime?: string;
   articleModifiedTime?: string;
   articleAuthor?: string;
+  articleSection?: "Session" | "Tape";
+  articleReadTime?: number;
+  articleWrittenDate?: string;
+  noindex?: boolean;
 }
 const {
   config: givenConfig,
@@ -39,7 +41,11 @@ const sessionCount = sessions.length;
 const timelineCount = sessions.length + timeline.length;
 ---
 
-<BaseLayout {...metadata} config={config}>
+<BaseLayout
+  {...metadata}
+  ogImage={metadata.ogImage === undefined ? defaultOgImage(config, sessions[0]) : metadata.ogImage}
+  config={config}
+>
   <a class="skip-link mono" href="#content">
     Skip to content
   </a>
