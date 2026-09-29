@@ -12,7 +12,7 @@ Sessions, tapes and thoughts. An Astro multi-page site with an embedded Sanity S
 - Better Auth and Cloudflare D1 for reader sessions; Resend for newsletters
 - bun for dependency management and commands
 
-Public routes remain `/`, `/sessions`, `/sessions/[slug]` and `/timeline`; `/about`, `/preferences` and `/rss.xml` are available. Legacy `/blog` URLs redirect to `/sessions`.
+Public routes are `/`, `/sessions`, `/sessions/[slug]`, `/timeline`, `/preferences` and `/rss.xml`. Legacy `/blog` URLs redirect to `/sessions`; `/about` permanently redirects to `/`, preserving query parameters. Unmatched routes return a real 404 with the interactive terminal, including `/untitled-draft`.
 
 ## Development
 
@@ -24,15 +24,16 @@ bun dev
 
 Use `http://localhost:4321` consistently when configuring OAuth and `BETTER_AUTH_URL`. Add the exact Studio development origin to the Sanity project's credentialed CORS allowlist. Studio uses Sanity's Google sign-in, separately from reader authentication.
 
-| Command | Purpose |
-| --- | --- |
-| `bun dev` | Astro development server |
-| `bun run check` | Astro and TypeScript contract checks |
-| `bun lint` | ESLint |
-| `bun run build` | Generate cursor assets and build the Worker/site |
-| `bun start` | Preview the production build locally |
-| `bun run format` | Format Astro, TypeScript and CSS source |
-| `bun scripts/migrate-data.ts` | Dry-run the redesign content migration |
+| Command                       | Purpose                                                               |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `bun dev`                     | Astro development server                                              |
+| `bun run check`               | Astro and TypeScript contract checks                                  |
+| `bun lint`                    | ESLint                                                                |
+| `bun run build`               | Refresh GitHub data, generate cursor assets and build the Worker/site |
+| `bun start`                   | Preview the production build locally                                  |
+| `bun run format`              | Format Astro, TypeScript and CSS source                               |
+| `bun scripts/migrate-data.ts` | Dry-run the redesign content migration                                |
+| `bun test`                    | Run deterministic behavioral regressions                              |
 
 Run development, Astro checks and builds sequentially: they share Vite's dependency cache. Brand/font regeneration is optional; committed assets need no Python dependencies at build time. `scripts/generate-brand-assets.py` uses fonttools, brotli, cairosvg and Pillow, with pinned upstream font hashes and bundled font licenses.
 
@@ -55,6 +56,8 @@ PUBLIC_SANITY_PROJECT_ID=
 PUBLIC_SANITY_DATASET=production
 PUBLIC_SANITY_API_VERSION=2026-03-26
 ```
+
+GitHub activity is build-only: `GITHUB_LOGIN=zacariec` and `GITHUB_TOKEN` are consumed by `scripts/fetch-github.ts`, never bundled into client code or deployed as Worker secrets. CI uses its ephemeral `github.token` with `contents: read`. Local tokenless builds reuse the checked-in, timestamped public snapshot; `bun scripts/fetch-github.ts --strict` requires an authenticated refresh. Never substitute a broad personal token in production configuration.
 
 Keep runtime secrets in local `.env.local` for development and Cloudflare Worker secrets for deployment, never in `PUBLIC_*` variables:
 
@@ -82,6 +85,10 @@ RESEND_API_KEY=
 RESEND_AUDIENCE_ID=
 RESEND_SESSIONS_TOPIC_ID=
 RESEND_FROM_EMAIL=
+
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_REFRESH_TOKEN=
 ```
 
 OAuth callback URLs are `/api/auth/callback/github`, `/api/auth/callback/twitter` (X), and `/api/auth/callback/linkedin` on the configured origin. Missing provider credentials leave the corresponding reader sign-in control unavailable; Google is not substituted for X or LinkedIn in the thread. `AUTH_SECRET` remains the existing alternative to `BETTER_AUTH_SECRET`.
@@ -90,7 +97,7 @@ OAuth callback URLs are `/api/auth/callback/github`, `/api/auth/callback/twitter
 
 The server-side `SANITY_API_TOKEN` must permit comment creation/updates and `readerPreferences` document writes for posting, likes and anchor visibility. A read-only token can render draft previews but cannot support reader mutations. Keep this token server-only; Studio's signed-in browser credentials do not grant the Worker write access.
 
-Site Config controls the headline, README copy, ticker, socials, display version, tone shift, newsletter copy and moderation default. New comments publish immediately by the chosen default. Add Zac's actual bio before considering `/about` editorially complete; no mock bio is supplied. Timeline entries, including X entries, are entered manually.
+Site Config controls the headline, README copy, ticker, socials, display version, tone shift, newsletter copy and moderation default. New comments publish immediately by the chosen default. Thoughts, including X entries, are entered manually; public GitHub pushes are fetched separately.
 
 ## Content contracts
 
@@ -100,6 +107,20 @@ Site Config controls the headline, README copy, ticker, socials, display version
 - Tone order is pink, blue, sand, sage, lilac, apricot. Formula: `(number × 5 + shift) mod 6`, default shift 1. A document override beats the formula; `?tone` beats the document override on a detail page. Valid `?shift` and `?tone` persist through internal links.
 - Reader highlights and board layouts persist locally. Studio's Thoughts board saves the canonical `board` fields; reader dragging never writes to Sanity.
 - Reader comments use same-origin authenticated API routes, plain-text validation, per-user/IP rate limits and server-only Sanity writes. Public queries expose approved comments and explicit public author fields only.
+- Optional `writtenTo` holds `{track, artist, spotifyUrl}`. The Studio input resolves a Spotify track URL through the rate-limited `/api/spotify-track` endpoint using server-only client credentials.
+- Optional `tags` use the fixed vocabulary `code`, `systems`, `ai`, `work`, `design`; `related` holds up to three non-self session/tape references. Related cards prefer authored picks, then shared-tag overlap and recency, excluding the current document and its numbered neighbors. Empty metadata never generates invented picks, tags or songs.
+
+## Activity and v3 interactions
+
+Home's Commits window reads the bundled public-only GitHub snapshot: 53 Sunday-first weeks on desktop, 22 on mobile, with Sanity publication marks and keyboard/tap day readouts. The static 2D Bayer renderer follows the latest session tone and reader palette precedence without joining the animation loop. Current streaks allow an unfinished zero-contribution today; future days do not count as activity.
+
+The build fetches public events and complete compare-backed commit lists for the latest 12 pushes. Exact additions/deletions are shown only when the comparison is complete. Branch creation/deletion or an unavailable comparison retains the real event with “Commit details unavailable”, rather than inventing zero commits. Restricted/private contribution data and incomplete visibility audits stop refresh. Timeline filters synchronize `filter=all|sessions|thoughts|pushes`, preserve palette parameters and restore on browser history navigation; sessions/thoughts precede pushes on the same UTC day.
+
+Spotify authorization requires the Authorization Code flow with `user-read-currently-playing` and `user-read-recently-played`. Store the resulting refresh token locally and as a Worker secret; revoked grants require reconnection. `/api/now-playing` shares a 30-second edge cache with SSR. It exposes music only, falls back to recently played music, and returns `null` on failure. One visible-tab polling loop updates both header and footer, advances progress locally, and suspends timers/requests while hidden. Real album artwork uses the shared cover renderer with plain-image fallback; idle, reduced-motion and Still states freeze it. The mobile bars disclose a compact strip with `aria-expanded`.
+
+Desktop `/` and `Ctrl+K`/`⌘K` open the accessible find palette. Commands navigate to pushes/the terminal, shuffle the Home board and update the existing motion preference. `[` and `]` navigate numbered session/tape neighbors; editing fields and incompatible open dialogs suppress global shortcuts. New page navigation resets document scroll while preserving hash destinations and browser history restoration. The terminal renders text only, keeps bounded in-memory history/output, and reads actual session, README and public-push data.
+
+The footer contains the colophon, Preferences link and discoverable terminal link. Home glossary triggers support keyboard focus and Escape dismissal. Mobile navigation has three tabs; Preferences remains reachable from the footer.
 
 ## Reader preferences
 
@@ -125,6 +146,8 @@ Browser verification covered desktop/mobile controls, persisted navigation, keyb
 ## Redesign migration and rollout
 
 The migration extends the existing document types and retains slugs, body content and references. It is dry-run by default, revision guarded and idempotent. It does **not** seed demonstration content.
+
+V3 adds optional fields without assigning content, and migrates navigation to Index/Sessions/Timeline/Preferences. Existing authored biography data is retained even though the About route/editor section is removed.
 
 1. Back up production, including assets, and import that backup into an isolated Sanity dataset. Dataset creation/import requires the corresponding Sanity permissions; a content-read token alone is insufficient.
 2. Disable the production newsletter publication webhook before the eventual production migration: updates to historical sessions can otherwise trigger broadcasts.
@@ -180,19 +203,19 @@ Production rollout on 2026-09-28 backed up D1 and exported Sanity with all 17 as
 
 The deployed Worker uses a dedicated write-capable Sanity token, the verified Studio author identity, and a server-only mapping for the owner's verified Google reader identity. Production browser checks completed Google OAuth, posted an approved comment anchored to paragraph 1 with the AUTHOR badge, and verified likes remained at one across repeated requests. The temporary comment was deleted afterward. All six public views, RSS and Studio returned complete successful responses; desktop and 390px mobile rendering and tone-preserving navigation were checked. The authenticated production Studio loaded all 11 rich session previews.
 
-Production verification corrected two integration failures: Better Auth requires an absolute same-origin callback to retain the thread fragment, and legacy `/blog` redirects run in middleware to avoid generated asset rules appending `/index.html` to SSR destinations. Legacy redirects return 301 and preserve query parameters. Final About biography copy is still required.
+Production verification corrected two integration failures: Better Auth requires an absolute same-origin callback to retain the thread fragment, and legacy `/blog` redirects run in middleware to avoid generated asset rules appending `/index.html` to SSR destinations. Legacy redirects return 301 and preserve query parameters.
 
 ## Social previews
 
 `/og/*.png` and `/og/sessions/{slug}.png` are server-rendered endpoints, not build artifacts. The Worker's `BROWSER` binding uses Cloudflare Browser Run and `@cloudflare/puppeteer` to capture the existing Astro templates at 1200×630. The templates reuse the site's self-hosted fonts, seeded dither engine, canonical tones and published Sanity content. Capture waits for fonts, fitted text and painted canvases with reduced motion enabled. `bun run build` does not generate PNGs or install a capture browser.
 
-The generated images cover the site default, Sessions, Timeline, About, 404, and every published session or tape. Pages emit matching absolute Open Graph, Twitter and JSON-LD image URLs; article metadata includes the session ID, read time, publication date, author and section. Reader `shift`/`tone` parameters do not affect social previews. Studio remains `noindex, nofollow` without a share image, and `/og/render/*` is excluded from indexing and edge HTML caching.
+The generated images cover the site default, Sessions, Timeline, 404, and every published session or tape. Pages emit matching absolute Open Graph, Twitter and JSON-LD image URLs; article metadata includes the session ID, read time, publication date, author and section. Reader `shift`/`tone` parameters do not affect social previews. Studio remains `noindex, nofollow` without a share image, and `/og/render/*` is excluded from indexing and edge HTML caching.
 
 Every image request resolves current published content and hashes the resulting template HTML, including its versioned asset URLs. Matching images are reused from the Workers Cache API for up to 24 hours; changed visible content produces a new cache key immediately, without a rebuild or webhook. The browser receives the exact HTML used for that key. HTTP clients revalidate with a weak ETag; HEAD and unchanged conditional requests do not acquire a browser. New sessions and tapes render their own images on their first request; unknown routes/slugs return 404, never a default-image redirect. Browser Run usage and concurrency are subject to the account's [plan limits](https://developers.cloudflare.com/browser-run/limits/).
 
 ## Deployment
 
-The existing GitHub Actions workflow runs lint and build on pushes to `main`, then deploys with Wrangler. `wrangler.jsonc` defines the D1 and KV bindings; Astro emits the Worker deployment configuration under `dist/server`. Apply required D1 migrations and configure runtime secrets before release. Building or running the content migration in dry-run mode does not deploy or mutate production.
+The existing GitHub Actions workflow runs lint and build on pushes to `main`, manual dispatch, and every three hours (minute 17 UTC), then deploys with Wrangler. A failed GitHub refresh fails the build, leaving the prior deployment intact rather than publishing fabricated or private activity. `wrangler.jsonc` defines the D1 and KV bindings; Astro emits the Worker deployment configuration under `dist/server`. Apply required D1 migrations and configure runtime secrets before release. Building or running the content migration in dry-run mode does not deploy or mutate production.
 
 `SITE_URL` and `BETTER_AUTH_URL` are set to `https://zcarr.dev` in the Worker configuration. The deployment workflow removes Astro's generated `legacy_env` field, which current Wrangler no longer accepts, and retains the existing Durable Object migration history before deploying. Existing Worker secrets are preserved.
 

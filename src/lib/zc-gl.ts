@@ -1,4 +1,7 @@
 import { getPreferences, subscribePreferences } from "./preferences";
+import { mountHeat } from "./zc-heat";
+
+import type { Heatmap } from "./zc-heat";
 
 export interface CortexSession {
   number: number;
@@ -51,6 +54,15 @@ interface CanvasState {
   clear: boolean;
   palette: Float32Array;
   image: ImageData | null;
+  source: string | undefined;
+  artwork: HTMLImageElement | null;
+  artworkPixels: Uint8ClampedArray | null;
+  artworkWidth: number;
+  artworkHeight: number;
+  artworkTime: number;
+  artworkMotion: boolean;
+  texture: WebGLTexture | null;
+  textureGeneration: number;
 }
 const CELL = 3;
 const INTERVAL = 1000 / 30;
@@ -82,8 +94,13 @@ const attributes = [
   "data-fadeb",
   "data-drift",
   "data-highlight",
+  "data-src",
+  "data-days",
+  "data-weeks",
+  "data-legend",
 ];
 const states = new Map<HTMLCanvasElement, CanvasState>();
+const heatmaps = new Map<HTMLCanvasElement, Heatmap>();
 let initialized = false;
 let suspended = false;
 let reduced = false;
@@ -95,6 +112,7 @@ let checkVisibility = true;
 let mutationObserver: MutationObserver;
 let pulse: HTMLCanvasElement;
 let gpu: Graphics | null = null;
+let graphicsAttempted = false;
 
 function random(seed: number): () => number {
   let valueSeed = seed;
@@ -257,6 +275,7 @@ function configure(state: CanvasState): void {
   state.scale = numeric(data.scale, 1);
   state.fade = Math.max(0, Math.min(1, numeric(data.fade, 0)));
   state.fadeBottom = Math.max(0, Math.min(1, numeric(data.fadeb, 0)));
+  if (state.kind === "cover" && state.source !== data.src) loadArtwork(state, data.src);
   if (state.kind === "cortex" && state.sessionData !== (data.sessions || "[]")) {
     state.sessionData = data.sessions || "[]";
     let sessions: CortexSession[] = [];
@@ -291,6 +310,50 @@ function configure(state: CanvasState): void {
   refreshColors(state);
   resize(state, true);
   state.dirty = true;
+}
+
+function loadArtwork(state: CanvasState, source: string | undefined): void {
+  state.source = source;
+  state.artwork = null;
+  state.artworkPixels = null;
+  state.artworkTime = 0;
+  state.artworkMotion = false;
+  if (state.texture && gpu) gpu.gl.deleteTexture(state.texture);
+  state.texture = null;
+  delete state.canvas.dataset.imageReady;
+  const fallback = state.canvas.closest("[data-image-cover]")?.querySelector("img");
+  if (fallback) {
+    if (source) fallback.src = source;
+    else fallback.removeAttribute("src");
+  }
+  if (!source) return;
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  image.decoding = "async";
+  image.onload = () => {
+    if (state.source !== source || !state.canvas.isConnected) return;
+    // Read once, after a CORS-approved load. Reuse these real pixels on the CPU
+    // when WebGL is unavailable/lost, rather than substituting a procedural seed.
+    const sample = document.createElement("canvas");
+    const scale = Math.min(1, 512 / Math.max(image.naturalWidth, image.naturalHeight));
+    sample.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    sample.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = sample.getContext("2d", { willReadFrequently: true });
+    if (!context) return;
+    try {
+      context.drawImage(image, 0, 0, sample.width, sample.height);
+      state.artworkPixels = context.getImageData(0, 0, sample.width, sample.height).data;
+    } catch {
+      // A denied/tainted source leaves the ordinary image visible.
+      return;
+    }
+    state.artworkWidth = sample.width;
+    state.artworkHeight = sample.height;
+    state.artwork = image;
+    state.dirty = true;
+    schedule();
+  };
+  image.src = source;
 }
 
 function refreshColors(state: CanvasState): void {
@@ -364,7 +427,7 @@ function resize(state: CanvasState, force = false): void {
 }
 
 const fragment = `precision highp float;
-uniform vec2 uRes; uniform float uT,uKind,uAnim,uClear,uAsp;
+uniform vec2 uRes; uniform float uT,uKind,uAnim,uClear,uAsp,uImage,uImageAsp;
 uniform vec3 uFg,uBg; uniform sampler2D uTex;
 uniform vec4 uB[6]; uniform float uPh[6]; uniform vec4 uP;
 uniform vec3 uD[34]; uniform vec3 uC[6];
@@ -374,11 +437,20 @@ void main(){
   vec2 px=vec2(floor(gl_FragCoord.x),uRes.y-1.-floor(gl_FragCoord.y));
   float x=(px.x+.5)/uRes.x,y=(px.y+.5)/uRes.y,v=0.;
   if(uKind<.5){
+    if(uImage>.5){
+      vec2 uv=vec2(x,y);
+      if(uAnim>.5)uv+=vec2(sin(y*8.+uT*.7)*.012,cos(x*7.+uT*.5)*.01);
+      if(uImageAsp>uAsp)uv.x=(uv.x-.5)*uAsp/uImageAsp+.5;
+      else uv.y=(uv.y-.5)*uImageAsp/uAsp+.5;
+      v=1.-dot(texture2D(uTex,clamp(uv,0.,1.)).rgb,vec3(.2126,.7152,.0722));
+      if(uAnim>.5&&abs(y-fract(uT*.18))<.012)v=1.-v*.4;
+    }else{
     v=.12+y*.12;
     for(int i=0;i<4;i++){vec4 b=uB[i];float dx=(x-b.x-sin(uT*.7+uPh[i])*.14)*uAsp;float dy=y-b.y-cos(uT*.5+uPh[i])*.1;v+=b.w*exp(-(dx*dx+dy*dy)/(b.z*b.z));}
     v+=.14*sin((x*uAsp*cos(uP.x)+y*sin(uP.x))*uP.y-uT*2.2);
     if(uAnim>.5){float hd=fract(uT*.18);if(abs(y-hd)<.012)v=1.-v*.4;}
     v=clamp(v*.62,0.,1.);
+    }
   }else if(uKind<1.5){
     float m=min(uAsp,1.6);
     for(int i=0;i<6;i++){vec4 b=uB[i];float dx=(x-b.x-sin(uT*.31+uPh[i])*.07)*m;float dy=y-b.y-cos(uT*.23+uPh[i]*1.3)*.06;v+=b.w*exp(-(dx*dx+dy*dy)/(b.z*b.z*(1.+.12*sin(uT*.4+uPh[i]))));}
@@ -406,6 +478,8 @@ type Uniform =
   | "uFg"
   | "uBg"
   | "uTex"
+  | "uImage"
+  | "uImageAsp"
   | "uP"
   | "uB"
   | "uPh"
@@ -416,6 +490,8 @@ interface Graphics {
   gl: WebGLRenderingContext;
   uniforms: Record<Uniform, WebGLUniformLocation | null>;
   ready: boolean;
+  texture: WebGLTexture | null;
+  generation: number;
 }
 
 function setupGraphics(graphics: Graphics): void {
@@ -467,6 +543,8 @@ function setupGraphics(graphics: Graphics): void {
     "uFg",
     "uBg",
     "uTex",
+    "uImage",
+    "uImageAsp",
     "uP",
     "uB",
     "uPh",
@@ -478,13 +556,15 @@ function setupGraphics(graphics: Graphics): void {
       ["uB", "uPh", "uD", "uC"].includes(key) ? `${key}[0]` : key,
     );
   }
-  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  graphics.texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, graphics.texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.uniform1i(graphics.uniforms.uTex, 0);
   graphics.ready = true;
+  graphics.generation++;
 }
 
 function createGraphics(): Graphics | null {
@@ -503,7 +583,14 @@ function createGraphics(): Graphics | null {
     return null;
   }
   if (!gl) return null;
-  const graphics: Graphics = { canvas, gl, uniforms: {} as Graphics["uniforms"], ready: false };
+  const graphics: Graphics = {
+    canvas,
+    gl,
+    uniforms: {} as Graphics["uniforms"],
+    ready: false,
+    texture: null,
+    generation: 0,
+  };
   canvas.addEventListener("webglcontextlost", (event) => {
     event.preventDefault();
     graphics.ready = false;
@@ -534,12 +621,31 @@ function drawGraphics(state: CanvasState, time: number): void {
   gl.uniform2f(u.uRes, width, height);
   gl.uniform1f(u.uT, time);
   gl.uniform1f(u.uKind, modes[state.kind]);
-  gl.uniform1f(u.uAnim, state.animated && !reduced ? 1 : 0);
+  gl.uniform1f(
+    u.uAnim,
+    state.artwork ? Number(state.artworkMotion) : Number(state.animated && !reduced),
+  );
   gl.uniform1f(u.uClear, state.clear ? 1 : 0);
   gl.uniform1f(u.uAsp, width / height);
+  gl.uniform1f(u.uImage, state.artwork ? 1 : 0);
+  gl.uniform1f(u.uImageAsp, state.artwork ? state.artworkWidth / state.artworkHeight : 1);
   gl.uniform3f(u.uFg, state.fg[0] / 255, state.fg[1] / 255, state.fg[2] / 255);
   gl.uniform3f(u.uBg, state.bg[0] / 255, state.bg[1] / 255, state.bg[2] / 255);
-  if (state.kind === "cortex") {
+  if (state.artwork) {
+    if (!state.texture || state.textureGeneration !== gpu.generation) {
+      state.texture = gl.createTexture();
+      if (!state.texture) throw new Error("Unable to allocate artwork texture");
+      gl.bindTexture(gl.TEXTURE_2D, state.texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, state.artwork);
+      if (gl.getError() !== gl.NO_ERROR) throw new Error("Artwork texture upload failed");
+      state.textureGeneration = gpu.generation;
+    } else gl.bindTexture(gl.TEXTURE_2D, state.texture);
+  } else if (state.kind === "cortex") {
+    gl.bindTexture(gl.TEXTURE_2D, gpu.texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, state.buffer);
   } else {
     const p = state.parameters;
@@ -759,6 +865,55 @@ function drawCortex(state: CanvasState): void {
   }
 }
 
+function drawArtworkCpu(state: CanvasState): void {
+  const source = state.artworkPixels;
+  if (!source) return;
+  const { width, height } = state.buffer;
+  state.image ??= state.bufferContext.createImageData(width, height);
+  const { image } = state;
+  const pixels = image.data;
+  const aspect = width / height;
+  const sourceAspect = state.artworkWidth / state.artworkHeight;
+  const time = state.artworkTime;
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      const x = (px + 0.5) / width;
+      const y = (py + 0.5) / height;
+      let u = x;
+      let v = y;
+      if (state.artworkMotion) {
+        u += Math.sin(y * 8 + time * 0.7) * 0.012;
+        v += Math.cos(x * 7 + time * 0.5) * 0.01;
+      }
+      if (sourceAspect > aspect) u = ((u - 0.5) * aspect) / sourceAspect + 0.5;
+      else v = ((v - 0.5) * sourceAspect) / aspect + 0.5;
+      const sx = Math.max(0, Math.min(state.artworkWidth - 1, Math.floor(u * state.artworkWidth)));
+      const sy = Math.max(
+        0,
+        Math.min(state.artworkHeight - 1, Math.floor(v * state.artworkHeight)),
+      );
+      const sourceOffset = (sy * state.artworkWidth + sx) * 4;
+      let value =
+        1 -
+        (source[sourceOffset] * 0.2126 +
+          source[sourceOffset + 1] * 0.7152 +
+          source[sourceOffset + 2] * 0.0722) /
+          255;
+      if (state.artworkMotion && Math.abs(y - ((time * 0.18) % 1)) < 0.012) value = 1 - value * 0.4;
+      const on = value >= (BAYER[(py & 3) * 4 + (px & 3)] + 0.5) / 16;
+      const [red, green, blue] = on ? state.fg : state.bg;
+      const offset = (py * width + px) * 4;
+      pixels[offset] = red;
+      pixels[offset + 1] = green;
+      pixels[offset + 2] = blue;
+      pixels[offset + 3] = 255;
+    }
+  }
+  state.bufferContext.putImageData(image, 0, 0);
+  state.context.clearRect(0, 0, state.canvas.width, state.canvas.height);
+  state.context.drawImage(state.buffer, 0, 0, state.canvas.width, state.canvas.height);
+}
+
 function schedule(): void {
   if (!raf && !suspended && !document.hidden && states.size) raf = requestAnimationFrame(render);
 }
@@ -790,6 +945,8 @@ function render(now: number): void {
         bounds.right > -200 &&
         bounds.left < window.innerWidth + 200;
     }
+    // An image request must never reveal a generated substitute or keep RAF alive.
+    if (state.source !== undefined && !state.artwork) continue;
     const animate =
       !reduced &&
       (state.kind === "cover" ? state.animated : state.kind !== "cortex" || state.count > 0);
@@ -797,8 +954,21 @@ function render(now: number): void {
     keepAnimating ||= animate;
     if (!state.dirty && !animate) continue;
     if (state.kind === "cortex") drawCortex(state);
-    const time = reduced || (state.kind === "cover" && !state.animated) ? 0 : elapsed / 1000;
-    if (gpu?.ready) drawGraphics(state, time);
+    let time = reduced || (state.kind === "cover" && !state.animated) ? 0 : elapsed / 1000;
+    if (state.artwork) {
+      if (animate) {
+        state.artworkTime = time;
+        state.artworkMotion = true;
+      } else time = state.artworkTime;
+      try {
+        if (gpu?.ready) drawGraphics(state, time);
+        else drawArtworkCpu(state);
+      } catch {
+        if (gpu) gpu.ready = false;
+        drawArtworkCpu(state);
+      }
+      if (state.canvas.dataset.imageReady !== "true") state.canvas.dataset.imageReady = "true";
+    } else if (gpu?.ready) drawGraphics(state, time);
     else drawCpu(state, time);
     state.dirty = false;
   }
@@ -808,11 +978,23 @@ function render(now: number): void {
 
 function unmount(state: CanvasState): void {
   state.observer.disconnect();
+  if (state.texture && gpu) gpu.gl.deleteTexture(state.texture);
   states.delete(state.canvas);
 }
 
 function mount(canvas: HTMLCanvasElement): void {
+  if (canvas.dataset.zc === "heat") {
+    if (!heatmaps.has(canvas)) {
+      const heatmap = mountHeat(canvas);
+      if (heatmap) heatmaps.set(canvas, heatmap);
+    }
+    return;
+  }
   if (!(canvas.dataset.zc && canvas.dataset.zc in modes)) return;
+  if (!graphicsAttempted) {
+    graphicsAttempted = true;
+    gpu = createGraphics();
+  }
   const context = canvas.getContext("2d");
   const buffer = document.createElement("canvas");
   const bufferContext = buffer.getContext("2d", { willReadFrequently: !gpu?.ready });
@@ -853,6 +1035,15 @@ function mount(canvas: HTMLCanvasElement): void {
     clear: false,
     palette: new Float32Array(18),
     image: null,
+    source: undefined,
+    artwork: null,
+    artworkPixels: null,
+    artworkWidth: 0,
+    artworkHeight: 0,
+    artworkTime: 0,
+    artworkMotion: false,
+    texture: null,
+    textureGeneration: 0,
   };
   states.set(canvas, state);
   configure(state);
@@ -866,6 +1057,7 @@ function pause(): void {
   last = 0;
   mutationObserver.disconnect();
   for (const state of states.values()) state.observer.disconnect();
+  for (const heatmap of heatmaps.values()) heatmap.pause();
 }
 
 function resume(): void {
@@ -881,6 +1073,7 @@ function resume(): void {
     state.observer.observe(state.canvas);
     resize(state);
   }
+  for (const heatmap of heatmaps.values()) heatmap.resume();
   refresh();
 }
 
@@ -892,7 +1085,6 @@ function initialize(): void {
   const personal = document.documentElement.hasAttribute("data-device-preferences") && !canonical;
   const motion = personal ? getPreferences().motion : "System";
   reduced = canonical || motion === "Still" || (motion === "System" && preference.matches);
-  gpu = createGraphics();
   pulse = document.createElement("canvas");
   pulse.width = 20;
   pulse.height = 20;
@@ -924,11 +1116,22 @@ function initialize(): void {
     for (const record of records) {
       if (record.type === "attributes" && record.target instanceof HTMLCanvasElement) {
         layoutChanged = true;
+        const heatmap = heatmaps.get(record.target);
+        if (heatmap) {
+          if (record.target.dataset.zc === "heat") {
+            heatmap.refresh();
+            continue;
+          }
+          heatmap.dispose();
+          heatmaps.delete(record.target);
+        }
         const state = states.get(record.target);
         if (state && record.target.dataset.zc && record.target.dataset.zc in modes)
           configure(state);
-        else if (state) unmount(state);
-        else scan(record.target);
+        else if (state) {
+          unmount(state);
+          scan(record.target);
+        } else scan(record.target);
       } else {
         for (const node of record.addedNodes) {
           if (!(node instanceof Element)) continue;
@@ -942,6 +1145,12 @@ function initialize(): void {
     }
     if (!layoutChanged) return;
     for (const state of states.values()) if (!state.canvas.isConnected) unmount(state);
+    for (const [canvas, heatmap] of heatmaps) {
+      if (!canvas.isConnected) {
+        heatmap.dispose();
+        heatmaps.delete(canvas);
+      }
+    }
     checkVisibility = true;
     schedule();
   });
@@ -963,6 +1172,7 @@ function initialize(): void {
   );
   window.addEventListener("resize", () => {
     for (const state of states.values()) resize(state);
+    for (const heatmap of heatmaps.values()) heatmap.refresh();
     checkVisibility = true;
     schedule();
   });
@@ -987,9 +1197,10 @@ export function scan(root?: ParentNode): void {
   if (typeof document === "undefined") return;
   initialize();
   const scope = root || document;
-  if (scope instanceof HTMLCanvasElement && !states.has(scope)) mount(scope);
+  if (scope instanceof HTMLCanvasElement && !states.has(scope) && !heatmaps.has(scope))
+    mount(scope);
   for (const canvas of scope.querySelectorAll<HTMLCanvasElement>("canvas[data-zc]"))
-    if (!states.has(canvas)) mount(canvas);
+    if (!states.has(canvas) && !heatmaps.has(canvas)) mount(canvas);
   checkVisibility = true;
   schedule();
 }
@@ -1001,5 +1212,8 @@ export function refresh(root?: ParentNode): void {
   for (const state of states.values())
     if (!root || root === state.canvas || (root instanceof Node && root.contains(state.canvas)))
       configure(state);
+  for (const [canvas, heatmap] of heatmaps)
+    if (!root || root === canvas || (root instanceof Node && root.contains(canvas)))
+      heatmap.refresh();
   schedule();
 }

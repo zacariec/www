@@ -116,7 +116,7 @@ export default defineConfig([
       "no-plusplus": "off",
       "no-continue": "off",
       "consistent-return": "off",
-      "import-x/no-unresolved": ["error", { ignore: ["^cloudflare:", "^astro:"] }],
+      "import-x/no-unresolved": ["error", { ignore: ["^cloudflare:", "^astro:", "^bun:"] }],
       "react/jsx-fragments": ["error", "syntax"],
       "react/jsx-no-useless-fragment": "off",
       "react/function-component-definition": "off",
@@ -126,7 +126,7 @@ export default defineConfig([
   },
   {
     // DOM and renderer state are intentionally updated in place.
-    files: ["src/scripts/*.ts", "src/lib/zc-gl.ts"],
+    files: ["src/scripts/*.ts", "src/lib/zc-gl.ts", "src/lib/zc-heat.ts"],
     rules: {
       "no-param-reassign": ["error", { props: false }],
       "@typescript-eslint/no-use-before-define": ["error", { functions: false }],
@@ -134,7 +134,7 @@ export default defineConfig([
   },
   {
     // Deterministic integer PRNG, Bayer indexing, and PNG CRC require bitwise arithmetic.
-    files: ["src/lib/zc-gl.ts", "scripts/build-cursors.ts"],
+    files: ["src/lib/zc-gl.ts", "src/lib/zc-heat.ts", "scripts/build-cursors.ts"],
     rules: { "no-bitwise": "off" },
   },
 ]);

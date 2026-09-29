@@ -1,13 +1,17 @@
 ---
+import { formatDistanceToNow } from "date-fns";
 import Window from "./Window.astro";
 import Chip from "./Chip.astro";
 import { postToneStyle } from "@/lib/session";
 import type { SanitySessionTape, SanityTimelineEntry } from "@/lib/sanity/types";
+import type { GitHubPush } from "@/lib/github";
 type Props =
-  | { session: SanitySessionTape; tone: string; thought?: never }
-  | { thought: SanityTimelineEntry; session?: never; tone?: never };
-const { session, thought, tone } = Astro.props;
-const date = (session ?? thought).date.slice(0, 10);
+  | { session: SanitySessionTape; tone: string; thought?: never; push?: never }
+  | { thought: SanityTimelineEntry; session?: never; tone?: never; push?: never }
+  | { push: GitHubPush; session?: never; thought?: never; tone?: never };
+const { session, thought, push, tone } = Astro.props;
+const activity = session ?? thought ?? push;
+const date = activity.date.slice(0, 10);
 const source =
   thought?.type === "linkedin"
     ? "LinkedIn"
@@ -18,20 +22,23 @@ const source =
         : "Thought";
 ---
 
-<article class="timeline-item" id={thought ? thought._id : undefined} style={session ? postToneStyle(session.number, tone, Boolean(session.toneOverride)) : undefined}>
+<article
+  class="timeline-item"
+  id={thought ? thought._id : undefined}
+  style={session ? postToneStyle(session.number, tone, Boolean(session.toneOverride)) : undefined}
+>
   <div class="item-meta mono">
-    <time datetime={(session ?? thought).date}>{date}</time>
+    <time datetime={activity.date}>{date}</time>
     {session ? (
       <Chip kind="id" number={session.number} tone={tone} />
+    ) : push ? (
+      <span class="push-label">push</span>
     ) : (
       <span class="thought-label">[thought]</span>
     )}
   </div>
   {session ? (
-    <a
-      class="timeline-session"
-      href={`/sessions/${session.slug}`}
-    >
+    <a class="timeline-session" href={`/sessions/${session.slug}`}>
       <div>
         <h2>{session.title}</h2>
         <p>
@@ -40,7 +47,46 @@ const source =
       </div>
       <Chip minutes={session.readTime} />
     </a>
-  ) : (
+  ) : push ? (
+    <Window title={`${push.repo} · ${push.branch}`}>
+      {!push.comparisonUnavailable &&
+        typeof push.additions === "number" &&
+        typeof push.deletions === "number" && (
+          <span
+            class="push-changes"
+            slot="right"
+            aria-label={`${push.additions} additions, ${push.deletions} deletions`}
+          >
+            <span class="push-additions">+{push.additions.toLocaleString("en-GB")}</span>{" "}
+            <span class="push-deletions">−{push.deletions.toLocaleString("en-GB")}</span>
+          </span>
+        )}
+      {push.comparisonUnavailable ? (
+        <p class="push-unavailable mono">Commit details unavailable.</p>
+      ) : (
+        <ul class="push-commits mono">
+          {push.commits.map((commit) => (
+            <li>
+              <code>{commit.sha.slice(0, 7)}</code>
+              <span>{commit.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="push-footer mono">
+        <span>
+          {!push.comparisonUnavailable &&
+            `${push.commits.length} ${push.commits.length === 1 ? "commit" : "commits"} · `}
+          {formatDistanceToNow(new Date(push.date), { addSuffix: true })}
+        </span>
+        {!push.comparisonUnavailable && (
+          <a href={push.compareUrl} target="_blank" rel="noopener noreferrer">
+            compare ↗
+          </a>
+        )}
+      </div>
+    </Window>
+  ) : thought ? (
     <Window title={source}>
       <span class="mono" slot="right">
         ♥ {thought.likes} · {thought.comments} replies
@@ -54,7 +100,7 @@ const source =
         )}
       </div>
     </Window>
-  )}
+  ) : null}
 </article>
 <style>
   .timeline-item {
@@ -75,6 +121,59 @@ const source =
   .thought-label {
     color: var(--moss);
   }
+  .push-label {
+    padding: 2px 7px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .push-additions {
+    color: var(--moss);
+  }
+  .push-deletions {
+    color: var(--rose);
+  }
+  .push-unavailable {
+    padding: 20px 16px;
+    color: var(--mute);
+  }
+  .timeline-item :global(.zc-window__bar > span) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .push-commits {
+    list-style: none;
+    margin: 0;
+    padding: 4px 16px;
+    font-size: 12px;
+  }
+  .push-commits li {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .push-commits li + li {
+    border-top: 1px dashed var(--rule);
+  }
+  .push-commits code {
+    color: var(--mute);
+  }
+  .push-commits li > span {
+    overflow-wrap: anywhere;
+  }
+  .push-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    border-top: 1px solid var(--ink);
+    color: var(--mute);
+  }
+  .push-footer a {
+    flex-shrink: 0;
+    color: var(--ink);
+  }
   .timeline-session {
     display: flex;
     align-items: center;
@@ -88,7 +187,8 @@ const source =
       transform 150ms,
       box-shadow 150ms;
   }
-  .timeline-session:hover {
+  .timeline-session:hover,
+  .timeline-session:focus-visible {
     transform: translate(-3px, -3px);
     box-shadow: 5px 5px 0 var(--ink);
   }
@@ -122,6 +222,10 @@ const source =
     color: var(--navy);
   }
   @media (max-width: 924px) {
+    .push-commits {
+      padding-inline: 12px;
+      font-size: 11px;
+    }
     .timeline-item {
       grid-template-columns: 130px minmax(0, 1fr);
       gap: 20px;
@@ -155,6 +259,19 @@ const source =
     .thought-copy p {
       font-size: 17px;
     }
+    .push-footer {
+      padding: 0 12px;
+      font-size: 10px;
+    }
+    .push-footer a {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+    }
+  }
+  :global(html[data-pref-motion="still"]) .timeline-session {
+    transition: none;
+    transform: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .timeline-session {

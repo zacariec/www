@@ -1,0 +1,241 @@
+---
+import { navigation } from "@/lib/navigation";
+import { sessionId } from "@/lib/session";
+import type { SanitySessionTape } from "@/lib/sanity/types";
+interface Props {
+  sessions: SanitySessionTape[];
+}
+const { sessions } = Astro.props;
+const commands = [
+  { action: "shuffle", title: "Shuffle the thoughts board", hint: "home" },
+  { action: "motion", title: "Stop all motion", hint: "preferences" },
+  { action: "pushes", title: "Show pushes", hint: "timeline" },
+  { action: "terminal", title: "Open a terminal", hint: "zsh" },
+];
+---
+
+<dialog class="find-palette mono" data-find-palette aria-labelledby="find-title" aria-modal="true">
+  <div class="find-title">
+    <span id="find-title">Index Tool 1.1 · find</span>
+    <span class="find-muted" aria-hidden="true">
+      ⌘K or /
+    </span>
+  </div>
+  <label class="find-field">
+    <span aria-hidden="true">›</span>
+    <input
+      data-find-input
+      type="text"
+      role="combobox"
+      aria-label="Find pages, sessions and commands"
+      aria-autocomplete="list"
+      aria-controls="find-results"
+      aria-expanded="false"
+      aria-describedby="find-help"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </label>
+  <div id="find-results" class="find-results" role="listbox" aria-label="Results">
+    <div role="group" aria-labelledby="find-pages" data-find-group>
+      <div id="find-pages" class="find-group-title" role="presentation">
+        PAGES
+      </div>
+      {navigation.map((item) => (
+        <a
+          id={`find-page-${item.number}`}
+          class="find-row"
+          role="option"
+          aria-selected="false"
+          tabindex="-1"
+          href={item.href}
+          data-find-row
+          data-find-search={`${item.number} ${item.label} ${item.href} pages`.toLowerCase()}
+        >
+          <span class="find-row-id">{item.number}</span>
+          <span class="find-row-title">{item.label}</span>
+          <span class="find-row-hint">{item.href}</span>
+        </a>
+      ))}
+    </div>
+    <div role="group" aria-labelledby="find-sessions" data-find-group>
+      <div id="find-sessions" class="find-group-title" role="presentation">
+        SESSIONS
+      </div>
+      {sessions.map((session) => {
+        const id = sessionId(session.number);
+        const hint = `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
+        return (
+          <a
+            id={`find-session-${session.number}`}
+            class="find-row"
+            role="option"
+            aria-selected="false"
+            tabindex="-1"
+            href={`/sessions/${session.slug}`}
+            data-find-row
+            data-find-search={`${id} ${session.title} ${hint} sessions`.toLowerCase()}
+          >
+            <span class="find-row-id">{id}</span>
+            <span class="find-row-title">{session.title}</span>
+            <span class="find-row-hint">{hint}</span>
+          </a>
+        );
+      })}
+    </div>
+    <div role="group" aria-labelledby="find-commands" data-find-group>
+      <div id="find-commands" class="find-group-title" role="presentation">
+        COMMANDS
+      </div>
+      {commands.map((command) => (
+        <button
+          id={`find-command-${command.action}`}
+          class="find-row"
+          type="button"
+          role="option"
+          aria-selected="false"
+          tabindex="-1"
+          data-find-row
+          data-find-command={command.action}
+          data-find-search={`> ${command.title} ${command.hint} commands`.toLowerCase()}
+        >
+          <span class="find-row-id">&gt;</span>
+          <span class="find-row-title">{command.title}</span>
+          <span class="find-row-hint">{command.hint}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+  <p class="find-empty" data-find-empty hidden>
+    No match. Try a page, session title or command.
+  </p>
+  <div class="find-footer">
+    <span id="find-help">↑↓ move · ↵ open · esc close</span>
+    <span data-find-count role="status" aria-live="polite" aria-atomic="true"></span>
+  </div>
+</dialog>
+<style>
+  .find-palette {
+    position: fixed;
+    inset: 14vh auto auto 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0;
+    width: min(600px, calc(100vw - 48px));
+    max-height: 78dvh;
+    overflow: hidden;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 10px 10px 0 var(--ink);
+    font-size: 12px;
+  }
+  .find-palette::backdrop {
+    background: color-mix(in srgb, var(--ink) 28%, transparent);
+  }
+  .find-title,
+  .find-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+  .find-title {
+    border-bottom: 1px solid var(--ink);
+  }
+  .find-muted,
+  .find-footer {
+    color: var(--mute);
+  }
+  .find-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .find-field > span {
+    color: var(--rose);
+    font-size: 16px;
+  }
+  .find-field:focus-within {
+    box-shadow: inset 3px 0 0 var(--rose);
+  }
+  .find-field input {
+    flex: 1;
+    min-width: 0;
+    height: 54px;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font: 22px var(--font-host-grotesk);
+    letter-spacing: -0.02em;
+  }
+  .find-results {
+    max-height: min(380px, 50dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .find-group-title {
+    padding: 12px 14px 6px;
+    color: var(--mute);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .find-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+  }
+  .find-row[aria-selected="true"] {
+    background: var(--pink);
+  }
+  .find-row-id,
+  .find-row-hint {
+    color: var(--mute);
+  }
+  .find-row[aria-selected="true"] .find-row-id,
+  .find-row[aria-selected="true"] .find-row-hint {
+    color: var(--ink);
+  }
+  .find-row-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 16px var(--font-host-grotesk);
+    letter-spacing: -0.01em;
+  }
+  .find-empty {
+    padding: 24px 14px;
+    margin: 0;
+    color: var(--mute);
+  }
+  .find-footer {
+    border-top: 1px solid var(--ink);
+    font-size: 11px;
+  }
+  [hidden] {
+    display: none;
+  }
+  @media (max-width: 720px) {
+    .find-palette {
+      display: none;
+    }
+  }
+</style>
+<script>
+  import "@/scripts/find-palette";
+</script>

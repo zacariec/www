@@ -1,0 +1,88 @@
+---
+import Cover from "./Cover.astro";
+import { playedAgo, trackProgress, trackTime } from "@/lib/now-playing-display";
+import type { NowPlayingData } from "@/lib/schemas/spotify";
+import "@/styles/now-playing.css";
+
+interface Props {
+  state: NowPlayingData | null;
+  toneStyle?: string;
+}
+const { state, toneStyle } = Astro.props;
+const status = state?.playing ? "Now playing" : "Last played";
+const detail = state
+  ? `${state.track} — ${state.artist}${state.playing ? "" : ` · ${playedAgo(state.playedAt)}`}`
+  : "";
+---
+
+<div
+  class="np-bar"
+  data-now-playing
+  data-state={JSON.stringify(state)}
+  data-playing={String(state?.playing ?? false)}
+  style={toneStyle}
+  hidden={!state}
+>
+  <a class="np-bar__anchor" href="#now-playing" aria-label={`${status} · ${detail}`} data-np-anchor>
+    <span class="np-bars" aria-hidden="true">
+      {[0, 1, 2, 3].map(() => (
+        <i></i>
+      ))}
+    </span>
+    <span class="np-bar__reveal">
+      <span>
+        <span class="np-muted" data-np-status>
+          {status}
+        </span>
+        <span data-np-detail>{detail}</span>
+      </span>
+    </span>
+  </a>
+  <button
+    class="np-bar__toggle"
+    type="button"
+    aria-label={`${status} · ${detail}`}
+    aria-controls="now-playing-strip"
+    aria-expanded="false"
+    data-np-toggle
+  >
+    <span class="np-bars" aria-hidden="true">
+      {[0, 1, 2, 3].map(() => (
+        <i></i>
+      ))}
+    </span>
+  </button>
+  <div class="np-strip" id="now-playing-strip" hidden data-np-strip>
+    <a
+      class="np-strip__content"
+      href={state?.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-np-link
+    >
+      <Cover
+        seed={1}
+        tone="--post-tone"
+        imageUrl={state?.artUrl ?? ""}
+        animated={state?.playing ?? false}
+        class="np-strip__art"
+      />
+      <span class="np-strip__copy">
+        <span class="np-muted np-strip__status">
+          <span data-np-status>{status}</span> · spotify ↗
+        </span>
+        <span class="np-ellipsis" data-np-detail>
+          {detail}
+        </span>
+      </span>
+      <span class="np-strip__time np-muted" data-np-playing hidden={!state?.playing}>
+        <span data-np-position>{trackTime(state ? trackProgress(state) : 0)}</span> /{" "}
+        <span data-np-duration>{trackTime(state?.durationMs ?? 0)}</span>
+      </span>
+    </a>
+  </div>
+</div>
+
+<script>
+  import "@/scripts/now-playing";
+</script>

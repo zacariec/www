@@ -3,12 +3,26 @@ import Window from "./Window.astro";
 import Logo from "./Logo.astro";
 import Blot from "./Blot.astro";
 import SocialFlip from "./SocialFlip.astro";
+import NowPlayingCard from "./NowPlayingCard.astro";
+import { resolveTone, postToneStyle } from "@/lib/session";
+import type { NowPlayingData } from "@/lib/schemas/spotify";
 import { NewsletterForm } from "@/components/molecules/newsletter-form";
-import type { SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
   config: SanitySiteConfig;
+  latest?: SanitySessionTape;
+  nowPlaying?: NowPlayingData | null;
 }
-const { config } = Astro.props;
+const { config, latest, nowPlaying = null } = Astro.props;
+const params = new URLSearchParams(Astro.url.search);
+params.delete("tone");
+const toneStyle = latest
+  ? postToneStyle(
+      latest.number,
+      resolveTone(latest.number, config.toneShift, params, latest.toneOverride),
+      Boolean(latest.toneOverride),
+    )
+  : undefined;
 const nl = config.newsletter ?? {};
 const copy = {
   description: nl.footerDescription,
@@ -35,18 +49,21 @@ const copy = {
         <br />
         reading.
       </h2>
-      <div class="updates">
-        <Window title="Updates 1.0">
-          <span slot="right" aria-hidden="true">
-            ⩆ ∵
-          </span>
-          <div class="updates-body">
-            <NewsletterForm client:visible copy={copy} />
-            <p class="mono rss">
-              or <a href="/rss.xml">rss</a> · <code>$ curl zcarr.dev/rss.xml</code>
-            </p>
-          </div>
-        </Window>
+      <div class="footer-windows">
+        <div class="updates" id="updates">
+          <Window title="Updates 1.0">
+            <span slot="right" aria-hidden="true">
+              ⩆ ∵
+            </span>
+            <div class="updates-body">
+              <NewsletterForm client:visible copy={copy} />
+              <p class="mono rss">
+                or <a href="/rss.xml">rss</a> · <code>$ curl zcarr.dev/rss.xml</code>
+              </p>
+            </div>
+          </Window>
+        </div>
+        <NowPlayingCard state={nowPlaying} toneStyle={toneStyle} />
       </div>
     </div>
     <div class="footer-grid">
@@ -59,7 +76,13 @@ const copy = {
           <br />© {new Date().getFullYear()} Zacarie Carr
         </p>
       </div>
-      <div class="footer-space" aria-hidden="true"></div>
+      <div class="footer-colophon mono">
+        <p>Astro · Sanity · Host Grotesk + Plex Mono · 4×4 Bayer, 3px</p>
+        <a href="/preferences">Preferences ↗</a>
+        <a class="lost-link" href="/untitled-draft">
+          /untitled-draft
+        </a>
+      </div>
       <p class="mono encoded">
         <span>[b.64]</span>
         <br />
@@ -70,6 +93,12 @@ const copy = {
         <SocialFlip socials={config.socials} large />
         <a class="mono back-top" href="#top">
           Back to top ↑
+        </a>
+        <a class="mono mobile-footer-link" href="/preferences">
+          Preferences ↗
+        </a>
+        <a class="mono mobile-footer-link lost-link" href="/untitled-draft">
+          /untitled-draft
         </a>
       </div>
     </div>
@@ -107,10 +136,15 @@ const copy = {
     font-weight: 500;
     margin: 0;
   }
+  .footer-windows {
+    display: grid;
+    gap: 28px;
+    min-width: 0;
+  }
   .updates {
     --mute: var(--paper-mute);
     --rule: var(--paper-rule);
-    margin-bottom: 4px;
+    scroll-margin-top: 24px;
   }
   .updates :global(.zc-window) {
     box-shadow: 6px 6px 0 var(--pink);
@@ -139,6 +173,26 @@ const copy = {
     gap: 24px;
     border-top: 1px solid var(--rule);
     padding-top: 36px;
+  }
+  .footer-colophon {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer-colophon p {
+    margin: 0 0 12px;
+    background: var(--ink);
+  }
+  .footer-colophon a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .lost-link {
+    color: var(--mute);
+  }
+  .mobile-footer-link {
+    display: none;
   }
   .footer-grid p,
   .footer-socials > span {
@@ -174,7 +228,7 @@ const copy = {
       gap: 30px;
     }
     .footer-grid {
-      grid-template-columns: 1fr 0.3fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
     }
   }
   @media (max-width: 720px) {
@@ -197,8 +251,23 @@ const copy = {
       grid-template-columns: 1fr 1fr;
       gap: 32px 20px;
     }
-    .footer-space {
+    .footer-colophon {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+    .footer-colophon p {
+      margin: 0;
+    }
+    .footer-colophon a {
       display: none;
+    }
+    .mobile-footer-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      grid-column: 1 / -1;
+      width: fit-content;
+      background: var(--ink);
     }
     .encoded {
       font-size: 9px;

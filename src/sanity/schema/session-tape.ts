@@ -1,6 +1,7 @@
 import { defineField, defineType } from "sanity";
-import { TONES } from "../../lib/session";
+import { canonicalSessionId, SESSION_TAGS, SPOTIFY_TRACK_URL, TONES } from "../../lib/session";
 import { NumberedBodyInput, SessionBlock } from "../studio-components";
+import { WrittenToInput } from "../written-to-input";
 
 export const sessionTapeType = defineType({
   name: "sessionTape",
@@ -91,6 +92,101 @@ export const sessionTapeType = defineType({
       title: "Excerpt",
       type: "text",
       rows: 3,
+    }),
+    defineField({
+      name: "tags",
+      title: "Tags",
+      type: "array",
+      description:
+        "Optional. Related sessions use these shared tags; leave unassigned until reviewed.",
+      of: [{ type: "string" }],
+      options: { list: SESSION_TAGS.map((tag) => ({ title: tag, value: tag })) },
+      validation: (rule) =>
+        rule
+          .unique()
+          .custom((tags) =>
+            !tags ||
+            tags.every((tag) => SESSION_TAGS.includes(tag as (typeof SESSION_TAGS)[number]))
+              ? true
+              : "Choose only code, systems, ai, work or design.",
+          ),
+    }),
+    defineField({
+      name: "related",
+      title: "Related sessions",
+      type: "array",
+      description:
+        "Up to three hand-picked sessions or tapes. The current session and its neighbours are excluded on the site.",
+      of: [
+        {
+          type: "reference",
+          to: [{ type: "sessionTape" }],
+          options: {
+            filter: ({ document }) => ({
+              filter: "!(_id in $self)",
+              params: {
+                self: [
+                  canonicalSessionId(document._id),
+                  `drafts.${canonicalSessionId(document._id)}`,
+                ],
+              },
+            }),
+          },
+        },
+      ],
+      validation: (rule) =>
+        rule
+          .max(3)
+          .unique()
+          .custom((references, context) => {
+            const self = canonicalSessionId(context.document?._id ?? "");
+            const seen = new Set<string>();
+            for (const reference of references ?? []) {
+              if (!reference || typeof reference !== "object" || !("_ref" in reference))
+                return "Choose a session for each reference.";
+              const id = canonicalSessionId(
+                typeof reference._ref === "string" ? reference._ref : "",
+              );
+              if (!id) return "Choose a session for each reference.";
+              if (id === self) return "A session cannot be related to itself.";
+              if (seen.has(id)) return "Choose each related session only once.";
+              seen.add(id);
+            }
+            return true;
+          }),
+    }),
+    defineField({
+      name: "writtenTo",
+      title: "Written to",
+      type: "object",
+      description:
+        "Optional. Paste a Spotify track URL to resolve its title and artist. Nothing is selected by default.",
+      components: { input: WrittenToInput },
+      fields: [
+        defineField({
+          name: "track",
+          title: "Track",
+          type: "string",
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: "artist",
+          title: "Artist",
+          type: "string",
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: "spotifyUrl",
+          title: "Spotify URL",
+          type: "url",
+          validation: (rule) =>
+            rule
+              .required()
+              .custom((url) =>
+                url && SPOTIFY_TRACK_URL.test(url) ? true : "Enter a Spotify track URL.",
+              ),
+        }),
+      ],
     }),
     defineField({
       name: "content",

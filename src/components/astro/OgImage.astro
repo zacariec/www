@@ -11,7 +11,7 @@ import "@/styles/tokens.css";
 import "@/styles/og-image.css";
 
 interface Props {
-  kind: "default" | "session" | "tape" | "sessions" | "timeline" | "about" | "404";
+  kind: "default" | "session" | "tape" | "sessions" | "timeline" | "404";
   config: SanitySiteConfig;
   sessions: SanitySessionTape[];
   timeline: SanityTimelineEntry[];
@@ -33,9 +33,6 @@ const titleSize = titleLength <= 24 ? 112 : titleLength <= 44 ? 100 : titleLengt
 const dek = session?.subtitle || session?.excerpt;
 const written = session ? formatWritten(session.date) : "";
 const routeLabel = session || kind === "sessions" ? "sessions" : kind;
-const author = config.author.trim().split(/\s+/);
-const authorLast = author.pop() ?? "";
-const authorFirst = author.join(" ");
 const headline = config.headline.filter((line) => line.trim());
 const thought = [...timeline].sort(
   (a, b) => b.date.localeCompare(a.date) || a._id.localeCompare(b._id),
@@ -129,21 +126,19 @@ const entries = [
       {kind === "timeline" && (
         <Lava seed={21} colors="pink,sand,sage,lilac,apricot,paper" class="og-full-canvas" />
       )}
-      {kind === "about" && (
+      {kind === "404" && (
         <>
-          <Blot tone="sand" seed={90} class="og-blot og-about-blot" />
+          <Blot tone="pink" seed={57} class="og-blot og-notfound-blot" />
           <Cortex
             sessions={chronology}
+            highlight={chronology.length}
             ox={0.74}
-            scale={0.9}
-            fade={0.7}
-            fadeBottom={0.4}
+            fade={0.55}
             drift={false}
             class="og-full-canvas"
           />
         </>
       )}
-      {kind === "404" && <Blot tone="pink" seed={57} class="og-blot og-notfound-blot" />}
 
       <header class="og-chrome">
         <div class="og-brand">
@@ -172,8 +167,7 @@ const entries = [
           )}
           {kind === "sessions" && <span>[02] Long-form</span>}
           {kind === "timeline" && <span>[03] Log</span>}
-          {kind === "about" && <span>[04] whoami</span>}
-          {kind === "404" && <span>[??] Not found</span>}
+          {kind === "404" && <span>[404] Not found</span>}
         </div>
       </header>
 
@@ -286,7 +280,7 @@ const entries = [
         <>
           <div class="og-timeline-heading">
             <h1>Timeline.</h1>
-            <p>Sessions and thoughts, in the order they happened.</p>
+            <p>Sessions, thoughts and pushes, in the order they happened.</p>
           </div>
           {thought && (
             <aside class="og-window og-thought">
@@ -318,52 +312,15 @@ const entries = [
         </>
       )}
 
-      {kind === "about" && (
-        <>
-          <div class="og-about-heading">
-            <h1 data-og-fit data-max-lines="3" data-max-height="310" data-min-size="72">
-              {authorFirst && <span>{authorFirst}</span>}
-              <span>{authorLast.replace(/\.$/, "")}.</span>
-            </h1>
-            <p>Code, systems &amp; noise.</p>
-          </div>
-          <aside class="og-window og-glossary">
-            <header class="og-window-bar">
-              <span>[b] glossary</span>
-              <span class="og-muted">
-                <svg
-                  width="14"
-                  height="18"
-                  viewBox="0 0 16 20"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.2"
-                  aria-hidden="true"
-                >
-                  <path d="M4 1v4a4 4 0 0 0 8 0V1M4 10v4a4 4 0 0 0 8 0v-4" />
-                </svg>
-                ∵
-              </span>
-            </header>
-            <dl>
-              <dt>session</dt>
-              <dd>not a blog</dd>
-              <dt>tape</dt>
-              <dd>the long ones</dd>
-              <dt>cortex</dt>
-              <dd>one branch per session</dd>
-              <dt>thought</dt>
-              <dd>short posts from elsewhere</dd>
-            </dl>
-          </aside>
-        </>
-      )}
-
       {kind === "404" && (
         <>
           <div class="og-notfound-heading">
-            <h1>404.</h1>
-            <p>Page not found</p>
+            <h1>
+              Nothing
+              <br />
+              grew here.
+            </h1>
+            <p>The terminal still works.</p>
           </div>
           <div class="og-chips">
             <span>cd /</span>

@@ -79,6 +79,8 @@ export function planMigration(documents: Document[], options: MigrationOptions =
     const remove = (...fields: string[]) => {
       for (const field of fields) if (Object.hasOwn(doc, field)) unset.push(field);
     };
+    // v3 tags, related picks and writtenTo are optional authored data.
+    // Never infer them, seed empty fields, or rewrite their references.
     if (doc._type === "sessionTape") {
       if (doc.kind == null) {
         if (!kinds[id])
@@ -108,6 +110,8 @@ export function planMigration(documents: Document[], options: MigrationOptions =
         z: index >= 0 ? index + 1 : 0,
       });
     } else if (doc._type === "siteConfig") {
+      if (typeof doc.bio === "string" && doc.bio.trim())
+        notices.push(`${doc._id}: authored bio retained in the dataset; no public About consumer.`);
       defaultValue("headlinePreset", "getting-it-out-there");
       defaultValue("readme", siteConfig.readme);
       defaultValue("tickerEnabled", true);

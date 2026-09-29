@@ -1,16 +1,18 @@
 ---
+import GlossaryText from "./GlossaryText.astro";
 interface Props {
   number: string;
   title: string;
   class?: string;
+  glossary?: boolean;
 }
 
-const { number, title, class: className, ...rest } = Astro.props;
+const { number, title, glossary = false, class: className, ...rest } = Astro.props;
 ---
 
 <div {...rest} class:list={["zc-section-head", className]}>
   <span class="zc-section-head__number mono">[{number}]</span>
-  <h2>{title}</h2>
+  <h2>{glossary ? <GlossaryText text={title} /> : title}</h2>
 </div>
 
 <style>

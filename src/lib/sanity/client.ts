@@ -22,6 +22,10 @@ const technicalFields: Record<string, true> = {
   label: true,
   style: true,
   language: true,
+  tags: true,
+  related: true,
+  relatedIds: true,
+  spotifyUrl: true,
 };
 
 export const client = projectId

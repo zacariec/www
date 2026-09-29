@@ -1,3 +1,5 @@
+import { hasBlockingOverlay, isEditingTarget } from "./site";
+
 interface CardPosition {
   x: number;
   y: number;
@@ -211,6 +213,13 @@ function initializeBoard(section: HTMLElement) {
       if (
         mobile.matches ||
         event.target !== card ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        isEditingTarget(event.target) ||
+        hasBlockingOverlay() ||
         !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
       )
         return;
@@ -272,6 +281,13 @@ function initializeBoard(section: HTMLElement) {
   compact.addEventListener("change", layout);
   window.addEventListener("pageshow", layout);
   layout();
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("board") === "shuffle" && !mobile.matches) {
+    shuffle.click();
+    url.searchParams.delete("board");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    section.scrollIntoView({ behavior: "instant", block: "start" });
+  }
 }
 
 for (const section of document.querySelectorAll<HTMLElement>("[data-thought-board]"))

@@ -75,12 +75,6 @@ dd {
   width: 560px !important;
   height: 400px;
 }
-.og-about-blot {
-  left: 520px;
-  top: 40px;
-  width: 600px !important;
-  height: 440px;
-}
 .og-notfound-blot {
   right: -60px;
   top: 60px;
@@ -156,8 +150,7 @@ dd {
   line-height: 0.86;
   letter-spacing: -0.055em;
 }
-.og-default-title > span,
-.og-about-heading h1 > span {
+.og-default-title > span {
   display: block;
 }
 .og-byline {
@@ -421,60 +414,11 @@ dd {
   text-overflow: ellipsis;
 }
 
-.og-about-heading {
-  position: absolute;
-  z-index: 2;
-  left: 56px;
-  top: 150px;
-  width: 650px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.og-about-heading h1 {
-  font-size: 160px;
-  line-height: 0.86;
-  letter-spacing: -0.055em;
-  overflow-wrap: anywhere;
-}
-.og-about-heading p,
 .og-notfound-heading p {
   width: fit-content;
   padding: 2px 10px 4px;
   background: var(--paper);
   font-size: 30px;
-}
-.og-glossary {
-  right: 56px;
-  bottom: 48px;
-  width: 430px;
-}
-.og-glossary dl {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 10px 14px;
-  align-items: baseline;
-  padding: 14px;
-}
-.og-glossary dt {
-  font: 17px var(--font-ibm-plex-mono);
-}
-.og-glossary dt:nth-of-type(1) {
-  color: var(--rose);
-}
-.og-glossary dt:nth-of-type(2) {
-  color: var(--navy);
-}
-.og-glossary dt:nth-of-type(4) {
-  color: var(--moss);
-}
-.og-glossary dd {
-  font-size: 20px;
-}
-
-.og-404 {
-  background: var(--sage);
-  --mute: var(--sage-mute);
 }
 .og-notfound-heading {
   position: absolute;
@@ -486,7 +430,7 @@ dd {
   gap: 20px;
 }
 .og-notfound-heading h1 {
-  font-size: 240px;
+  font-size: 140px;
   line-height: 0.82;
   letter-spacing: -0.06em;
 }

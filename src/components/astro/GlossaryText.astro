@@ -1,0 +1,149 @@
+---
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+const definitions: Record<string, string> = {
+  session:
+    "Me writing, just smashing out my thoughts and how I feel. They're not blogs, they're sessions.",
+  tape: "A long-form session. A full build written up, start to finish.",
+  cortex:
+    "One branch per session, longer sessions grow longer branches, tapes end in a square node.",
+  thought: "Short posts from elsewhere, collected on the timeline.",
+};
+const parts = text.split(/(\b(?:sessions?|tapes?|cortex(?:es)?|cortices|thoughts?)\b)/gi);
+const prefix = `glossary-${crypto.randomUUID()}`;
+function termFor(part: string) {
+  const word = part.toLowerCase();
+  return word.startsWith("cort") ? "cortex" : word.replace(/s$/, "");
+}
+---
+
+{parts.map((part, index) =>
+  index % 2 === 0 ? (
+    part
+  ) : (
+    <span class="glossary-term" data-glossary>
+      <button type="button" class="glossary-trigger" aria-describedby={`${prefix}-${index}`}>
+        {part}
+      </button>
+      <span class="glossary-tip" role="tooltip" id={`${prefix}-${index}`} hidden>
+        <span class="glossary-label mono">{termFor(part)}</span>
+        <span class="glossary-definition">{definitions[termFor(part)]}</span>
+      </span>
+    </span>
+  ),
+)}
+<style>
+  .glossary-term {
+    display: inline;
+  }
+  .glossary-trigger {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-align: inherit;
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.15em;
+    cursor: help;
+  }
+  .glossary-tip {
+    position: fixed;
+    z-index: 80;
+    width: min(300px, calc(100vw - 32px));
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    text-align: left;
+    text-transform: none;
+    font-family: var(--font-host-grotesk);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: normal;
+    white-space: normal;
+  }
+  .glossary-tip[hidden] {
+    display: none;
+  }
+  .glossary-label,
+  .glossary-definition {
+    display: block;
+    padding: 10px 12px;
+  }
+  .glossary-label {
+    border-bottom: 1px solid var(--ink);
+    font-size: 11px;
+  }
+</style>
+<script>
+  let active: HTMLElement | null = null;
+  const close = () => {
+    active?.querySelector<HTMLElement>("[role=tooltip]")?.setAttribute("hidden", "");
+    active = null;
+  };
+  const position = () => {
+    const trigger = active?.querySelector<HTMLButtonElement>("button");
+    const tooltip = active?.querySelector<HTMLElement>("[role=tooltip]");
+    if (!trigger || !tooltip) return;
+    const rect = trigger.getBoundingClientRect();
+    const width = tooltip.offsetWidth;
+    const height = tooltip.offsetHeight;
+    const left = Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));
+    const below = rect.bottom + 8;
+    const top =
+      below + height <= window.innerHeight - 16 ? below : Math.max(16, rect.top - height - 8);
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  };
+  for (const term of document.querySelectorAll<HTMLElement>("[data-glossary]")) {
+    const trigger = term.querySelector<HTMLButtonElement>("button");
+    const tooltip = term.querySelector<HTMLElement>("[role=tooltip]");
+    if (!trigger || !tooltip) continue;
+    let leaveTimer: number | undefined;
+    const open = () => {
+      clearTimeout(leaveTimer);
+      if (active !== term) close();
+      active = term;
+      tooltip.hidden = false;
+      position();
+    };
+    term.addEventListener("pointerenter", open);
+    term.addEventListener("pointerleave", () => {
+      // Leave a small bridge to the paper tooltip so it remains hoverable.
+      leaveTimer = window.setTimeout(() => {
+        if (active === term && !term.matches(":focus-within, :hover")) close();
+      }, 120);
+    });
+    trigger.addEventListener("focus", open);
+    trigger.addEventListener("click", open);
+    term.addEventListener("focusout", (event) => {
+      if (
+        active === term &&
+        (!(event.relatedTarget instanceof Node) || !term.contains(event.relatedTarget))
+      )
+        close();
+    });
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && active) {
+      event.preventDefault();
+      close();
+    }
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (active && event.target instanceof Node && !active.contains(event.target)) close();
+  });
+  window.addEventListener("resize", position);
+  window.addEventListener("scroll", position, { passive: true });
+  window.addEventListener("pagehide", close);
+</script>

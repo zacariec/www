@@ -75,6 +75,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Redirect at runtime: generated asset rules append /index.html to dynamic
   // destinations, but sessions are SSR routes rather than static HTML files.
   const { pathname, search } = context.url;
+  if (pathname === "/about" || pathname === "/about/") {
+    return context.redirect(`/${search}`, 301);
+  }
   if (pathname === "/blog" || pathname.startsWith("/blog/")) {
     return context.redirect(`/sessions${pathname.slice("/blog".length)}${search}`, 301);
   }

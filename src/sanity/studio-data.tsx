@@ -23,6 +23,9 @@ export type StudioSession = {
   coverSeed?: number;
   readTimeOverride?: number;
   content?: StudioBlock[];
+  tags?: string[];
+  relatedIds?: string[];
+  writtenTo?: SanitySessionTape["writtenTo"];
 };
 export type BoardPosition = { visible: boolean; x: number; y: number; rotation: number; z: number };
 export type StudioThought = {
@@ -49,7 +52,7 @@ type StudioData = StudioSnapshot & {
   refresh: () => Promise<void>;
 };
 export const STUDIO_DATA_QUERY = `{
-  "sessions": *[_type == "sessionTape"]{_id,_rev,title,slug,subtitle,excerpt,publishedAt,kind,toneOverride,coverSeed,readTimeOverride,content},
+  "sessions": *[_type == "sessionTape"]{_id,_rev,title,slug,subtitle,excerpt,publishedAt,kind,toneOverride,coverSeed,readTimeOverride,content,tags,"relatedIds":coalesce(related[]._ref,[]),writtenTo{track,artist,spotifyUrl}},
   "thoughts": *[_type == "timelineEntry"]{_id,_rev,text,"date":coalesce(publishedAt,""),type,board},
   "comments": *[_type == "comment" && !(_id in path("drafts.**"))]{_id,_rev,"session":session._ref,anchorIndex,"parent":parent._ref,body,author,status,likes,createdAt},
   "config": *[_type == "siteConfig"] | order(_id desc)[0]{_id,toneShift,authorSanityId}

@@ -1,5 +1,11 @@
 /// <reference types="astro/client" />
 
+declare namespace App {
+  interface Locals {
+    notFoundPath?: string;
+  }
+}
+
 declare namespace Cloudflare {
   interface Env {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Keep the project environment ambient without importing Worker DOM globals.

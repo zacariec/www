@@ -2,7 +2,7 @@ export const navItems = [
   { href: "/", label: "Index" },
   { href: "/sessions", label: "Sessions" },
   { href: "/timeline", label: "Timeline" },
-  { href: "/about", label: "About" },
+  { href: "/preferences", label: "Preferences" },
 ] as const;
 
 export const HEADLINE_PRESETS = {

@@ -11,7 +11,7 @@ const { entries } = Astro.props;
 const visible = entries.filter((entry) => entry.board?.visible);
 ---
 
-<section class="thoughts-section" data-thought-board aria-label="Recent thoughts">
+<section id="thoughts" class="thoughts-section" data-thought-board aria-label="Recent thoughts">
   <Lava
     class="thoughts-section__lava"
     colors="--pink,--sand,--sage,--lilac,--blue,--apricot"
@@ -19,7 +19,7 @@ const visible = entries.filter((entry) => entry.board?.visible);
   />
   <div class="thoughts-section__inner">
     <header class="thoughts-section__heading">
-      <SectionHead number="03" title="Recent thoughts" />
+      <SectionHead number="04" title="Recent thoughts" glossary />
       <div class="thoughts-section__controls">
         <span>Drag them around ✥</span>
         <button type="button" data-board-shuffle>

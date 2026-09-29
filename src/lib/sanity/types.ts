@@ -23,6 +23,12 @@ export interface SanityImageBlock extends TypedObject {
 
 export type SanityContentNode = SanityTextBlock | SanityCodeBlock | SanityImageBlock;
 
+export interface WrittenTo {
+  track: string;
+  artist: string;
+  spotifyUrl: string;
+}
+
 export interface SanitySessionTape {
   _id: string;
   title: string;
@@ -42,6 +48,9 @@ export interface SanitySessionTape {
   excerpt: string;
   content: SanityContentNode[];
   sideNote?: string;
+  tags: string[];
+  relatedIds: string[];
+  writtenTo?: WrittenTo;
   featuredImage?: { asset: { _ref: string }; url?: string; alt?: string };
   comments: SanityComment[];
   commentCount: number;
@@ -87,7 +96,6 @@ export interface SanitySiteConfig {
   socials: { label: string; url: string }[];
   toneShift: number;
   displayVersion: string;
-  bio?: string;
   moderationDefault: "approved" | "pending";
   authorSanityId?: string;
   newsletter?: SanityNewsletterCopy;

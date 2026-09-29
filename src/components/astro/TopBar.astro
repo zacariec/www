@@ -1,60 +1,92 @@
 ---
 import Logo from "./Logo.astro";
 import SocialFlip from "./SocialFlip.astro";
+import NowPlayingBar from "./NowPlayingBar.astro";
 import { resolveTone, postToneStyle, sessionId, formatWritten } from "@/lib/session";
 import { publicPathname } from "@/lib/navigation";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import type { NowPlayingData } from "@/lib/schemas/spotify";
 interface Props {
   config: SanitySiteConfig;
   latest?: SanitySessionTape;
+  nowPlaying?: NowPlayingData | null;
 }
-const { config, latest } = Astro.props;
+const { config, latest, nowPlaying = null } = Astro.props;
 const params = new URLSearchParams(Astro.url.search);
 params.delete("tone");
 const tone = latest
   ? resolveTone(latest.number, config.toneShift, params, latest.toneOverride)
   : "pink";
+const toneStyle = latest
+  ? postToneStyle(latest.number, tone, Boolean(latest.toneOverride))
+  : undefined;
+const now = new Date();
+const timezone = config.timezone ?? "Australia/Sydney";
 ---
 
 <header class="top-bar zc-container mono">
-  <a href="/" class="site-mark" aria-label="zcarr.dev — Index">
-    <Logo size={25} />
-    <span>zcarr.dev / {config.displayVersion}</span>
+  <a
+    href="/"
+    class="site-mark header-reveal"
+    aria-label={`zcarr.dev / ${config.displayVersion} — Index`}
+  >
+    <Logo size={18} />
+    <span class="reveal mark-label">zcarr.dev / {config.displayVersion}</span>
   </a>
-  {config.tickerEnabled && latest && (
-    <a class="latest-ticker" href={`/sessions/${latest.slug}`} style={postToneStyle(latest.number, tone, Boolean(latest.toneOverride))}>
-      <span class="ticker-square" style="--ticker-tone:var(--post-tone)" aria-hidden="true"></span>
-      <span>
-        Latest {sessionId(latest.number)} · {latest.title}
-      </span>
-      <time datetime={latest.date}>{formatWritten(latest.date)} →</time>
-    </a>
-  )}
+  <span class="mobile-path">{publicPathname(Astro.url.pathname)}</span>
+  <div class="latest-slot">
+    {config.tickerEnabled && latest && (
+      <a
+        class="latest-ticker header-reveal"
+        href={`/sessions/${latest.slug}`}
+        style={toneStyle}
+        aria-label={`Latest ${sessionId(latest.number)} · ${latest.title} · ${formatWritten(latest.date)}`}
+      >
+        <span class="ticker-square" aria-hidden="true"></span>
+        <span>Latest</span>
+        <span class="reveal latest-detail">
+          <span>
+            {sessionId(latest.number)} · {latest.title}
+          </span>
+          <time datetime={latest.date}>{formatWritten(latest.date)} →</time>
+        </span>
+      </a>
+    )}
+  </div>
+  <NowPlayingBar state={nowPlaying} toneStyle={toneStyle} />
   <div class="top-elsewhere">
     <span class="elsewhere-label">elsewhere</span>
     <SocialFlip socials={config.socials} />
-    <time
-      data-site-clock
-      data-timezone={config.timezone ?? "Australia/Sydney"}
-      datetime={new Date().toISOString()}
-    >
-      {new Date().toLocaleDateString("en-AU", {
-        timeZone: config.timezone ?? "Australia/Sydney",
-        year: "numeric",
-        month: "short",
+  </div>
+  <div
+    class="site-clock header-reveal"
+    tabindex="0"
+    aria-label={`Current time in ${timezone}`}
+    data-clock-zone={timezone}
+  >
+    <span class="reveal clock-date" data-site-date>
+      {now.toLocaleDateString("en-AU", {
+        timeZone: timezone,
+        weekday: "long",
         day: "numeric",
+        month: "long",
+        year: "numeric",
       })}
+    </span>
+    <time data-site-clock datetime={now.toISOString()}>
+      {now.toLocaleTimeString("en-GB", { timeZone: timezone, hour12: false })}
     </time>
   </div>
-  <span class="mobile-path">{publicPathname(Astro.url.pathname)}</span>
 </header>
 <style>
   .top-bar {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    min-height: 64px;
+    gap: 20px;
+    min-height: 52px;
+    padding-block: 14px;
+    font-size: 11px;
     position: relative;
     z-index: 5;
   }
@@ -66,116 +98,197 @@ const tone = latest
     right: 32px;
     border-bottom: 1px solid var(--ink);
   }
-  .site-mark {
+  .site-mark,
+  .latest-ticker,
+  .top-elsewhere,
+  .site-clock {
     display: flex;
     align-items: center;
-    gap: 14px;
+    height: 24px;
+    white-space: nowrap;
+  }
+  .site-mark {
     flex-shrink: 0;
     view-transition-name: site-logo;
   }
-  .site-mark span,
+  .reveal {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .header-reveal:is(:hover, :focus-within) .reveal {
+    max-width: var(--reveal-width, 180px);
+    opacity: 1;
+  }
+  .top-bar:focus-within .header-reveal:not(:focus-within) .reveal,
+  .top-bar:focus-within :global(.np-bar__anchor:not(:focus-within) .np-bar__reveal) {
+    max-width: 0;
+    opacity: 0;
+  }
+  .mark-label,
+  .latest-detail {
+    padding-left: 0;
+  }
+  .mark-label::before,
+  .latest-detail::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    flex-shrink: 0;
+  }
+  .mark-label,
   .elsewhere-label,
-  time,
-  .mobile-path {
+  .site-clock,
+  .mobile-path,
+  .latest-detail time {
     color: var(--mute);
   }
-  .latest-ticker {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  .latest-slot {
+    margin-right: auto;
     min-width: 0;
   }
-  .latest-ticker > span:not(.ticker-square) {
-    white-space: nowrap;
+  .latest-ticker {
+    gap: 7px;
+    min-width: 0;
+  }
+  .latest-detail {
+    --reveal-width: 460px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .latest-detail > span {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .latest-ticker time {
-    white-space: nowrap;
+  .latest-detail time {
+    flex-shrink: 0;
   }
   .ticker-square {
     width: 7px;
     height: 7px;
-    background: var(--ticker-tone);
+    background: var(--post-tone);
     border: 1px solid var(--ink);
     flex-shrink: 0;
   }
   .top-elsewhere {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
   }
-  .top-elsewhere time {
+  .site-clock {
+    flex-shrink: 0;
     font-variant-numeric: tabular-nums;
-    min-width: 152px;
+  }
+  .clock-date {
+    --reveal-width: 260px;
+  }
+  .clock-date::after {
+    content: "";
+    display: inline-block;
+    width: 12px;
   }
   .mobile-path {
     display: none;
   }
-  @media (max-width: 1150px) {
-    .top-elsewhere time,
-    .latest-ticker time,
+  :global(:root[data-pref-motion="still"]) .reveal {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      transition: none;
+    }
+  }
+  @media (min-width: 721px) and (max-width: 1000px) {
+    .top-bar {
+      gap: 12px;
+    }
     .elsewhere-label {
+      display: none;
+    }
+    .latest-detail {
+      --reveal-width: 220px;
+    }
+    .latest-detail time {
       display: none;
     }
   }
   @media (max-width: 720px) {
     .top-bar {
       height: 52px;
-      min-height: 52px;
+      padding-block: 4px;
       gap: 8px;
+    }
+    .top-bar:has(:global(.np-strip:not([hidden]))) {
+      margin-bottom: 57px;
     }
     .top-bar::after {
       left: 16px;
       right: 16px;
     }
     .site-mark {
-      min-height: 44px;
-      min-width: 44px;
+      height: 44px;
+      min-width: 32px;
     }
-    .site-mark > span:last-child,
-    .latest-ticker {
+    .site-mark .reveal,
+    .latest-slot,
+    .site-clock,
+    .elsewhere-label {
       display: none;
     }
     .mobile-path {
       display: block;
-      order: 1;
-      max-width: 50%;
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .top-elsewhere {
-      order: 2;
-    }
   }
 </style>
 <script>
-  const clocks = [...document.querySelectorAll<HTMLTimeElement>("[data-site-clock]")];
-  function updateClock() {
-    const now = new Date();
-    for (const clock of clocks) {
-      clock.dateTime = now.toISOString();
-      clock.textContent = now.toLocaleString("en-AU", {
-        timeZone: clock.dataset.timezone,
-        weekday: "short",
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
+  const clocks = [...document.querySelectorAll<HTMLElement>("[data-clock-zone]")].map(
+    (element) => ({
+      element,
+      time: element.querySelector<HTMLTimeElement>("[data-site-clock]"),
+      date: element.querySelector<HTMLElement>("[data-site-date]"),
+      timeFormat: new Intl.DateTimeFormat("en-GB", {
+        timeZone: element.dataset.clockZone,
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-      });
+      }),
+      dateFormat: new Intl.DateTimeFormat("en-AU", {
+        timeZone: element.dataset.clockZone,
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    }),
+  );
+  function updateClock() {
+    const now = new Date();
+    for (const clock of clocks) {
+      if (clock.time) {
+        clock.time.dateTime = now.toISOString();
+        clock.time.textContent = clock.timeFormat.format(now);
+      }
+      if (clock.date) clock.date.textContent = clock.dateFormat.format(now);
     }
   }
-  let interval: number;
+  let interval: number | undefined;
   function startClock() {
     clearInterval(interval);
+    if (document.hidden) return;
     updateClock();
     interval = window.setInterval(updateClock, 1000);
   }
+  document.addEventListener("visibilitychange", startClock);
   window.addEventListener("pageshow", startClock);
   window.addEventListener("pagehide", () => clearInterval(interval));
   startClock();

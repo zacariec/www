@@ -10,7 +10,10 @@ export const GET: APIRoute = async () => {
   return new Response(JSON.stringify(data), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+      "Cache-Control": data
+        ? `public, max-age=0, s-maxage=${Math.max(0, Math.floor((30_000 - (Date.now() - data.fetchedAt)) / 1_000))}`
+        : "no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 };

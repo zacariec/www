@@ -5,6 +5,9 @@ import type { SanityComment, SanityContentNode, SanitySessionTape } from "./sani
 export const TONES = ["pink", "blue", "sand", "sage", "lilac", "apricot"] as const;
 export type Tone = (typeof TONES)[number];
 export const WORDS_PER_MINUTE = 200;
+export const SESSION_TAGS = ["code", "systems", "ai", "work", "design"] as const;
+export const SPOTIFY_TRACK_URL =
+  /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/[A-Za-z0-9]{22}(?:[?#].*)?$/;
 
 export interface SessionSource {
   _id: string;
@@ -23,6 +26,9 @@ export interface SessionSource {
   toneOverride?: Tone | null;
   readTimeOverride?: number | null;
   sideNote?: string;
+  tags?: string[] | null;
+  relatedIds?: string[] | null;
+  writtenTo?: SanitySessionTape["writtenTo"] | null;
   featuredImage?: SanitySessionTape["featuredImage"];
   comments?: SanityComment[];
   commentCount?: number;
@@ -103,6 +109,7 @@ export function deriveSession(input: SessionSource, number = input.number ?? 1):
       ? input.readTimeOverride
       : undefined;
   const comments = (input.comments ?? []).filter((comment) => comment.status === "approved");
+  const { writtenTo } = input;
   return {
     _id: canonicalSessionId(input._id),
     title: input.title ?? "",
@@ -139,6 +146,26 @@ export function deriveSession(input: SessionSource, number = input.number ?? 1):
     toneOverride:
       input.toneOverride && TONES.includes(input.toneOverride) ? input.toneOverride : undefined,
     sideNote: input.sideNote,
+    tags: [
+      ...new Set(
+        (input.tags ?? []).filter((tag) =>
+          SESSION_TAGS.includes(tag as (typeof SESSION_TAGS)[number]),
+        ),
+      ),
+    ],
+    relatedIds: [
+      ...new Set(
+        (input.relatedIds ?? [])
+          .filter((id) => typeof id === "string" && id)
+          .map(canonicalSessionId),
+      ),
+    ],
+    writtenTo:
+      writtenTo?.track?.trim() &&
+      writtenTo.artist?.trim() &&
+      SPOTIFY_TRACK_URL.test(writtenTo.spotifyUrl)
+        ? { track: writtenTo.track, artist: writtenTo.artist, spotifyUrl: writtenTo.spotifyUrl }
+        : undefined,
     featuredImage: input.featuredImage,
     comments,
     commentCount: input.commentCount ?? comments.length,

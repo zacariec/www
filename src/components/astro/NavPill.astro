@@ -8,7 +8,12 @@ interface Props {
 }
 const { sessionCount, timelineCount, socials } = Astro.props;
 const current = currentNavigation(Astro.url.pathname);
-const counts = ["/", String(sessionCount), String(timelineCount), "—", "↗"];
+const counts: Record<string, string> = {
+  "/": "/",
+  "/sessions": String(sessionCount),
+  "/timeline": String(timelineCount),
+  "/preferences": "↗",
+};
 ---
 
 <div class="pill-track">
@@ -19,11 +24,11 @@ const counts = ["/", String(sessionCount), String(timelineCount), "—", "↗"];
           Index Tool 1.1 <span>∵ ⩆</span>
         </div>
         <nav aria-label="Page navigation">
-          {navigation.map((item, index) => (
+          {navigation.map((item) => (
             <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
               <span>{item.number}</span>
               <span>{item.label}</span>
-              <span>{counts[index]}</span>
+              <span>{counts[item.href]}</span>
             </a>
           ))}
         </nav>

@@ -19,6 +19,8 @@ export const SESSION_PROJECTION = `
   "number": count(*[_type == "sessionTape" && !(_id in path("drafts.**")) &&
     (publishedAt < ^.publishedAt || (publishedAt == ^.publishedAt && _id < ^._id))]) + 1,
   kind, state, coverSeed, toneOverride, readTimeOverride,
+  "tags": coalesce(tags, []), "relatedIds": coalesce(related[]._ref, []),
+  writtenTo { track, artist, spotifyUrl },
   featuredImage { asset, "url": asset->url, alt },
   "commentCount": count(*[_type == "comment" && session._ref == ^._id && status == "approved"])
 `;
@@ -47,7 +49,7 @@ export const siteConfigQuery = `*[_type == "siteConfig"][0] {
   )
     .map(([key, lines]) => `headlinePreset == ${JSON.stringify(key)} => ${JSON.stringify(lines)}`)
     .join(", ")}, ["Getting it", "out there."]),
-  readme, tickerEnabled, socials[] { label, url }, toneShift, displayVersion, bio, moderationDefault, authorSanityId,
+  readme, tickerEnabled, socials[] { label, url }, toneShift, displayVersion, moderationDefault, authorSanityId,
   newsletter { footerHeading, footerDescription, inlineHeading, inlineDescription, buttonLabel, placeholder, successMessage, alreadySubscribedMessage, unsubscribeLabel, unsubscribeConfirmedMessage, errorMessage },
   siteName, siteDescription, siteUrl, author, twitterHandle, timezone
 }`;

@@ -4,12 +4,14 @@ const current = currentNavigation(Astro.url.pathname);
 ---
 
 <nav class="bottom-tabs mono" aria-label="Mobile navigation">
-  {navigation.map((item) => (
-    <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
-      <span>{item.number}</span>
-      {item.href === "/preferences" ? "Prefs" : item.label}
-    </a>
-  ))}
+  {navigation
+    .filter((item) => item.href !== "/preferences")
+    .map((item) => (
+      <a href={item.href} aria-current={current.href === item.href ? "page" : undefined}>
+        <span>{item.number}</span>
+        {item.label}
+      </a>
+    ))}
 </nav>
 <style>
   .bottom-tabs {
@@ -18,7 +20,7 @@ const current = currentNavigation(Astro.url.pathname);
   @media (max-width: 720px) {
     .bottom-tabs {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       position: sticky;
       bottom: 0;
       z-index: 40;

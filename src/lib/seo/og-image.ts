@@ -10,7 +10,7 @@ export interface OgImage {
   alt: string;
 }
 
-type OgRoute = "default" | "sessions" | "timeline" | "about" | "404" | `sessions/${string}`;
+type OgRoute = "default" | "sessions" | "timeline" | "404" | `sessions/${string}`;
 
 export function siteOrigin(config: SanitySiteConfig): string {
   return config.siteUrl ? new URL(config.siteUrl).origin : "https://zcarr.dev";

@@ -5,7 +5,7 @@ import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sani
 export const prerender = false;
 
 const path = Astro.params.path ?? "";
-const pages = ["default", "sessions", "timeline", "about", "404"] as const;
+const pages = ["default", "sessions", "timeline", "404"] as const;
 type Page = (typeof pages)[number];
 const parts = path.split("/");
 const isSession = parts.length === 2 && parts[0] === "sessions" && parts[1] !== "";

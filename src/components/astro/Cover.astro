@@ -3,25 +3,42 @@ interface Props {
   seed: number;
   tone: string;
   animated?: boolean;
+  imageUrl?: string;
   class?: string;
   style?: string;
 }
 
-const { seed, tone, animated = false, class: className, style, ...rest } = Astro.props;
+const { seed, tone, animated = false, imageUrl, class: className, style, ...rest } = Astro.props;
 const background = tone.startsWith("--") || tone.startsWith("#") ? tone : `--${tone}`;
 ---
 
-<canvas
-  {...rest}
-  class:list={["zc-cover", className]}
-  style={style}
-  data-zc="cover"
-  data-seed={seed}
-  data-fg="--ink"
-  data-bg={background}
-  data-anim={String(animated)}
-  aria-hidden="true"
-></canvas>
+{imageUrl !== undefined ? (
+  <span class:list={["zc-cover", "zc-image-cover", className]} style={style} data-image-cover>
+    <img src={imageUrl || undefined} alt="" loading="lazy" decoding="async" />
+    <canvas
+      {...rest}
+      data-zc="cover"
+      data-seed={seed}
+      data-src={imageUrl}
+      data-fg="--ink"
+      data-bg={background}
+      data-anim={String(animated)}
+      aria-hidden="true"
+    ></canvas>
+  </span>
+) : (
+  <canvas
+    {...rest}
+    class:list={["zc-cover", className]}
+    style={style}
+    data-zc="cover"
+    data-seed={seed}
+    data-fg="--ink"
+    data-bg={background}
+    data-anim={String(animated)}
+    aria-hidden="true"
+  ></canvas>
+)}
 
 <style>
   :where(.zc-cover) {
@@ -30,6 +47,28 @@ const background = tone.startsWith("--") || tone.startsWith("#") ? tone : `--${t
     aspect-ratio: 1;
     image-rendering: pixelated;
     pointer-events: none;
+  }
+  .zc-image-cover {
+    position: relative;
+    overflow: hidden;
+  }
+  .zc-image-cover > img,
+  .zc-image-cover > canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .zc-image-cover > img {
+    image-rendering: auto;
+  }
+  .zc-image-cover > canvas {
+    visibility: hidden;
+  }
+  .zc-image-cover > canvas[data-image-ready="true"] {
+    visibility: visible;
   }
 </style>
 

@@ -3,6 +3,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import PageHero from "@/components/astro/PageHero.astro";
 import TimelineItem from "@/components/astro/TimelineItem.astro";
 import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import { getGitHubSnapshot } from "@/lib/github";
 import { resolveTone } from "@/lib/session";
 import { timelineJsonLd } from "@/lib/seo/jsonld";
 import { generatedOgImage } from "@/lib/seo/og-image";
@@ -11,20 +12,48 @@ const [sessions, timeline, config] = await Promise.all([
   getAllTimelineEntries(),
   getSiteConfig(),
 ]);
+const github = getGitHubSnapshot();
 const entries = [
   ...sessions.map((session) => ({
-    kind: "session" as const,
+    kind: "sessions" as const,
     date: session.date,
     id: session._id,
     session,
   })),
   ...timeline.map((thought) => ({
-    kind: "thought" as const,
+    kind: "thoughts" as const,
     date: thought.date,
     id: thought._id,
     thought,
   })),
-].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
+  ...(github?.pushes ?? []).map((push) => ({
+    kind: "pushes" as const,
+    date: push.date,
+    id: push.id,
+    push,
+  })),
+].sort(
+  (a, b) =>
+    b.date.slice(0, 10).localeCompare(a.date.slice(0, 10)) ||
+    Number(a.kind === "pushes") - Number(b.kind === "pushes") ||
+    b.date.localeCompare(a.date) ||
+    a.id.localeCompare(b.id),
+);
+const filters = [
+  { key: "all", label: "All", count: entries.length },
+  { key: "sessions", label: "Sessions", count: sessions.length },
+  { key: "thoughts", label: "Thoughts", count: timeline.length },
+  { key: "pushes", label: "Pushes", count: github ? github.pushes.length : null },
+];
+const filter =
+  filters.find((item) => item.key === Astro.url.searchParams.get("filter"))?.key ?? "all";
+const visibleCount = entries.filter((entry) => filter === "all" || entry.kind === filter).length;
+function filterHref(key: string) {
+  const url = new URL(Astro.url);
+  if (key === "all") url.searchParams.delete("filter");
+  else url.searchParams.set("filter", key);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 const first = entries.at(-1)?.date.slice(0, 4);
 const last = entries[0]?.date.slice(0, 4);
 const eyebrow = first ? `[03] Log · ${first} → ${last}` : "[03] Log";
@@ -32,7 +61,7 @@ const params = new URLSearchParams(Astro.url.search);
 params.delete("tone");
 const og = generatedOgImage(
   "timeline",
-  "Timeline — sessions and thoughts in chronological order on a blue board with dithered lava.",
+  "Timeline — sessions, thoughts and public GitHub pushes in chronological order.",
 );
 ---
 
@@ -42,44 +71,182 @@ const og = generatedOgImage(
   timeline={timeline}
   canonicalUrl="/timeline"
   title={`Timeline — ${config.siteName}`}
-  description="Sessions and thoughts, in the order they happened."
+  description="Sessions, thoughts and pushes, in the order they happened."
   jsonLd={timelineJsonLd(config)}
   ogImage={og}
 >
-  <PageHero
-    title="Timeline."
-    eyebrow={eyebrow}
-    description="Sessions and thoughts, in the order they happened."
-    sessions={sessions}
-    tone="sage"
-  />
-  <div class="timeline-list zc-container">
-    {entries.map((entry) =>
-      entry.kind === "session" ? (
-        <TimelineItem
-          session={entry.session}
-          tone={resolveTone(
-            entry.session.number,
-            config.toneShift,
-            params,
-            entry.session.toneOverride,
+  <div class="timeline-hero">
+    <PageHero title="Timeline." eyebrow={eyebrow} sessions={sessions} tone="sage" />
+    <div class="timeline-intro zc-container">
+      <p>
+        <span class="desktop-copy">Sessions, thoughts and pushes, in the order they happened.</span>
+        <span class="mobile-copy">Sessions, thoughts and pushes, in order.</span>
+      </p>
+    </div>
+  </div>
+  <div class="timeline-list zc-container" data-timeline data-github-available={Boolean(github)}>
+    <nav class="timeline-filters mono" aria-label="Filter timeline" data-timeline-filters>
+      {filters.map((item) => (
+        <a
+          href={filterHref(item.key)}
+          data-timeline-filter={item.key}
+          aria-current={filter === item.key ? "true" : undefined}
+          aria-controls="timeline-entries"
+        >
+          {item.key === "sessions" ? (
+            <>
+              <span class="desktop-copy">Sessions</span>
+              <span class="mobile-copy">Posts</span>
+            </>
+          ) : (
+            <span>{item.label}</span>
           )}
-        />
-      ) : (
-        <TimelineItem thought={entry.thought} />
-      ),
+          <span class="filter-count" aria-label={item.count === null ? "unavailable" : undefined}>
+            {item.count ?? "—"}
+          </span>
+        </a>
+      ))}
+    </nav>
+    <p class="sr-only" data-timeline-status role="status" aria-live="polite" aria-atomic="true">
+      {visibleCount} {visibleCount === 1 ? "entry" : "entries"} shown.
+    </p>
+    {!github && (
+      <p class="timeline-unavailable mono">Public GitHub activity is currently unavailable.</p>
     )}
+    <div id="timeline-entries">
+      {entries.map((entry) => (
+        <div data-timeline-kind={entry.kind} hidden={filter !== "all" && filter !== entry.kind}>
+          {entry.kind === "sessions" ? (
+            <TimelineItem
+              session={entry.session}
+              tone={resolveTone(
+                entry.session.number,
+                config.toneShift,
+                params,
+                entry.session.toneOverride,
+              )}
+            />
+          ) : entry.kind === "thoughts" ? (
+            <TimelineItem thought={entry.thought} />
+          ) : (
+            <TimelineItem push={entry.push} />
+          )}
+        </div>
+      ))}
+    </div>
+    <p class="timeline-empty mono" data-timeline-empty hidden={visibleCount > 0}>
+      {filter === "pushes" && !github
+        ? "Pushes will appear when GitHub activity is available."
+        : "No entries in this view yet."}
+    </p>
   </div>
 </SiteLayout>
+<script>
+  import "@/scripts/timeline";
+</script>
 <style>
+  .timeline-hero :global(.page-hero) {
+    padding-bottom: 0;
+  }
+  .timeline-intro {
+    position: relative;
+    z-index: 2;
+    padding-top: 28px;
+    padding-bottom: 68px;
+  }
+  .timeline-intro p {
+    max-width: 660px;
+    color: var(--mute);
+    font-size: 21px;
+    line-height: 1.45;
+  }
+  .timeline-intro p > span {
+    background: var(--paper);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
   .timeline-list {
     position: relative;
     z-index: 2;
     padding-bottom: 140px;
   }
+  .timeline-filters {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin-bottom: 36px;
+  }
+  .timeline-filters a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 18px;
+  }
+  .timeline-filters a + a {
+    border-left: 1px solid var(--ink);
+  }
+  .timeline-filters a[aria-current] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .timeline-filters a:hover:not([aria-current]) {
+    background: var(--pink);
+  }
+  .filter-count {
+    color: var(--mute);
+    font-variant-numeric: tabular-nums;
+  }
+  .timeline-filters a[aria-current] .filter-count {
+    color: var(--paper);
+    opacity: 0.75;
+  }
+  .timeline-empty {
+    border: 1px dashed var(--ink);
+    padding: 32px;
+  }
+  .timeline-unavailable {
+    color: var(--mute);
+    margin-bottom: 24px;
+  }
+  .mobile-copy {
+    display: none;
+  }
+  [hidden] {
+    display: none;
+  }
   @media (max-width: 720px) {
+    .timeline-intro {
+      padding-top: 22px;
+      padding-bottom: 38px;
+    }
+    .timeline-intro p {
+      font-size: 18px;
+      max-width: 340px;
+    }
     .timeline-list {
       padding-bottom: 100px;
+    }
+    .timeline-filters {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 28px;
+    }
+    .timeline-filters a {
+      min-width: 0;
+      padding: 10px 4px;
+      gap: 5px;
+      font-size: 10px;
+    }
+    .desktop-copy {
+      display: none;
+    }
+    .mobile-copy {
+      display: inline;
     }
   }
 </style>

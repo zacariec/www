@@ -1,48 +1,184 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { getSiteConfig } from "@/lib/sanity/fetch";
+import Terminal from "@/components/astro/Terminal.astro";
+import Blot from "@/components/astro/Blot.astro";
+import Cortex from "@/components/astro/Cortex.astro";
+import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { getGitHubSnapshot } from "@/lib/github";
 import { generatedOgImage } from "@/lib/seo/og-image";
-const config = await getSiteConfig();
+const [config, sessions] = await Promise.all([getSiteConfig(), getAllSessions()]);
+const path = Astro.locals.notFoundPath ?? Astro.url.pathname;
+const pushes = getGitHubSnapshot()?.pushes ?? [];
 Astro.response.status = 404;
 ---
 
 <SiteLayout
   config={config}
+  sessions={sessions}
   title={`Not found — ${config.siteName}`}
-  description="Page not found"
-  canonicalUrl="/404"
+  description="That branch of the cortex doesn't exist. The terminal below still works."
+  canonicalUrl={path}
   noindex
-  ogImage={generatedOgImage(
-    "404",
-    "404 — Page not found. Navigation back to zcarr.dev, sessions, and timeline.",
-  )}
+  ogImage={generatedOgImage("404", "404 — Nothing grew here. The terminal below still works.")}
 >
-  <section class="not-found zc-container">
-    <h1 class="zc-hero-title">404</h1>
-    <p>Page not found</p>
-    <a class="mono" href="/">
-      ← Back to home
-    </a>
+  <section class="lost-hero">
+    <div class="lost-blot">
+      <Blot tone="pink" seed={404} />
+    </div>
+    <div class="lost-cortex">
+      <Cortex
+        sessions={sessions}
+        highlight={sessions.length}
+        ox={0.72}
+        fade={0.62}
+        fadeBottom={0.34}
+        drift
+      />
+    </div>
+    <div class="lost-copy zc-container">
+      <p class="lost-label mono">
+        <span>[404] {path}</span>
+      </p>
+      <h1 class="zc-hero-title">
+        Nothing
+        <br />
+        grew here.
+      </h1>
+      <p class="lost-description">
+        <span>That branch of the cortex doesn't exist. The terminal below still works.</span>
+      </p>
+    </div>
+  </section>
+  <section class="lost-terminal zc-container" aria-label="Terminal">
+    <div class="terminal-blot">
+      <Blot tone="blue" seed={408} />
+    </div>
+    <Terminal path={path} sessions={sessions} config={config} pushes={pushes} />
+    <nav class="lost-links mono" aria-label="Leave the terminal">
+      <a href="/">← cd ~</a>
+      <a href="/sessions">ls sessions/</a>
+    </nav>
   </section>
 </SiteLayout>
 <style>
-  .not-found {
-    padding-top: 260px;
-    padding-bottom: 150px;
+  .lost-hero {
+    position: relative;
+    min-height: 480px;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 0 36px;
   }
-  .not-found p {
-    margin: 28px 0;
-    color: var(--mute);
+  .lost-blot {
+    position: absolute;
+    left: 34%;
+    top: 70px;
+    width: 600px;
+    height: 400px;
+    pointer-events: none;
   }
-  .not-found a {
+  .lost-cortex {
+    position: absolute;
+    inset: 0 0 -240px;
+    pointer-events: none;
+  }
+  .lost-cortex :global(canvas) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .lost-copy {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+  .lost-label {
+    margin: 0 0 16px;
+    overflow-wrap: anywhere;
+  }
+  .lost-label span,
+  .lost-description span {
+    background: var(--paper);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  h1 {
+    margin: 0;
+    width: fit-content;
+    background: var(--paper);
+    box-shadow: 0 0 0 0.04em var(--paper);
+    view-transition-name: page-title;
+  }
+  .lost-description {
+    margin: 24px 0 0;
+    max-width: 720px;
+    font-size: 20px;
+    line-height: 1.45;
+  }
+  .lost-terminal {
+    position: relative;
+    padding-top: 24px;
+    padding-bottom: 140px;
+  }
+  .terminal-blot {
+    position: absolute;
+    right: -220px;
+    top: 120px;
+    width: 520px;
+    height: 400px;
+    pointer-events: none;
+  }
+  .lost-links {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .lost-links a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .lost-links a:hover {
+    background: var(--pink);
   }
   @media (max-width: 720px) {
-    .not-found {
-      padding-top: 100px;
+    .lost-hero {
+      min-height: 340px;
+      padding: 120px 0 28px;
+    }
+    .lost-blot {
+      width: 360px;
+      height: 300px;
+      left: auto;
+      right: -80px;
+      top: 20px;
+    }
+    .lost-cortex {
+      bottom: -130px;
+    }
+    .lost-label {
+      font-size: 11px;
+    }
+    h1 {
+      font-size: 64px;
+      letter-spacing: -0.055em;
+    }
+    .lost-description {
+      max-width: 340px;
+      font-size: 18px;
+    }
+    .lost-terminal {
+      padding-top: 16px;
       padding-bottom: 100px;
+    }
+    .terminal-blot {
+      width: 300px;
+      right: -130px;
     }
   }
 </style>

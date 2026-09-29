@@ -117,13 +117,6 @@ export const siteConfigType = defineType({
       initialValue: "0.26",
     }),
     defineField({
-      name: "bio",
-      title: "Bio",
-      type: "text",
-      group: "content",
-      description: "Optional. Leave empty until Zac supplies the copy.",
-    }),
-    defineField({
       name: "moderationDefault",
       title: "New comments",
       type: "string",

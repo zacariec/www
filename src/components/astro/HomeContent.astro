@@ -5,6 +5,8 @@ import TapeCard from "./TapeCard.astro";
 import SectionHead from "./SectionHead.astro";
 import Blot from "./Blot.astro";
 import ThoughtBoard from "./ThoughtBoard.astro";
+import CommitsSection from "./CommitsSection.astro";
+import GlossaryText from "./GlossaryText.astro";
 import { resolveTone } from "@/lib/session";
 import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
@@ -21,11 +23,13 @@ params.delete("tone");
 <PageHero title={config.headline} tone="pink" sessions={sessions} home />
 <section class="readme zc-container" aria-label="README">
   <span class="mono">[00] README</span>
-  <p>{config.readme}</p>
+  <p>
+    <GlossaryText text={config.readme} />
+  </p>
 </section>
 <section class="latest-section zc-container">
   <div class="section-heading">
-    <SectionHead number="01" title="Latest sessions" />
+    <SectionHead number="01" title="Latest sessions" glossary />
     <a class="mono" href="/sessions">
       ls sessions/ →
     </a>
@@ -39,19 +43,25 @@ params.delete("tone");
     ))}
   </div>
 </section>
+<CommitsSection sessions={sessions} toneShift={config.toneShift} />
 <section class="tapes-section zc-section zc-section--pink zc-overlap">
   <div class="tapes-blot">
     <Blot tone="blue" seed={4} />
   </div>
   <div class="zc-container tapes-content">
-    <p class="mono tapes-label">[02] Long-form</p>
-    <h2>Session tapes.</h2>
+    <p class="mono tapes-label">[03] Long-form</p>
+    <h2>
+      <GlossaryText text="Session tapes." />
+    </h2>
     <p class="tapes-description">
       The long ones. A full build written up start to finish, with every wrong turn left in.
     </p>
     <div class="tapes-grid">
       {tapes.map((session) => (
-        <TapeCard session={session} tone={resolveTone(session.number, config.toneShift, params, session.toneOverride)} />
+        <TapeCard
+          session={session}
+          tone={resolveTone(session.number, config.toneShift, params, session.toneOverride)}
+        />
       ))}
     </div>
   </div>

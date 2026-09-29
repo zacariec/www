@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "bun scripts/build-cursors.ts && astro build",
+    "build": "bun scripts/fetch-github.ts && bun scripts/build-cursors.ts && astro build",
     "start": "astro preview",
     "lint": "eslint .",
     "check": "astro check",

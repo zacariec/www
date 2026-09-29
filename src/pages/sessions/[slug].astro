@@ -11,7 +11,10 @@ const [session, sessions, config] = await Promise.all([
   getAllSessions(),
   getSiteConfig(),
 ]);
-if (!session) return Astro.redirect("/404");
+if (!session) {
+  Astro.locals.notFoundPath = Astro.url.pathname;
+  return Astro.rewrite(new URL(`/404${Astro.url.search}`, Astro.url));
+}
 const description = session.subtitle || session.excerpt;
 const og = sessionOgImage(session);
 const jsonLd = sessionTapeJsonLd(session, config);

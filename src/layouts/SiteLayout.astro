@@ -8,6 +8,9 @@ import EndSection from "@/components/astro/EndSection.astro";
 import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
 import { defaultOgImage, type OgImage } from "@/lib/seo/og-image";
+import FindPalette from "@/components/astro/FindPalette.astro";
+import { getGitHubSnapshot } from "@/lib/github";
+import { getNowPlaying } from "@/lib/spotify";
 interface Props {
   config?: SanitySiteConfig;
   sessions?: SanitySessionTape[];
@@ -32,13 +35,14 @@ const {
   timeline: givenTimeline,
   ...metadata
 } = Astro.props;
-const [config, sessions, timeline] = await Promise.all([
+const [config, sessions, timeline, nowPlaying] = await Promise.all([
   givenConfig ?? getSiteConfig(),
   givenSessions ?? getAllSessions(),
   givenTimeline ?? getAllTimelineEntries(),
+  getNowPlaying(),
 ]);
 const sessionCount = sessions.length;
-const timelineCount = sessions.length + timeline.length;
+const timelineCount = sessions.length + timeline.length + (getGitHubSnapshot()?.pushes.length ?? 0);
 ---
 
 <BaseLayout
@@ -49,16 +53,17 @@ const timelineCount = sessions.length + timeline.length;
   <a class="skip-link mono" href="#content">
     Skip to content
   </a>
-  <TopBar config={config} latest={sessions[0]} />
+  <TopBar config={config} latest={sessions[0]} nowPlaying={nowPlaying} />
   <div class="page-flow">
     <IndexTool sessionCount={sessionCount} timelineCount={timelineCount} />
     <main id="content">
       <slot />
     </main>
-    <EndSection config={config} />
+    <EndSection config={config} latest={sessions[0]} nowPlaying={nowPlaying} />
     <NavPill sessionCount={sessionCount} timelineCount={timelineCount} socials={config.socials} />
   </div>
   <BottomTabs />
+  <FindPalette sessions={sessions} />
 </BaseLayout>
 <style>
   .page-flow {
