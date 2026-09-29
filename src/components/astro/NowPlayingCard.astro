@@ -19,11 +19,6 @@ const percent = state?.durationMs ? (progress / state.durationMs) * 100 : 0;
   href={state?.url}
   target="_blank"
   rel="noopener noreferrer"
-  aria-label={
-    state
-      ? `${state.playing ? "Now playing" : "Last played"}: ${state.track} by ${state.artist} on Spotify`
-      : undefined
-  }
   data-now-playing
   data-np-link
   data-state={JSON.stringify(state)}

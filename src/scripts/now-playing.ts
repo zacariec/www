@@ -102,16 +102,8 @@ if (roots.length) {
         else link.removeAttribute("href");
       }
       if (root instanceof HTMLAnchorElement) {
-        if (state) {
-          root.href = state.url;
-          root.setAttribute(
-            "aria-label",
-            `${status}: ${state.track} by ${state.artist} on Spotify`,
-          );
-        } else {
-          root.removeAttribute("href");
-          root.removeAttribute("aria-label");
-        }
+        if (state) root.href = state.url;
+        else root.removeAttribute("href");
       }
       for (const control of root.querySelectorAll<HTMLElement>(
         "[data-np-anchor], [data-np-toggle]",
