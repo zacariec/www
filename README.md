@@ -36,6 +36,16 @@ Use `http://localhost:4321` consistently when configuring OAuth and `BETTER_AUTH
 
 Run development, Astro checks and builds sequentially: they share Vite's dependency cache. Brand/font regeneration is optional; committed assets need no Python dependencies at build time. `scripts/generate-brand-assets.py` uses fonttools, brotli, cairosvg and Pillow, with pinned upstream font hashes and bundled font licenses.
 
+Installed-app assets are declared in `public/manifest.json`, with a stable `/` app ID, separate standard and maskable icons, and desktop/mobile install previews. The outlined `zc` + pink node uses the bundled Host Grotesk font; maskable artwork stays inside the central 80%-diameter safe circle. Apple touch icons use the same centered mark with a versioned link.
+
+To regenerate only installed-app icons without touching fonts or browser favicons:
+
+```bash
+uv run --with cairosvg --with 'fonttools[woff]' --with pillow python scripts/generate-brand-assets.py --app-icons-only
+```
+
+The committed `public/app-screenshots/` PNGs are actual signed-out site captures: Index at 1440×900, and Index, Sessions and Preferences at 390×844, all at 1× pixel density with reduced motion. Refresh these captures after visual changes; keep manifest dimensions and labels in sync. Existing installations may retain their previous icon until the browser/OS refreshes app metadata.
+
 ## Configuration
 
 Public build variables:

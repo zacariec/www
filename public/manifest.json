@@ -1,7 +1,8 @@
 {
   "name": "zcarr.dev",
-  "short_name": "zc",
-  "description": "A space for long-form thinking on design, engineering, and the details most people skip.",
+  "short_name": "zcarr",
+  "description": "Sessions, tapes and thoughts on code, systems and whatever won't leave me alone.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,22 +12,58 @@
   "categories": ["journal"],
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/app-screenshots/index-wide.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "zcarr.dev — sessions, tapes and thoughts"
+    },
+    {
+      "src": "/app-screenshots/index-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "The journal on mobile"
+    },
+    {
+      "src": "/app-screenshots/sessions-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Browse sessions and tapes"
+    },
+    {
+      "src": "/app-screenshots/preferences-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Personal reading and motion preferences"
     }
   ]
 }
