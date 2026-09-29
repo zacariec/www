@@ -1,6 +1,7 @@
 ---
 import Cover from "./Cover.astro";
 import { sessionId, formatWritten, postToneStyle } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   session: SanitySessionTape;
@@ -9,7 +10,12 @@ interface Props {
 const { session, tone } = Astro.props;
 ---
 
-<a class="tape-card" href={`/sessions/${session.slug}`} style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}>
+<a
+  class="tape-card"
+  href={`/sessions/${session.slug}`}
+  {...sessionLinkAttributes(session, tone)}
+  style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}
+>
   <div class="tape-bar mono">
     <span>
       Tape {sessionId(session.number)} · {String(session.sections.length).padStart(2, "0")} sections

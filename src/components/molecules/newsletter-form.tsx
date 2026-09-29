@@ -22,9 +22,12 @@ export const NewsletterForm = ({ copy }: NewsletterFormProps) => {
   const [company, setCompany] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const emailId = useId();
-  const status = useStore($newsletterStatus);
+  const storedStatus = useStore($newsletterStatus);
+  const [ready, setReady] = useState(false);
+  const status = ready ? storedStatus : "idle";
 
   useEffect(() => {
+    setReady(true);
     const userEmail = session?.user?.email;
     if (!userEmail || !session.user.emailVerified || $newsletterStatus.get() !== "idle") return;
     setEmail(userEmail);

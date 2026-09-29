@@ -382,7 +382,7 @@ export function PreferencesPanel({
             <span className="mono">[06]</span>
             <h2>Account &amp; data.</h2>
           </header>
-          <PreferencesAccount providers={providers}>
+          <PreferencesAccount providers={providers} ready={ready}>
             {({ signedIn, commentCount, exporting, exportComments }) => (
               <PreferenceWindow
                 className="preference-data-window"

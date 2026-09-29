@@ -14,7 +14,7 @@ export interface TerminalData {
 
 type LineTone = "error" | "muted" | "hint";
 
-function initializeTerminal(terminal: HTMLElement): void {
+function initializeTerminal(terminal: HTMLElement) {
   const inputElement = terminal.querySelector<HTMLInputElement>("[data-terminal-input]");
   const outputElement = terminal.querySelector<HTMLElement>("[data-terminal-output]");
   const scrollElement = terminal.querySelector<HTMLElement>("[data-terminal-scroll]");
@@ -185,9 +185,26 @@ function initializeTerminal(terminal: HTMLElement): void {
   for (const chip of terminal.querySelectorAll<HTMLButtonElement>("[data-terminal-command]")) {
     chip.addEventListener("click", () => run(chip.dataset.terminalCommand || ""));
   }
-  window.addEventListener("pagehide", () => clearTimeout(pendingNavigation));
+  const cancelNavigation = () => clearTimeout(pendingNavigation);
+  window.addEventListener("pagehide", cancelNavigation);
   bindOverlayScroll(terminal);
+  return () => {
+    cancelNavigation();
+    window.removeEventListener("pagehide", cancelNavigation);
+  };
 }
 
-for (const terminal of document.querySelectorAll<HTMLElement>("[data-terminal]"))
-  initializeTerminal(terminal);
+let disposeTerminals: (() => void) | undefined;
+function initializeTerminals() {
+  if (disposeTerminals) return;
+  const disposers = [...document.querySelectorAll<HTMLElement>("[data-terminal]")].map(
+    initializeTerminal,
+  );
+  disposeTerminals = () => disposers.forEach((dispose) => dispose?.());
+}
+document.addEventListener("astro:before-swap", () => {
+  disposeTerminals?.();
+  disposeTerminals = undefined;
+});
+document.addEventListener("astro:page-load", initializeTerminals);
+initializeTerminals();

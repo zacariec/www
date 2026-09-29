@@ -170,9 +170,11 @@
   navigation: auto;
 }
 
-::view-transition-group(*) {
-  animation-duration: 180ms;
-  animation-timing-function: ease-out;
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation: none !important;
+  mix-blend-mode: normal;
 }
 
 @media (max-width: 720px) {

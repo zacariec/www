@@ -38,13 +38,6 @@ export function bootstrapPreferences(defaults: ReaderPreferences): PreferenceSto
   const root = document.documentElement;
   const tones = ["pink", "blue", "sand", "sage", "lilac", "apricot"];
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const params = new URLSearchParams(window.location.search);
-  const queryShift = params.get("shift");
-  const configuredShift = Number(root.dataset.toneShift);
-  const baseShift =
-    Number.isInteger(configuredShift) && configuredShift >= 0 && configuredShift <= 5
-      ? configuredShift
-      : 1;
   let explicitSize = false;
 
   function validate(value: unknown, fallback: ReaderPreferences): ReaderPreferences {
@@ -107,6 +100,12 @@ export function bootstrapPreferences(defaults: ReaderPreferences): PreferenceSto
   let current = load();
 
   function apply(notify = true): void {
+    const queryShift = new URLSearchParams(window.location.search).get("shift");
+    const configuredShift = Number(root.dataset.toneShift);
+    const baseShift =
+      Number.isInteger(configuredShift) && configuredShift >= 0 && configuredShift <= 5
+        ? configuredShift
+        : 1;
     root.dataset.prefSize = current.size;
     root.dataset.prefNums = String(current.nums);
     root.dataset.prefPanel = String(current.panel);
@@ -191,6 +190,7 @@ export function bootstrapPreferences(defaults: ReaderPreferences): PreferenceSto
     }
     apply();
   });
+  document.addEventListener("astro:after-swap", () => apply());
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => apply(), { once: true });
   }

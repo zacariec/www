@@ -1,10 +1,12 @@
-for (const timeline of document.querySelectorAll<HTMLElement>("[data-timeline]")) {
+function initializeTimeline(timeline: HTMLElement) {
   const navigation = timeline.querySelector<HTMLElement>("[data-timeline-filters]");
-  if (!navigation) continue;
+  if (!navigation) return;
   const links = [...navigation.querySelectorAll<HTMLAnchorElement>("[data-timeline-filter]")];
   const entries = [...timeline.querySelectorAll<HTMLElement>("[data-timeline-kind]")];
   const empty = timeline.querySelector<HTMLElement>("[data-timeline-empty]");
   const status = timeline.querySelector<HTMLElement>("[data-timeline-status]");
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
 
   function synchronize() {
     const current = new URL(window.location.href);
@@ -56,7 +58,7 @@ for (const timeline of document.querySelectorAll<HTMLElement>("[data-timeline]")
     if (link.dataset.timelineFilter === "all") url.searchParams.delete("filter");
     else if (link.dataset.timelineFilter)
       url.searchParams.set("filter", link.dataset.timelineFilter);
-    if (url.href !== window.location.href) window.history.pushState(null, "", url);
+    if (url.href !== window.location.href) window.history.pushState(window.history.state, "", url);
     synchronize();
   });
 
@@ -74,7 +76,23 @@ for (const timeline of document.querySelectorAll<HTMLElement>("[data-timeline]")
     links[next].focus();
   });
 
-  window.addEventListener("popstate", synchronize);
-  window.addEventListener("pageshow", synchronize);
+  window.addEventListener("popstate", synchronize, options);
+  window.addEventListener("pageshow", synchronize, options);
   synchronize();
+  return () => controller.abort();
 }
+
+let disposeTimelines: (() => void) | undefined;
+function initializeTimelines() {
+  if (disposeTimelines) return;
+  const disposers = [...document.querySelectorAll<HTMLElement>("[data-timeline]")].map(
+    initializeTimeline,
+  );
+  disposeTimelines = () => disposers.forEach((dispose) => dispose?.());
+}
+document.addEventListener("astro:before-swap", () => {
+  disposeTimelines?.();
+  disposeTimelines = undefined;
+});
+document.addEventListener("astro:page-load", initializeTimelines);
+initializeTimelines();

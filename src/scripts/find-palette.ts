@@ -3,7 +3,7 @@ import { setPreferences, subscribePreferences } from "@/lib/preferences";
 
 import { hasBlockingOverlay, isEditingTarget, navigateSite } from "./site";
 
-function initializeFindPalette(dialog: HTMLDialogElement): void {
+function initializeFindPalette(dialog: HTMLDialogElement) {
   const input = dialog.querySelector<HTMLInputElement>("[data-find-input]");
   const count = dialog.querySelector<HTMLElement>("[data-find-count]");
   const empty = dialog.querySelector<HTMLElement>("[data-find-empty]");
@@ -14,6 +14,8 @@ function initializeFindPalette(dialog: HTMLDialogElement): void {
   const rows = [...dialog.querySelectorAll<HTMLElement>("[data-find-row]")];
   const groups = [...dialog.querySelectorAll<HTMLElement>("[data-find-group]")];
   const desktop = matchMedia("(min-width: 721px)");
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
   let visible = rows;
   let active: HTMLElement | undefined;
   let previousFocus: HTMLElement | null = null;
@@ -154,37 +156,61 @@ function initializeFindPalette(dialog: HTMLDialogElement): void {
       }
     });
   });
-  document.addEventListener("keydown", (event) => {
-    if (
-      !desktop.matches ||
-      event.defaultPrevented ||
-      event.isComposing ||
-      event.repeat ||
-      isEditingTarget(event.target) ||
-      hasBlockingOverlay(dialog)
-    )
-      return;
-    const toggle =
-      event.key.toLowerCase() === "k" &&
-      (event.metaKey || event.ctrlKey) &&
-      !event.altKey &&
-      !event.shiftKey;
-    const slash =
-      event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
-    if (!toggle && !slash) return;
-    event.preventDefault();
-    if (dialog.open) {
-      if (toggle) close();
-    } else open();
-  });
-  desktop.addEventListener("change", () => {
-    if (!desktop.matches && dialog.open) close();
-  });
-  subscribePreferences(updateMotion);
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (
+        !desktop.matches ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.repeat ||
+        isEditingTarget(event.target) ||
+        hasBlockingOverlay(dialog)
+      )
+        return;
+      const toggle =
+        event.key.toLowerCase() === "k" &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey;
+      const slash =
+        event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+      if (!toggle && !slash) return;
+      event.preventDefault();
+      if (dialog.open) {
+        if (toggle) close();
+      } else open();
+    },
+    options,
+  );
+  desktop.addEventListener(
+    "change",
+    () => {
+      if (!desktop.matches && dialog.open) close();
+    },
+    options,
+  );
+  const unsubscribe = subscribePreferences(updateMotion);
   updateMotion();
   filter();
   bindOverlayScroll(dialog);
+  return () => {
+    controller.abort();
+    unsubscribe();
+    previousFocus = null;
+    if (dialog.open) close();
+  };
 }
 
-const palette = document.querySelector<HTMLDialogElement>("[data-find-palette]");
-if (palette) initializeFindPalette(palette);
+let disposePalette: (() => void) | undefined;
+function initializePalette() {
+  if (disposePalette) return;
+  const palette = document.querySelector<HTMLDialogElement>("[data-find-palette]");
+  if (palette) disposePalette = initializeFindPalette(palette);
+}
+document.addEventListener("astro:before-swap", () => {
+  disposePalette?.();
+  disposePalette = undefined;
+});
+document.addEventListener("astro:page-load", initializePalette);
+initializePalette();

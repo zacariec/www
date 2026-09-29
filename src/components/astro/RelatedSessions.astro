@@ -9,6 +9,7 @@ import {
   type Tone,
 } from "@/lib/session";
 import type { SanitySessionTape } from "@/lib/sanity/types";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import Cover from "./Cover.astro";
 
 interface Props {
@@ -37,6 +38,7 @@ const forcedTone = TONES.includes(Astro.url.searchParams.get("tone") as Tone);
           <a
             class="related-card"
             href={`/sessions/${item.slug}`}
+            {...sessionLinkAttributes(item, tone)}
             style={postToneStyle(item.number, tone, forcedTone || Boolean(item.toneOverride))}
           >
             <div class="related-card__bar mono">

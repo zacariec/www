@@ -2,6 +2,7 @@
 import Cover from "./Cover.astro";
 import Chip from "./Chip.astro";
 import { formatWritten, postToneStyle } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   session: SanitySessionTape;
@@ -13,6 +14,7 @@ const { session, tone } = Astro.props;
 <a
   class="session-row"
   href={`/sessions/${session.slug}`}
+  {...sessionLinkAttributes(session, tone)}
   style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}
   data-session-kind={session.kind}
 >

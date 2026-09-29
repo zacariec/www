@@ -50,6 +50,7 @@ export const siteConfigQuery = `*[_type == "siteConfig"][0] {
     .map(([key, lines]) => `headlinePreset == ${JSON.stringify(key)} => ${JSON.stringify(lines)}`)
     .join(", ")}, ["Getting it", "out there."]),
   readme, tickerEnabled, socials[] { label, url }, toneShift, displayVersion, moderationDefault, authorSanityId,
+  "pageTransition": coalesce(pageTransition, "radial"),
   newsletter { footerHeading, footerDescription, inlineHeading, inlineDescription, buttonLabel, placeholder, successMessage, alreadySubscribedMessage, unsubscribeLabel, unsubscribeConfirmedMessage, errorMessage },
   siteName, siteDescription, siteUrl, author, twitterHandle, timezone
 }`;

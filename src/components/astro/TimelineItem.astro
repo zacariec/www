@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import Window from "./Window.astro";
 import Chip from "./Chip.astro";
 import { postToneStyle } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import type { SanitySessionTape, SanityTimelineEntry } from "@/lib/sanity/types";
 import type { GitHubPush } from "@/lib/github";
 type Props =
@@ -38,7 +39,11 @@ const source =
     )}
   </div>
   {session ? (
-    <a class="timeline-session" href={`/sessions/${session.slug}`}>
+    <a
+      class="timeline-session"
+      href={`/sessions/${session.slug}`}
+      {...sessionLinkAttributes(session, tone)}
+    >
       <div>
         <h2>{session.title}</h2>
         <p>

@@ -65,25 +65,43 @@ const { socials, large = false } = Astro.props;
 </style>
 <script>
   import { getPreferences, subscribePreferences } from "@/lib/preferences";
-  const flippers = [...document.querySelectorAll<HTMLElement>("[data-social-flip]")];
-  let timer: number | undefined;
-  function startFlippers() {
-    clearInterval(timer);
-    if (!getPreferences().flip || document.documentElement.dataset.prefMotion === "still") return;
-    timer = window.setInterval(() => {
-      if (document.hidden) return;
-      for (const flipper of flippers) {
-        if (flipper.matches(":hover, :focus-within")) continue;
-        const links = [...flipper.querySelectorAll<HTMLAnchorElement>("a")];
-        if (links.length < 2) continue;
-        const current = links.findIndex((link) => !link.hidden);
-        links[current].hidden = true;
-        links[(current + 1) % links.length].hidden = false;
-      }
-    }, 2400);
+  let disposeFlippers: (() => void) | undefined;
+  function initializeFlippers() {
+    if (disposeFlippers) return;
+    const flippers = [...document.querySelectorAll<HTMLElement>("[data-social-flip]")];
+    if (!flippers.length) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    let timer: number | undefined;
+    function startFlippers() {
+      clearInterval(timer);
+      if (!getPreferences().flip || document.documentElement.dataset.prefMotion === "still") return;
+      timer = window.setInterval(() => {
+        if (document.hidden) return;
+        for (const flipper of flippers) {
+          if (flipper.matches(":hover, :focus-within")) continue;
+          const links = [...flipper.querySelectorAll<HTMLAnchorElement>("a")];
+          if (links.length < 2) continue;
+          const current = links.findIndex((link) => !link.hidden);
+          links[current].hidden = true;
+          links[(current + 1) % links.length].hidden = false;
+        }
+      }, 2400);
+    }
+    const unsubscribe = subscribePreferences(startFlippers);
+    window.addEventListener("pagehide", () => clearInterval(timer), options);
+    window.addEventListener("pageshow", startFlippers, options);
+    startFlippers();
+    disposeFlippers = () => {
+      controller.abort();
+      unsubscribe();
+      clearInterval(timer);
+    };
   }
-  subscribePreferences(startFlippers);
-  window.addEventListener("pagehide", () => clearInterval(timer));
-  window.addEventListener("pageshow", startFlippers);
-  startFlippers();
+  document.addEventListener("astro:before-swap", () => {
+    disposeFlippers?.();
+    disposeFlippers = undefined;
+  });
+  document.addEventListener("astro:page-load", initializeFlippers);
+  initializeFlippers();
 </script>

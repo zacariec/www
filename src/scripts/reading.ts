@@ -32,6 +32,8 @@ function initializeReading(root: HTMLElement) {
   const draft = draftElement;
   const post = postElement;
   const label = highlightLabel;
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
   const paragraphs = [...body.querySelectorAll<HTMLElement>("[data-paragraph]")];
   const anchors = [...body.querySelectorAll<HTMLButtonElement>("[data-paragraph-anchor]")];
   const key = `zc:highlights:${root.dataset.slug}`;
@@ -263,8 +265,10 @@ function initializeReading(root: HTMLElement) {
     url.hash = `p${selected}`;
     try {
       await navigator.clipboard.writeText(url.href);
+      if (controller.signal.aborted) return;
       status.textContent = "Link copied.";
     } catch {
+      if (controller.signal.aborted) return;
       // Keep the real link available when clipboard permission is denied.
       status.replaceChildren();
       const link = document.createElement("a");
@@ -274,33 +278,66 @@ function initializeReading(root: HTMLElement) {
     }
     positionDialog();
   });
-  window.addEventListener("zc:comments-updated", ((
-    event: CustomEvent<{ comments: SanityComment[] }>,
-  ) => {
-    if (Array.isArray(event.detail?.comments)) updateComments(event.detail.comments);
-  }) as EventListener);
-  window.addEventListener("zc:paragraph-jump", ((event: CustomEvent<{ anchorIndex: number }>) =>
-    jump(event.detail.anchorIndex)) as EventListener);
-  window.addEventListener("storage", (event) => {
-    if (event.key === key || event.key === null) {
-      highlights = parseHighlights(event.newValue);
-      paintHighlights();
-    }
-  });
-  window.addEventListener("hashchange", () => {
-    const match = /^#p(\d+)$/.exec(window.location.hash);
-    if (match) jump(Number(match[1]));
-  });
-  window.addEventListener("scroll", scheduleProgress, { passive: true });
-  window.addEventListener("resize", scheduleProgress, { passive: true });
-  window.addEventListener("pageshow", scheduleProgress);
-  mobile.addEventListener("change", positionDialog);
-  new ResizeObserver(scheduleProgress).observe(body);
+  window.addEventListener(
+    "zc:comments-updated",
+    ((event: CustomEvent<{ comments: SanityComment[] }>) => {
+      if (Array.isArray(event.detail?.comments)) updateComments(event.detail.comments);
+    }) as EventListener,
+    options,
+  );
+  window.addEventListener(
+    "zc:paragraph-jump",
+    ((event: CustomEvent<{ anchorIndex: number }>) =>
+      jump(event.detail.anchorIndex)) as EventListener,
+    options,
+  );
+  window.addEventListener(
+    "storage",
+    (event) => {
+      if (event.key === key || event.key === null) {
+        highlights = parseHighlights(event.newValue);
+        paintHighlights();
+      }
+    },
+    options,
+  );
+  window.addEventListener(
+    "hashchange",
+    () => {
+      const match = /^#p(\d+)$/.exec(window.location.hash);
+      if (match) jump(Number(match[1]));
+    },
+    options,
+  );
+  window.addEventListener("scroll", scheduleProgress, { ...options, passive: true });
+  window.addEventListener("resize", scheduleProgress, { ...options, passive: true });
+  window.addEventListener("pageshow", scheduleProgress, options);
+  mobile.addEventListener("change", positionDialog, options);
+  const resize = new ResizeObserver(scheduleProgress);
+  resize.observe(body);
   paintHighlights();
   updateProgress();
   const initialAnchor = /^#p(\d+)$/.exec(window.location.hash);
   if (initialAnchor) jump(Number(initialAnchor[1]), false);
+  return () => {
+    controller.abort();
+    resize.disconnect();
+    cancelAnimationFrame(frame);
+    clearTimeout(jumpTimeout);
+    if (dialog.open) closeDialog(false);
+    trigger = undefined;
+  };
 }
 
-const readingRoot = document.querySelector<HTMLElement>("[data-reading-root]");
-if (readingRoot) initializeReading(readingRoot);
+let disposeReading: (() => void) | undefined;
+function mountReading() {
+  if (disposeReading) return;
+  const readingRoot = document.querySelector<HTMLElement>("[data-reading-root]");
+  if (readingRoot) disposeReading = initializeReading(readingRoot);
+}
+document.addEventListener("astro:before-swap", () => {
+  disposeReading?.();
+  disposeReading = undefined;
+});
+document.addEventListener("astro:page-load", mountReading);
+mountReading();

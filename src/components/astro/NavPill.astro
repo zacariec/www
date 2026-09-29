@@ -31,6 +31,11 @@ const counts: Record<string, string> = {
               <span>{counts[item.href]}</span>
             </a>
           ))}
+          <a href="#top" data-back-top>
+            <span aria-hidden="true">↑</span>
+            <span>Back to top</span>
+            <span></span>
+          </a>
         </nav>
         <div class="pill-elsewhere">
           <span>elsewhere</span>
@@ -67,7 +72,6 @@ const counts: Record<string, string> = {
     transition:
       transform 200ms ease,
       opacity 200ms ease;
-    view-transition-name: navigation-pill;
   }
   :global(html.is-scrolled) .nav-pill {
     opacity: 1;
@@ -173,42 +177,74 @@ const counts: Record<string, string> = {
   }
 </style>
 <script>
-  const pill = document.querySelector<HTMLElement>("[data-nav-pill]");
-  const toggle = pill?.querySelector<HTMLButtonElement>(".pill-toggle");
-  const menu = pill?.querySelector<HTMLElement>(".pill-menu");
-  const index = document.querySelector<HTMLElement>("[data-index-tool]");
-  function closeMenu(restoreFocus = false) {
-    if (!pill || !toggle || !menu) return;
-    pill.removeAttribute("data-open");
-    toggle.setAttribute("aria-expanded", "false");
-    menu.inert = true;
-    if (restoreFocus) toggle.focus();
+  let disposeNavigation: (() => void) | undefined;
+  function initializeNavigation() {
+    if (disposeNavigation) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    const pill = document.querySelector<HTMLElement>("[data-nav-pill]");
+    const toggle = pill?.querySelector<HTMLButtonElement>(".pill-toggle");
+    const menu = pill?.querySelector<HTMLElement>(".pill-menu");
+    const index = document.querySelector<HTMLElement>("[data-index-tool]");
+    function closeMenu(restoreFocus = false) {
+      if (!pill || !toggle || !menu) return;
+      pill.removeAttribute("data-open");
+      toggle.setAttribute("aria-expanded", "false");
+      menu.inert = true;
+      if (restoreFocus) toggle.focus();
+    }
+    function updateNavigation() {
+      const scrolled = window.scrollY > 180;
+      document.documentElement.classList.toggle("is-scrolled", scrolled);
+      if (index) index.inert = scrolled;
+      if (pill) pill.inert = !scrolled;
+      if (!scrolled) closeMenu();
+    }
+    toggle?.addEventListener(
+      "click",
+      () => {
+        if (!pill || !menu) return;
+        const open = toggle.getAttribute("aria-expanded") !== "true";
+        toggle.setAttribute("aria-expanded", String(open));
+        pill.toggleAttribute("data-open", open);
+        menu.inert = !open;
+        if (open) menu.querySelector<HTMLAnchorElement>("a[aria-current]")?.focus();
+      },
+      options,
+    );
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape" && pill?.hasAttribute("data-open")) closeMenu(true);
+      },
+      options,
+    );
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
+      },
+      options,
+    );
+    document.addEventListener(
+      "focusin",
+      (event) => {
+        if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
+      },
+      options,
+    );
+    window.addEventListener("scroll", updateNavigation, { ...options, passive: true });
+    window.addEventListener("pageshow", updateNavigation, options);
+    updateNavigation();
+    disposeNavigation = () => {
+      controller.abort();
+      closeMenu();
+    };
   }
-  function updateNavigation() {
-    const scrolled = window.scrollY > 180;
-    document.documentElement.classList.toggle("is-scrolled", scrolled);
-    if (index) index.inert = scrolled;
-    if (pill) pill.inert = !scrolled;
-    if (!scrolled) closeMenu();
-  }
-  toggle?.addEventListener("click", () => {
-    if (!pill || !menu) return;
-    const open = toggle.getAttribute("aria-expanded") !== "true";
-    toggle.setAttribute("aria-expanded", String(open));
-    pill.toggleAttribute("data-open", open);
-    menu.inert = !open;
-    if (open) menu.querySelector<HTMLAnchorElement>("a[aria-current]")?.focus();
+  document.addEventListener("astro:before-swap", () => {
+    disposeNavigation?.();
+    disposeNavigation = undefined;
   });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && pill?.hasAttribute("data-open")) closeMenu(true);
-  });
-  document.addEventListener("pointerdown", (event) => {
-    if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
-  });
-  document.addEventListener("focusin", (event) => {
-    if (event.target instanceof Node && !pill?.contains(event.target)) closeMenu();
-  });
-  window.addEventListener("scroll", updateNavigation, { passive: true });
-  window.addEventListener("pageshow", updateNavigation);
-  updateNavigation();
+  document.addEventListener("astro:page-load", initializeNavigation);
+  initializeNavigation();
 </script>

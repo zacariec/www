@@ -117,6 +117,7 @@ const defaultSiteConfig: SanitySiteConfig = {
   tickerEnabled: true,
   socials: siteConfig.socials.map((social) => ({ ...social })),
   toneShift: 1,
+  pageTransition: "radial",
   displayVersion: "0.26",
   moderationDefault: "approved",
   siteName: siteConfig.name,

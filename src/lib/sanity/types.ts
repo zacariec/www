@@ -95,6 +95,7 @@ export interface SanitySiteConfig {
   tickerEnabled: boolean;
   socials: { label: string; url: string }[];
   toneShift: number;
+  pageTransition: "radial" | "sweep" | "dissolve" | "off";
   displayVersion: string;
   moderationDefault: "approved" | "pending";
   authorSanityId?: string;

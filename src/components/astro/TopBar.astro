@@ -3,6 +3,7 @@ import Logo from "./Logo.astro";
 import SocialFlip from "./SocialFlip.astro";
 import NowPlayingBar from "./NowPlayingBar.astro";
 import { resolveTone, postToneStyle, sessionId, formatWritten } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import { publicPathname } from "@/lib/navigation";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 import type { NowPlayingData } from "@/lib/schemas/spotify";
@@ -39,6 +40,7 @@ const timezone = config.timezone ?? "Australia/Sydney";
       <a
         class="latest-ticker header-reveal"
         href={`/sessions/${latest.slug}`}
+        {...sessionLinkAttributes(latest, tone)}
         style={toneStyle}
         aria-label={`Latest ${sessionId(latest.number)} · ${latest.title} · ${formatWritten(latest.date)}`}
       >
@@ -109,7 +111,6 @@ const timezone = config.timezone ?? "Australia/Sydney";
   }
   .site-mark {
     flex-shrink: 0;
-    view-transition-name: site-logo;
   }
   .reveal {
     max-width: 0;
@@ -250,46 +251,63 @@ const timezone = config.timezone ?? "Australia/Sydney";
   }
 </style>
 <script>
-  const clocks = [...document.querySelectorAll<HTMLElement>("[data-clock-zone]")].map(
-    (element) => ({
-      element,
-      time: element.querySelector<HTMLTimeElement>("[data-site-clock]"),
-      date: element.querySelector<HTMLElement>("[data-site-date]"),
-      timeFormat: new Intl.DateTimeFormat("en-GB", {
-        timeZone: element.dataset.clockZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
+  let disposeClock: (() => void) | undefined;
+  function initializeClock() {
+    if (disposeClock) return;
+    const clocks = [...document.querySelectorAll<HTMLElement>("[data-clock-zone]")].map(
+      (element) => ({
+        element,
+        time: element.querySelector<HTMLTimeElement>("[data-site-clock]"),
+        date: element.querySelector<HTMLElement>("[data-site-date]"),
+        timeFormat: new Intl.DateTimeFormat("en-GB", {
+          timeZone: element.dataset.clockZone,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }),
+        dateFormat: new Intl.DateTimeFormat("en-AU", {
+          timeZone: element.dataset.clockZone,
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
       }),
-      dateFormat: new Intl.DateTimeFormat("en-AU", {
-        timeZone: element.dataset.clockZone,
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    }),
-  );
-  function updateClock() {
-    const now = new Date();
-    for (const clock of clocks) {
-      if (clock.time) {
-        clock.time.dateTime = now.toISOString();
-        clock.time.textContent = clock.timeFormat.format(now);
+    );
+    if (!clocks.length) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    function updateClock() {
+      const now = new Date();
+      for (const clock of clocks) {
+        if (clock.time) {
+          clock.time.dateTime = now.toISOString();
+          clock.time.textContent = clock.timeFormat.format(now);
+        }
+        if (clock.date) clock.date.textContent = clock.dateFormat.format(now);
       }
-      if (clock.date) clock.date.textContent = clock.dateFormat.format(now);
     }
+    let interval: number | undefined;
+    function startClock() {
+      clearInterval(interval);
+      if (document.hidden) return;
+      updateClock();
+      interval = window.setInterval(updateClock, 1000);
+    }
+    document.addEventListener("visibilitychange", startClock, options);
+    window.addEventListener("pageshow", startClock, options);
+    window.addEventListener("pagehide", () => clearInterval(interval), options);
+    startClock();
+    disposeClock = () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }
-  let interval: number | undefined;
-  function startClock() {
-    clearInterval(interval);
-    if (document.hidden) return;
-    updateClock();
-    interval = window.setInterval(updateClock, 1000);
-  }
-  document.addEventListener("visibilitychange", startClock);
-  window.addEventListener("pageshow", startClock);
-  window.addEventListener("pagehide", () => clearInterval(interval));
-  startClock();
+  document.addEventListener("astro:before-swap", () => {
+    disposeClock?.();
+    disposeClock = undefined;
+  });
+  document.addEventListener("astro:page-load", initializeClock);
+  initializeClock();
 </script>

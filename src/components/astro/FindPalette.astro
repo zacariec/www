@@ -1,12 +1,14 @@
 ---
 import { navigation } from "@/lib/navigation";
 import OverlayScroll from "@/components/OverlayScroll.astro";
-import { sessionId } from "@/lib/session";
+import { resolveTone, sessionId } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
   sessions: SanitySessionTape[];
+  toneShift?: number;
 }
-const { sessions } = Astro.props;
+const { sessions, toneShift = 1 } = Astro.props;
 const commands = [
   { action: "shuffle", title: "Shuffle the thoughts board", hint: "home" },
   { action: "motion", title: "Stop all motion", hint: "preferences" },
@@ -75,6 +77,12 @@ const commands = [
         {sessions.map((session) => {
           const id = sessionId(session.number);
           const hint = `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
+          const tone = resolveTone(
+            session.number,
+            toneShift,
+            Astro.url.searchParams,
+            session.toneOverride,
+          );
           return (
             <a
               id={`find-session-${session.number}`}
@@ -83,6 +91,7 @@ const commands = [
               aria-selected="false"
               tabindex="-1"
               href={`/sessions/${session.slug}`}
+              {...sessionLinkAttributes(session, tone)}
               data-find-row
               data-find-search={`${id} ${session.title} ${hint} sessions`.toLowerCase()}
             >

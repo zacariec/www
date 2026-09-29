@@ -110,6 +110,22 @@ export const siteConfigType = defineType({
       validation: (rule) => rule.integer().min(0).max(5),
     }),
     defineField({
+      name: "pageTransition",
+      title: "Page transition",
+      type: "string",
+      group: "content",
+      initialValue: "radial",
+      description: "Dither wipe between pages. Existing documents default to radial.",
+      options: {
+        list: [
+          { title: "Radial", value: "radial" },
+          { title: "Sweep", value: "sweep" },
+          { title: "Dissolve", value: "dissolve" },
+          { title: "Off", value: "off" },
+        ],
+      },
+    }),
+    defineField({
       name: "displayVersion",
       title: "Display version",
       type: "string",

@@ -38,6 +38,7 @@ interface CommentExportState {
 }
 interface PreferencesAccountProps {
   providers: ReaderProvider[];
+  ready: boolean;
   children: (state: CommentExportState) => ReactNode;
 }
 interface SignedInPreferencesProps {
@@ -424,11 +425,12 @@ function SignedInPreferences({ user, children }: SignedInPreferencesProps) {
   );
 }
 
-export function PreferencesAccount({ providers, children }: PreferencesAccountProps) {
+export function PreferencesAccount({ providers, ready, children }: PreferencesAccountProps) {
   const { data: session, isPending } = useSession();
   const [signInError, setSignInError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
-  if (session?.user)
+  const pending = !ready || isPending;
+  if (ready && session?.user)
     return (
       <SignedInPreferences key={session.user.id} user={session.user}>
         {children}
@@ -443,7 +445,7 @@ export function PreferencesAccount({ providers, children }: PreferencesAccountPr
       >
         <div className="preference-copy">
           <p>
-            {isPending
+            {pending
               ? "Checking sign-in…"
               : "Sign in to reply and manage account or email preferences. Device settings work without an account."}
           </p>
@@ -452,7 +454,7 @@ export function PreferencesAccount({ providers, children }: PreferencesAccountPr
               <button
                 key={provider}
                 className="preference-button"
-                disabled={isPending || signingIn}
+                disabled={pending || signingIn}
                 type="button"
                 onClick={async () => {
                   setSigningIn(true);
@@ -474,7 +476,7 @@ export function PreferencesAccount({ providers, children }: PreferencesAccountPr
             ))}
           </div>
         </div>
-        {!isPending && providers.length === 0 && (
+        {!pending && providers.length === 0 && (
           <p className="preference-footnote mono">Reader sign-in is not configured.</p>
         )}
         <PreferenceRow

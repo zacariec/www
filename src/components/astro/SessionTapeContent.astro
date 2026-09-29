@@ -12,6 +12,7 @@ import {
   type Tone,
 } from "@/lib/session";
 import { sessionNeighbors } from "@/lib/related-sessions";
+import { sessionLinkAttributes } from "@/lib/session-link";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 import Blot from "./Blot.astro";
 import Cortex from "./Cortex.astro";
@@ -205,7 +206,19 @@ const ptComponents = {
         <nav class="article-neighbors" aria-label="Previous and next sessions">
           <div class="article-neighbors__grid">
             {previous && (
-              <a class="article-neighbor" href={`/sessions/${previous.slug}`}>
+              <a
+                class="article-neighbor"
+                href={`/sessions/${previous.slug}`}
+                {...sessionLinkAttributes(
+                  previous,
+                  resolveTone(
+                    previous.number,
+                    config.toneShift,
+                    Astro.url.searchParams,
+                    previous.toneOverride,
+                  ),
+                )}
+              >
                 <span class="article-neighbor__label">
                   <span>← Previous · {sessionId(previous.number)}</span>
                   <kbd aria-hidden="true">[</kbd>
@@ -215,7 +228,19 @@ const ptComponents = {
               </a>
             )}
             {next ? (
-              <a class="article-neighbor article-neighbor--next" href={`/sessions/${next.slug}`}>
+              <a
+                class="article-neighbor article-neighbor--next"
+                href={`/sessions/${next.slug}`}
+                {...sessionLinkAttributes(
+                  next,
+                  resolveTone(
+                    next.number,
+                    config.toneShift,
+                    Astro.url.searchParams,
+                    next.toneOverride,
+                  ),
+                )}
+              >
                 <span class="article-neighbor__label">
                   <kbd aria-hidden="true">]</kbd>
                   <span>Next · {sessionId(next.number)} →</span>

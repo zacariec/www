@@ -56,14 +56,14 @@ const timelineCount = sessions.length + timeline.length + (getGitHubSnapshot()?.
   <TopBar config={config} latest={sessions[0]} nowPlaying={nowPlaying} />
   <div class="page-flow">
     <IndexTool sessionCount={sessionCount} timelineCount={timelineCount} />
-    <main id="content">
+    <main id="content" tabindex="-1">
       <slot />
     </main>
     <EndSection config={config} latest={sessions[0]} nowPlaying={nowPlaying} />
     <NavPill sessionCount={sessionCount} timelineCount={timelineCount} socials={config.socials} />
   </div>
   <BottomTabs />
-  <FindPalette sessions={sessions} />
+  <FindPalette sessions={sessions} toneShift={config.toneShift} />
 </BaseLayout>
 <style>
   .page-flow {

@@ -86,64 +86,106 @@ function termFor(part: string) {
   }
 </style>
 <script>
-  let active: HTMLElement | null = null;
-  const close = () => {
-    active?.querySelector<HTMLElement>("[role=tooltip]")?.setAttribute("hidden", "");
-    active = null;
-  };
-  const position = () => {
-    const trigger = active?.querySelector<HTMLButtonElement>("button");
-    const tooltip = active?.querySelector<HTMLElement>("[role=tooltip]");
-    if (!trigger || !tooltip) return;
-    const rect = trigger.getBoundingClientRect();
-    const width = tooltip.offsetWidth;
-    const height = tooltip.offsetHeight;
-    const left = Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));
-    const below = rect.bottom + 8;
-    const top =
-      below + height <= window.innerHeight - 16 ? below : Math.max(16, rect.top - height - 8);
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-  };
-  for (const term of document.querySelectorAll<HTMLElement>("[data-glossary]")) {
-    const trigger = term.querySelector<HTMLButtonElement>("button");
-    const tooltip = term.querySelector<HTMLElement>("[role=tooltip]");
-    if (!trigger || !tooltip) continue;
-    let leaveTimer: number | undefined;
-    const open = () => {
-      clearTimeout(leaveTimer);
-      if (active !== term) close();
-      active = term;
-      tooltip.hidden = false;
-      position();
+  let disposeGlossary: (() => void) | undefined;
+  function initializeGlossary() {
+    if (disposeGlossary) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    const leaveTimers = new Set<number>();
+    let active: HTMLElement | null = null;
+    const close = () => {
+      active?.querySelector<HTMLElement>("[role=tooltip]")?.setAttribute("hidden", "");
+      active = null;
     };
-    term.addEventListener("pointerenter", open);
-    term.addEventListener("pointerleave", () => {
-      // Leave a small bridge to the paper tooltip so it remains hoverable.
-      leaveTimer = window.setTimeout(() => {
-        if (active === term && !term.matches(":focus-within, :hover")) close();
-      }, 120);
-    });
-    trigger.addEventListener("focus", open);
-    trigger.addEventListener("click", open);
-    term.addEventListener("focusout", (event) => {
-      if (
-        active === term &&
-        (!(event.relatedTarget instanceof Node) || !term.contains(event.relatedTarget))
-      )
-        close();
-    });
-  }
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && active) {
-      event.preventDefault();
-      close();
+    const position = () => {
+      const trigger = active?.querySelector<HTMLButtonElement>("button");
+      const tooltip = active?.querySelector<HTMLElement>("[role=tooltip]");
+      if (!trigger || !tooltip) return;
+      const rect = trigger.getBoundingClientRect();
+      const width = tooltip.offsetWidth;
+      const height = tooltip.offsetHeight;
+      const left = Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));
+      const below = rect.bottom + 8;
+      const top =
+        below + height <= window.innerHeight - 16 ? below : Math.max(16, rect.top - height - 8);
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    };
+    for (const term of document.querySelectorAll<HTMLElement>("[data-glossary]")) {
+      const trigger = term.querySelector<HTMLButtonElement>("button");
+      const tooltip = term.querySelector<HTMLElement>("[role=tooltip]");
+      if (!trigger || !tooltip) continue;
+      let leaveTimer: number | undefined;
+      const open = () => {
+        clearTimeout(leaveTimer);
+        if (leaveTimer !== undefined) leaveTimers.delete(leaveTimer);
+        leaveTimer = undefined;
+        if (active !== term) close();
+        active = term;
+        tooltip.hidden = false;
+        position();
+      };
+      term.addEventListener("pointerenter", open, options);
+      term.addEventListener(
+        "pointerleave",
+        () => {
+          // Leave a small bridge to the paper tooltip so it remains hoverable.
+          clearTimeout(leaveTimer);
+          if (leaveTimer !== undefined) leaveTimers.delete(leaveTimer);
+          leaveTimer = window.setTimeout(() => {
+            if (leaveTimer !== undefined) leaveTimers.delete(leaveTimer);
+            leaveTimer = undefined;
+            if (active === term && !term.matches(":focus-within, :hover")) close();
+          }, 120);
+          leaveTimers.add(leaveTimer);
+        },
+        options,
+      );
+      trigger.addEventListener("focus", open, options);
+      trigger.addEventListener("click", open, options);
+      term.addEventListener(
+        "focusout",
+        (event) => {
+          if (
+            active === term &&
+            (!(event.relatedTarget instanceof Node) || !term.contains(event.relatedTarget))
+          )
+            close();
+        },
+        options,
+      );
     }
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape" && active) {
+          event.preventDefault();
+          close();
+        }
+      },
+      options,
+    );
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (active && event.target instanceof Node && !active.contains(event.target)) close();
+      },
+      options,
+    );
+    window.addEventListener("resize", position, options);
+    window.addEventListener("scroll", position, { ...options, passive: true });
+    window.addEventListener("pagehide", close, options);
+    disposeGlossary = () => {
+      controller.abort();
+      for (const timer of leaveTimers) clearTimeout(timer);
+      leaveTimers.clear();
+      close();
+    };
+  }
+  document.addEventListener("astro:before-swap", () => {
+    disposeGlossary?.();
+    disposeGlossary = undefined;
   });
-  document.addEventListener("pointerdown", (event) => {
-    if (active && event.target instanceof Node && !active.contains(event.target)) close();
-  });
-  window.addEventListener("resize", position);
-  window.addEventListener("scroll", position, { passive: true });
-  window.addEventListener("pagehide", close);
+  document.addEventListener("astro:page-load", initializeGlossary);
+  initializeGlossary();
 </script>

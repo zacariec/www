@@ -126,7 +126,7 @@ export default defineConfig([
   },
   {
     // DOM and renderer state are intentionally updated in place.
-    files: ["src/scripts/*.ts", "src/lib/zc-gl.ts", "src/lib/zc-heat.ts"],
+    files: ["src/scripts/*.ts", "src/lib/zc-gl.ts", "src/lib/zc-heat.ts", "src/lib/dither-wipe.ts"],
     rules: {
       "no-param-reassign": ["error", { props: false }],
       "@typescript-eslint/no-use-before-define": ["error", { functions: false }],
@@ -134,7 +134,12 @@ export default defineConfig([
   },
   {
     // Deterministic integer PRNG, Bayer indexing, and PNG CRC require bitwise arithmetic.
-    files: ["src/lib/zc-gl.ts", "src/lib/zc-heat.ts", "scripts/build-cursors.ts"],
+    files: [
+      "src/lib/zc-gl.ts",
+      "src/lib/zc-heat.ts",
+      "src/lib/dither-wipe.ts",
+      "scripts/build-cursors.ts",
+    ],
     rules: { "no-bitwise": "off" },
   },
 ]);

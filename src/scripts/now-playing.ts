@@ -5,9 +5,11 @@ import { refresh } from "@/lib/zc-gl";
 
 import type { NowPlayingData } from "@/lib/schemas/spotify";
 
-const roots = Array.from(document.querySelectorAll<HTMLElement>("[data-now-playing]"));
-
-if (roots.length) {
+function initializeNowPlaying() {
+  const roots = Array.from(document.querySelectorAll<HTMLElement>("[data-now-playing]"));
+  if (!roots.length) return;
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
   let state: NowPlayingData | null = null;
   try {
     const parsed = nowPlayingResponseSchema
@@ -138,27 +140,27 @@ if (roots.length) {
 
   async function poll(): Promise<void> {
     if (document.hidden || suspended || request) return;
-    const controller = new AbortController();
-    request = controller;
-    requestTimer = window.setTimeout(() => controller.abort(), 8_000);
+    const requestController = new AbortController();
+    request = requestController;
+    requestTimer = window.setTimeout(() => requestController.abort(), 8_000);
     try {
       const response = await fetch("/api/now-playing", {
         cache: "no-store",
-        signal: controller.signal,
+        signal: requestController.signal,
       });
       if (!response.ok) throw new Error("Spotify is unavailable");
       const parsed = nowPlayingResponseSchema.nullable().safeParse(await response.json());
       if (!parsed.success) throw new Error("Invalid playback state");
-      if (request !== controller || document.hidden || suspended) return;
+      if (request !== requestController || document.hidden || suspended) return;
       state = parsed.data;
       render();
     } catch {
-      if (request !== controller || document.hidden || suspended) return;
+      if (request !== requestController || document.hidden || suspended) return;
       // Never leave the previous track looking live after a failed request.
       state = null;
       render();
     } finally {
-      if (request === controller) {
+      if (request === requestController) {
         window.clearTimeout(requestTimer);
         requestTimer = undefined;
         request = null;
@@ -193,28 +195,66 @@ if (roots.length) {
     toggle.setAttribute("aria-expanded", String(open));
     strip.hidden = !open;
   });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && strip && !strip.hidden) {
-      closeStrip(strip.contains(document.activeElement));
-    }
-  });
-  mobile.addEventListener("change", () => {
-    if (!mobile.matches) closeStrip();
-  });
-  reducedMotion.addEventListener("change", updateMotion);
-  subscribePreferences(updateMotion);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stop();
-    else resume();
-  });
-  window.addEventListener("pagehide", () => {
-    suspended = true;
-    stop();
-  });
-  window.addEventListener("pageshow", () => {
-    suspended = false;
-    resume();
-  });
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Escape" && strip && !strip.hidden) {
+        closeStrip(strip.contains(document.activeElement));
+      }
+    },
+    options,
+  );
+  mobile.addEventListener(
+    "change",
+    () => {
+      if (!mobile.matches) closeStrip();
+    },
+    options,
+  );
+  reducedMotion.addEventListener("change", updateMotion, options);
+  const unsubscribe = subscribePreferences(updateMotion);
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.hidden) stop();
+      else resume();
+    },
+    options,
+  );
+  window.addEventListener(
+    "pagehide",
+    () => {
+      suspended = true;
+      stop();
+    },
+    options,
+  );
+  window.addEventListener(
+    "pageshow",
+    () => {
+      suspended = false;
+      resume();
+    },
+    options,
+  );
   if (document.hidden) render();
   else resume();
+  return () => {
+    suspended = true;
+    controller.abort();
+    unsubscribe();
+    stop();
+  };
 }
+
+let disposeNowPlaying: (() => void) | undefined;
+function mountNowPlaying() {
+  if (disposeNowPlaying) return;
+  disposeNowPlaying = initializeNowPlaying();
+}
+document.addEventListener("astro:before-swap", () => {
+  disposeNowPlaying?.();
+  disposeNowPlaying = undefined;
+});
+document.addEventListener("astro:page-load", mountNowPlaying);
+mountNowPlaying();

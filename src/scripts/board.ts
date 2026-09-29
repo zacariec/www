@@ -25,6 +25,8 @@ function initializeBoard(section: HTMLElement) {
   const board = boardElement;
   const status = statusElement;
   const cards = [...board.querySelectorAll<HTMLElement>("[data-thought-card]")];
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
   const mobile = matchMedia("(max-width: 720px)");
   const compact = matchMedia("(max-width: 1100px)");
   const key = "zc:thought-board:v1";
@@ -271,15 +273,16 @@ function initializeBoard(section: HTMLElement) {
     persist();
   });
   let previousWidth = 0;
-  new ResizeObserver(() => {
+  const resize = new ResizeObserver(() => {
     if (board.clientWidth !== previousWidth) {
       previousWidth = board.clientWidth;
       if (!frame) frame = requestAnimationFrame(layout);
     }
-  }).observe(board);
-  mobile.addEventListener("change", layout);
-  compact.addEventListener("change", layout);
-  window.addEventListener("pageshow", layout);
+  });
+  resize.observe(board);
+  mobile.addEventListener("change", layout, options);
+  compact.addEventListener("change", layout, options);
+  window.addEventListener("pageshow", layout, options);
   layout();
   const url = new URL(window.location.href);
   if (url.searchParams.get("board") === "shuffle" && !mobile.matches) {
@@ -288,7 +291,25 @@ function initializeBoard(section: HTMLElement) {
     window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
     section.scrollIntoView({ behavior: "instant", block: "start" });
   }
+  return () => {
+    controller.abort();
+    resize.disconnect();
+    cancelAnimationFrame(frame);
+    finishDrag();
+  };
 }
 
-for (const section of document.querySelectorAll<HTMLElement>("[data-thought-board]"))
-  initializeBoard(section);
+let disposeBoards: (() => void) | undefined;
+function initializeBoards() {
+  if (disposeBoards) return;
+  const disposers = [...document.querySelectorAll<HTMLElement>("[data-thought-board]")].map(
+    initializeBoard,
+  );
+  disposeBoards = () => disposers.forEach((dispose) => dispose?.());
+}
+document.addEventListener("astro:before-swap", () => {
+  disposeBoards?.();
+  disposeBoards = undefined;
+});
+document.addEventListener("astro:page-load", initializeBoards);
+initializeBoards();
