@@ -1,3 +1,5 @@
+import { bindOverlayScroll } from "@/lib/overlay-scroll";
+
 import { navigateSite } from "./site";
 
 import type { GitHubPush } from "@/lib/github";
@@ -184,6 +186,7 @@ function initializeTerminal(terminal: HTMLElement): void {
     chip.addEventListener("click", () => run(chip.dataset.terminalCommand || ""));
   }
   window.addEventListener("pagehide", () => clearTimeout(pendingNavigation));
+  bindOverlayScroll(terminal);
 }
 
 for (const terminal of document.querySelectorAll<HTMLElement>("[data-terminal]"))

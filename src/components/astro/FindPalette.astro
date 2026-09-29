@@ -1,5 +1,6 @@
 ---
 import { navigation } from "@/lib/navigation";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 import { sessionId } from "@/lib/session";
 import type { SanitySessionTape } from "@/lib/sanity/types";
 interface Props {
@@ -36,76 +37,86 @@ const commands = [
       spellcheck="false"
     />
   </label>
-  <div id="find-results" class="find-results" role="listbox" aria-label="Results">
-    <div role="group" aria-labelledby="find-pages" data-find-group>
-      <div id="find-pages" class="find-group-title" role="presentation">
-        PAGES
-      </div>
-      {navigation.map((item) => (
-        <a
-          id={`find-page-${item.number}`}
-          class="find-row"
-          role="option"
-          aria-selected="false"
-          tabindex="-1"
-          href={item.href}
-          data-find-row
-          data-find-search={`${item.number} ${item.label} ${item.href} pages`.toLowerCase()}
-        >
-          <span class="find-row-id">{item.number}</span>
-          <span class="find-row-title">{item.label}</span>
-          <span class="find-row-hint">{item.href}</span>
-        </a>
-      ))}
-    </div>
-    <div role="group" aria-labelledby="find-sessions" data-find-group>
-      <div id="find-sessions" class="find-group-title" role="presentation">
-        SESSIONS
-      </div>
-      {sessions.map((session) => {
-        const id = sessionId(session.number);
-        const hint = `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
-        return (
+  <OverlayScroll
+    axis="y"
+    tone="paper"
+    id="find-results"
+    class="find-results"
+    role="listbox"
+    label="Results"
+    tabindex={-1}
+  >
+    <div role="presentation">
+      <div role="group" aria-labelledby="find-pages" data-find-group>
+        <div id="find-pages" class="find-group-title" role="presentation">
+          PAGES
+        </div>
+        {navigation.map((item) => (
           <a
-            id={`find-session-${session.number}`}
+            id={`find-page-${item.number}`}
             class="find-row"
             role="option"
             aria-selected="false"
             tabindex="-1"
-            href={`/sessions/${session.slug}`}
+            href={item.href}
             data-find-row
-            data-find-search={`${id} ${session.title} ${hint} sessions`.toLowerCase()}
+            data-find-search={`${item.number} ${item.label} ${item.href} pages`.toLowerCase()}
           >
-            <span class="find-row-id">{id}</span>
-            <span class="find-row-title">{session.title}</span>
-            <span class="find-row-hint">{hint}</span>
+            <span class="find-row-id">{item.number}</span>
+            <span class="find-row-title">{item.label}</span>
+            <span class="find-row-hint">{item.href}</span>
           </a>
-        );
-      })}
-    </div>
-    <div role="group" aria-labelledby="find-commands" data-find-group>
-      <div id="find-commands" class="find-group-title" role="presentation">
-        COMMANDS
+        ))}
       </div>
-      {commands.map((command) => (
-        <button
-          id={`find-command-${command.action}`}
-          class="find-row"
-          type="button"
-          role="option"
-          aria-selected="false"
-          tabindex="-1"
-          data-find-row
-          data-find-command={command.action}
-          data-find-search={`> ${command.title} ${command.hint} commands`.toLowerCase()}
-        >
-          <span class="find-row-id">&gt;</span>
-          <span class="find-row-title">{command.title}</span>
-          <span class="find-row-hint">{command.hint}</span>
-        </button>
-      ))}
+      <div role="group" aria-labelledby="find-sessions" data-find-group>
+        <div id="find-sessions" class="find-group-title" role="presentation">
+          SESSIONS
+        </div>
+        {sessions.map((session) => {
+          const id = sessionId(session.number);
+          const hint = `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
+          return (
+            <a
+              id={`find-session-${session.number}`}
+              class="find-row"
+              role="option"
+              aria-selected="false"
+              tabindex="-1"
+              href={`/sessions/${session.slug}`}
+              data-find-row
+              data-find-search={`${id} ${session.title} ${hint} sessions`.toLowerCase()}
+            >
+              <span class="find-row-id">{id}</span>
+              <span class="find-row-title">{session.title}</span>
+              <span class="find-row-hint">{hint}</span>
+            </a>
+          );
+        })}
+      </div>
+      <div role="group" aria-labelledby="find-commands" data-find-group>
+        <div id="find-commands" class="find-group-title" role="presentation">
+          COMMANDS
+        </div>
+        {commands.map((command) => (
+          <button
+            id={`find-command-${command.action}`}
+            class="find-row"
+            type="button"
+            role="option"
+            aria-selected="false"
+            tabindex="-1"
+            data-find-row
+            data-find-command={command.action}
+            data-find-search={`> ${command.title} ${command.hint} commands`.toLowerCase()}
+          >
+            <span class="find-row-id">&gt;</span>
+            <span class="find-row-title">{command.title}</span>
+            <span class="find-row-hint">{command.hint}</span>
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
+  </OverlayScroll>
   <p class="find-empty" data-find-empty hidden>
     No match. Try a page, session title or command.
   </p>

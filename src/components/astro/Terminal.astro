@@ -1,5 +1,6 @@
 ---
 import { navigation } from "@/lib/navigation";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 import { sessionId } from "@/lib/session";
 import type { GitHubPush } from "@/lib/github";
 import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
@@ -31,41 +32,51 @@ const data: TerminalData = {
     <span>zsh — zc@paper — 80×24</span>
     <span aria-hidden="true">∵ ⩆</span>
   </div>
-  <div class="terminal-scroll" data-terminal-scroll>
-    <div
-      class="terminal-output"
-      data-terminal-output
-      role="log"
-      aria-label="Terminal output"
-      aria-live="polite"
-      aria-relevant="additions"
-    >
-      <div class="terminal-line">$ cd {path}</div>
-      <div class="terminal-line terminal-line--error">cd: no such file or directory: {path}</div>
-      <div class="terminal-line terminal-line--muted">Type help, or tap a command below.</div>
+  <OverlayScroll
+    axis="y"
+    tone="ink"
+    class="terminal-scroll"
+    data-terminal-scroll
+    label="Terminal output"
+  >
+    <div class="terminal-content">
+      <div
+        class="terminal-output"
+        data-terminal-output
+        role="log"
+        aria-label="Terminal output"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
+        <div class="terminal-line">$ cd {path}</div>
+        <div class="terminal-line terminal-line--error">cd: no such file or directory: {path}</div>
+        <div class="terminal-line terminal-line--muted">Type help, or tap a command below.</div>
+      </div>
+      <form class="terminal-prompt" data-terminal-form>
+        <label for="terminal-input">zc@paper ~/lost $</label>
+        <input
+          id="terminal-input"
+          data-terminal-input
+          aria-label="Terminal input"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="1024"
+          enterkeyhint="go"
+        />
+      </form>
     </div>
-    <form class="terminal-prompt" data-terminal-form>
-      <label for="terminal-input">zc@paper ~/lost $</label>
-      <input
-        id="terminal-input"
-        data-terminal-input
-        aria-label="Terminal input"
-        type="text"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        maxlength="1024"
-        enterkeyhint="go"
-      />
-    </form>
-  </div>
-  <div class="terminal-chips" aria-label="Terminal commands">
-    {["help", "ls", "cd sessions", "cat readme", "git log"].map((command) => (
-      <button type="button" data-terminal-command={command}>
-        {command}
-      </button>
-    ))}
-  </div>
+  </OverlayScroll>
+  <OverlayScroll axis="x" tone="ink" class="terminal-chips" label="Terminal commands">
+    <div class="terminal-chip-list">
+      {["help", "ls", "cd sessions", "cat readme", "git log"].map((command) => (
+        <button type="button" data-terminal-command={command}>
+          {command}
+        </button>
+      ))}
+    </div>
+  </OverlayScroll>
 </div>
 <style>
   .terminal {
@@ -143,11 +154,14 @@ const data: TerminalData = {
     outline-offset: 2px;
   }
   .terminal-chips {
+    overflow-x: auto;
+    padding: 10px 12px;
+    border-top: 1px solid var(--rule);
+  }
+  .terminal-chip-list {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 10px 12px;
-    border-top: 1px solid var(--rule);
   }
   .terminal-chips button {
     display: inline-flex;
@@ -183,9 +197,10 @@ const data: TerminalData = {
       min-height: 44px;
       font-size: 16px;
     }
-    .terminal-chips {
+    .terminal-chip-list {
+      width: max-content;
+      min-width: 100%;
       flex-wrap: nowrap;
-      overflow-x: auto;
     }
   }
 </style>

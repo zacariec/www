@@ -5,6 +5,7 @@
 import { getHighlighter, isSupportedLanguage, SHIKI_THEME } from "@/lib/shiki/highlighter";
 import type { Props as PortableTextProps } from "astro-portabletext/types";
 import type { SanityCodeBlock } from "@/lib/sanity/types";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 
 type Props = PortableTextProps<SanityCodeBlock>;
 
@@ -40,16 +41,22 @@ try {
 
 <figure class="article-code">
   {node.filename && <figcaption>{node.filename}</figcaption>}
-  <div class="article-code__content" set:html={html} />
+  <OverlayScroll
+    axis="both"
+    tone="ink"
+    class="article-code__content"
+    role="region"
+    label={node.filename ? `Code: ${node.filename}` : "Code"}
+  >
+    <Fragment set:html={html} />
+  </OverlayScroll>
 </figure>
 
 <style is:global>
   /* shiki ships inline styles via `style="..."`; keep its background but
      force our layout rules so the pre plays nicely with the article column. */
-  figure > .shiki,
-  figure > div > pre.shiki {
+  .article-code__content > pre.shiki {
     padding: 1rem 1.25rem;
     line-height: 1.7;
-    overflow-x: auto;
   }
 </style>

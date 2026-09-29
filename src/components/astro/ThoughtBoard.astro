@@ -1,5 +1,6 @@
 ---
 import type { SanityTimelineEntry } from "@/lib/sanity/types";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 import ThoughtCard from "./ThoughtCard.astro";
 import Lava from "./Lava.astro";
 import SectionHead from "./SectionHead.astro";
@@ -32,10 +33,21 @@ const visible = entries.filter((entry) => entry.board?.visible);
       <span class="thoughts-section__swipe">Swipe ⇄</span>
     </header>
     {visible.length > 0 && (
-      <div class="thought-board" data-board-canvas>
-        {visible.map((entry, index) => (
-          <ThoughtCard entry={entry} index={index} />
-        ))}
+      <div class="thought-board-scroll">
+        <OverlayScroll
+          axis="x"
+          tone="paper"
+          class="thought-board"
+          data-board-canvas
+          label="Recent thoughts"
+          tabindex={-1}
+        >
+          <div class="thought-board-content">
+            {visible.map((entry, index) => (
+              <ThoughtCard entry={entry} index={index} />
+            ))}
+          </div>
+        </OverlayScroll>
       </div>
     )}
     <p class="thought-board-status" data-board-status role="status" aria-live="polite"></p>

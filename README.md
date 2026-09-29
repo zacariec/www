@@ -124,6 +124,10 @@ Desktop `/` and `Ctrl+K`/`⌘K` open the accessible find palette. Commands navig
 
 The footer contains the colophon, Preferences link and discoverable terminal link. Home glossary triggers support keyboard focus and Escape dismissal. Mobile navigation has three tabs; Preferences remains reachable from the footer.
 
+Inner scroll boxes use `src/components/OverlayScroll.astro` and the dependency-free `bindOverlayScroll` runtime. Set `axis` (`x`, `y` or `both`), `tone` (`paper` or `ink`), a descriptive `label`, and pass sizing classes/styles to the native scroller. Keep the complete scroll content in its first child so resize observation tracks appended lines, filtering and font changes. Hydrated React content uses the same `data-ov` / `data-ov-sc` / `data-ov-thumb` contract and calls the binder after mounting.
+
+Overlay thumbs reserve no gutter, appear only on overflowing axes during scrolling/hover/drag, and hide after 900ms idle. Touch preserves native swiping; thumb drags temporarily suspend scroll snapping. Reduced motion and the Still preference disable fades. Native keyboard, wheel and touch scrolling remain available without JavaScript; decorative thumbs never receive focus. Binding is idempotent and removal disconnects per-box observers/listeners. The window scrollbar, comment thread and Studio are unchanged.
+
 ## Reader preferences
 
 `/preferences` separates device settings from authenticated account and delivery settings. Device choices persist in `zc.prefs` and apply before first paint: text size, paragraph numbers, desktop reading panel, motion, social-link cycling, cursor accent and palette shift. Explicit URL parameters retain precedence; CMS tone overrides remain pinned. Untouched mobile body text stays 17px; selecting S/M/L explicitly applies 17/19/21px. Hidden paragraph labels retain keyboard-focusable actions. Personal settings never affect OG images.

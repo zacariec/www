@@ -22,6 +22,7 @@ import GlyphDivider from "./GlyphDivider.astro";
 import MetaStrip from "./MetaStrip.astro";
 import ReadingPanel from "./ReadingPanel.astro";
 import RelatedSessions from "./RelatedSessions.astro";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 import "@/styles/reading.css";
 
 // Dynamic imports keep Astro serializers out of Vite's JS dependency scanner.
@@ -237,24 +238,33 @@ const ptComponents = {
       </article>
       <aside class="reading-sidebar" aria-label="Reading tools">
         <div class="reading-sidebar__sticky">
-          {isTape && session.sections.length > 0 && (
-            <nav class="article-contents" aria-label="Contents">
-              <Window title="Contents">
-                <span slot="right">{session.sections.length} sections</span>
-                <ol>
-                  {session.sections.map((section, index) => (
-                    <li>
-                      <a href={`#${section.id}`}>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                        {section.title}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </Window>
-            </nav>
-          )}
-          <ReadingPanel session={session} paragraphCount={paragraphCount} />
+          <OverlayScroll
+            axis="y"
+            label="Reading tools"
+            role="region"
+            class="reading-sidebar__scroll"
+          >
+            <div class="reading-sidebar__content">
+              {isTape && session.sections.length > 0 && (
+                <nav class="article-contents" aria-label="Contents">
+                  <Window title="Contents">
+                    <span slot="right">{session.sections.length} sections</span>
+                    <ol>
+                      {session.sections.map((section, index) => (
+                        <li>
+                          <a href={`#${section.id}`}>
+                            <span>{String(index + 1).padStart(2, "0")}</span>
+                            {section.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </Window>
+                </nav>
+              )}
+              <ReadingPanel session={session} paragraphCount={paragraphCount} />
+            </div>
+          </OverlayScroll>
         </div>
       </aside>
     </section>
@@ -267,41 +277,51 @@ const ptComponents = {
     aria-labelledby="paragraph-dialog-title"
     data-paragraph-dialog
   >
-    <div class="paragraph-dialog__title">
-      <span id="paragraph-dialog-title">
-        Anchor <span data-dialog-paragraph>¶01</span>
-      </span>
-      <button type="button" data-dialog-close aria-label="Close paragraph actions">
-        ×
-      </button>
-    </div>
-    <div class="paragraph-dialog__actions">
-      <button type="button" data-highlight-toggle aria-pressed="false">
-        □ Highlight <span data-dialog-paragraph>¶01</span>
-      </button>
-      <button type="button" data-comment-open>
-        ↳ Comment on <span data-dialog-paragraph>¶01</span>
-      </button>
-      <button type="button" data-copy-anchor>
-        ⧉ Copy link to <span data-dialog-paragraph>¶01</span>
-      </button>
-    </div>
-    <form class="paragraph-dialog__composer" data-paragraph-composer hidden>
-      <label for="paragraph-draft">
-        Comment on <span data-dialog-paragraph>¶01</span>
-      </label>
-      <textarea
-        id="paragraph-draft"
-        name="body"
-        rows="3"
-        maxlength="5000"
-        placeholder="Say the thing"
-      ></textarea>
-      <button type="submit" disabled>
-        Post ↵
-      </button>
-    </form>
-    <p class="paragraph-dialog__status" data-dialog-status role="status"></p>
+    <OverlayScroll
+      axis="y"
+      tone="paper"
+      class="paragraph-dialog__scroll"
+      label="Paragraph actions"
+      tabindex={-1}
+    >
+      <div>
+        <div class="paragraph-dialog__title">
+          <span id="paragraph-dialog-title">
+            Anchor <span data-dialog-paragraph>¶01</span>
+          </span>
+          <button type="button" data-dialog-close aria-label="Close paragraph actions">
+            ×
+          </button>
+        </div>
+        <div class="paragraph-dialog__actions">
+          <button type="button" data-highlight-toggle aria-pressed="false">
+            □ Highlight <span data-dialog-paragraph>¶01</span>
+          </button>
+          <button type="button" data-comment-open>
+            ↳ Comment on <span data-dialog-paragraph>¶01</span>
+          </button>
+          <button type="button" data-copy-anchor>
+            ⧉ Copy link to <span data-dialog-paragraph>¶01</span>
+          </button>
+        </div>
+        <form class="paragraph-dialog__composer" data-paragraph-composer hidden>
+          <label for="paragraph-draft">
+            Comment on <span data-dialog-paragraph>¶01</span>
+          </label>
+          <textarea
+            id="paragraph-draft"
+            name="body"
+            rows="3"
+            maxlength="5000"
+            placeholder="Say the thing"
+          ></textarea>
+          <button type="submit" disabled>
+            Post ↵
+          </button>
+        </form>
+        <p class="paragraph-dialog__status" data-dialog-status role="status"></p>
+      </div>
+    </OverlayScroll>
   </dialog>
 
   <Thread

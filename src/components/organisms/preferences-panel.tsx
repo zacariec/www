@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   PreferenceRow,
@@ -8,6 +8,7 @@ import {
   PreferenceToggle,
   PreferenceWindow,
 } from "@/components/molecules/preference-controls";
+import { bindOverlayScroll } from "@/lib/overlay-scroll";
 import {
   DEFAULT_PREFERENCES,
   getPreferences,
@@ -90,8 +91,10 @@ export function PreferencesPanel({
     available: true,
   });
   const [confirm, setConfirm] = useState<"highlights" | "board" | "all" | null>(null);
+  const snapshotScroll = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (snapshotScroll.current) bindOverlayScroll(snapshotScroll.current);
     const refresh = () => {
       setPrefs(getPreferences());
       setDevice(readDeviceData());
@@ -335,7 +338,16 @@ export function PreferencesPanel({
 
         <aside aria-label="Saved device preferences" className="preferences-snapshot">
           <PreferenceWindow note={saved} title="prefs.json">
-            <pre>{JSON.stringify(prefs, null, 2)}</pre>
+            <div ref={snapshotScroll} data-ov data-axis="both" data-tone="paper">
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native overflow regions need keyboard scrolling. */}
+              <div data-ov-sc aria-label="Saved preferences JSON" role="region" tabIndex={0}>
+                <pre>
+                  <code>{JSON.stringify(prefs, null, 2)}</code>
+                </pre>
+              </div>
+              <div hidden aria-hidden="true" data-ov-thumb="x" />
+              <div hidden aria-hidden="true" data-ov-thumb="y" />
+            </div>
             <div className="preferences-snapshot__footer mono">
               <span>localStorage · zc.prefs</span>
               <button

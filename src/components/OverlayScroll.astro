@@ -1,0 +1,114 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"div"> {
+  axis?: "x" | "y" | "both";
+  tone?: "paper" | "ink";
+  label?: string;
+}
+
+const {
+  axis = "both",
+  tone = "paper",
+  label,
+  tabindex = 0,
+  role = label ? "region" : undefined,
+  ...attributes
+} = Astro.props;
+---
+
+<div data-ov data-axis={axis} data-tone={tone}>
+  <div {...attributes} data-ov-sc tabindex={tabindex} role={role} aria-label={label}>
+    <slot />
+  </div>
+  <div data-ov-thumb="x" aria-hidden="true" hidden></div>
+  <div data-ov-thumb="y" aria-hidden="true" hidden></div>
+</div>
+
+<style>
+  /* Attribute-scoped so hydrated islands can use the same component contract. */
+  :global([data-ov]) {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+  }
+  :global(:where([data-ov] > [data-ov-sc])) {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+  }
+  :global(:where([data-ov][data-axis="x"] > [data-ov-sc])) {
+    overflow-y: hidden;
+  }
+  :global(:where([data-ov][data-axis="y"] > [data-ov-sc])) {
+    overflow-x: hidden;
+  }
+  :global([data-ov] > [data-ov-thumb]) {
+    position: absolute;
+    z-index: 5;
+    box-sizing: border-box;
+    border: 3px solid transparent;
+    border-radius: 0;
+    background: var(--ink);
+    background-clip: padding-box;
+    opacity: 0;
+    pointer-events: none;
+    touch-action: none;
+    user-select: none;
+    cursor: var(--cur-grab, grab);
+    transition:
+      opacity 0.3s,
+      border-width 0.15s;
+  }
+  :global([data-ov][data-tone="ink"] > [data-ov-thumb]) {
+    background-color: var(--paper);
+  }
+  :global([data-ov] > [data-ov-thumb="x"]) {
+    height: 11px;
+    bottom: 1px;
+    left: 0;
+  }
+  :global([data-ov] > [data-ov-thumb="y"]) {
+    width: 11px;
+    right: 1px;
+    top: 0;
+  }
+  :global([data-ov][data-ov-visible] > [data-ov-thumb]) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  :global([data-ov][data-ov-dragging] > [data-ov-thumb]) {
+    border-width: 2px;
+    background-color: var(--pink);
+  }
+  @media (hover: hover) {
+    :global([data-ov] > [data-ov-thumb]:hover) {
+      border-width: 2px;
+      background-color: var(--pink);
+    }
+  }
+  :global([data-ov][data-ov-dragging]),
+  :global([data-ov][data-ov-dragging] > [data-ov-thumb]) {
+    cursor: var(--cur-grabbing, grabbing);
+  }
+  :global([data-ov][data-ov-dragging] > [data-ov-sc]) {
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+  }
+  :global([data-pref-motion="still"] [data-ov] > [data-ov-thumb]) {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global([data-ov] > [data-ov-thumb]) {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { bindOverlayScroll } from "@/lib/overlay-scroll";
+
+  bindOverlayScroll();
+  document.addEventListener("astro:page-load", () => bindOverlayScroll());
+</script>

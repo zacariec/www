@@ -1,3 +1,4 @@
+import { bindOverlayScroll } from "@/lib/overlay-scroll";
 import { setPreferences, subscribePreferences } from "@/lib/preferences";
 
 import { hasBlockingOverlay, isEditingTarget, navigateSite } from "./site";
@@ -68,6 +69,7 @@ function initializeFindPalette(dialog: HTMLDialogElement): void {
     updateMotion();
     filter();
     dialog.showModal();
+    bindOverlayScroll(dialog);
     field.setAttribute("aria-expanded", "true");
     field.focus({ preventScroll: true });
   }
@@ -181,6 +183,7 @@ function initializeFindPalette(dialog: HTMLDialogElement): void {
   subscribePreferences(updateMotion);
   updateMotion();
   filter();
+  bindOverlayScroll(dialog);
 }
 
 const palette = document.querySelector<HTMLDialogElement>("[data-find-palette]");

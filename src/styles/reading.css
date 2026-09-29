@@ -352,7 +352,10 @@
 }
 .article-code__content pre {
   margin: 0;
-  max-width: 100%;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow: visible;
 }
 .article-code__content code {
   font-family: inherit;
@@ -450,11 +453,15 @@ a.article-neighbor:is(:hover, :focus-visible) {
 .reading-sidebar__sticky {
   position: sticky;
   top: 24px;
-  display: grid;
-  gap: 24px;
+}
+.reading-sidebar__scroll {
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   padding: 0 7px 7px 0;
+}
+.reading-sidebar__content {
+  display: grid;
+  gap: 24px;
 }
 .reading-panel__body {
   padding: 16px 12px 12px;
@@ -544,7 +551,10 @@ a.article-neighbor:is(:hover, :focus-visible) {
   font:
     11px/1.5 var(--font-ibm-plex-mono),
     monospace;
-  overflow: auto;
+  overflow: hidden;
+}
+.paragraph-dialog__scroll {
+  max-height: calc(100dvh - 26px);
 }
 .paragraph-dialog::backdrop {
   background: transparent;
@@ -845,6 +855,9 @@ a.article-neighbor:is(:hover, :focus-visible) {
     border-bottom: 0;
     box-shadow: 0 -5px 0 var(--ink);
     font-size: 12px;
+  }
+  .paragraph-dialog__scroll {
+    max-height: calc(80dvh - 1px - env(safe-area-inset-bottom));
   }
   .paragraph-dialog::backdrop {
     background: color-mix(in srgb, var(--ink) 35%, transparent);

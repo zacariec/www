@@ -1,5 +1,6 @@
 ---
 import { formatDistanceToNow } from "date-fns";
+import OverlayScroll from "@/components/OverlayScroll.astro";
 import { getGitHubSnapshot, type ContributionDay } from "@/lib/github";
 import { postToneStyle, resolveTone, sessionId, TONES, type Tone } from "@/lib/session";
 import type { SanitySessionTape } from "@/lib/sanity/types";
@@ -87,50 +88,59 @@ const timelineHref = `/timeline?${timelineParams}`;
           </span>
         </div>
         {[53, 22].map((weeks) => (
-          <div class:list={["heat-scroll", weeks === 53 ? "desktop-only" : "mobile-only"]}>
-            <div class:list={["heat-grid", { "heat-grid--mobile": weeks === 22 }]}>
-              {weeks === 53 && <span aria-hidden="true" />}
-              <div class="heat-months" aria-hidden="true">
-                {monthLabels(days, weeks).map((month) => (
-                  <span style={`left:${month.left}px`}>{month.label}</span>
-                ))}
-              </div>
-              {weeks === 53 && (
-                <div class="heat-weekdays" aria-hidden="true">
-                  <span style="top:13px">Mon</span>
-                  <span style="top:43px">Wed</span>
-                  <span style="top:73px">Fri</span>
+          <div class={weeks === 53 ? "desktop-only" : "mobile-only"}>
+            <OverlayScroll axis="x" tone="paper" class="heat-scroll" label="Contribution calendar">
+              <div class:list={["heat-grid", { "heat-grid--mobile": weeks === 22 }]}>
+                {weeks === 53 && <span aria-hidden="true" />}
+                <div class="heat-months" aria-hidden="true">
+                  {monthLabels(days, weeks).map((month) => (
+                    <span style={`left:${month.left}px`}>{month.label}</span>
+                  ))}
                 </div>
-              )}
-              <canvas
-                data-zc="heat"
-                data-days={daysJson}
-                data-weeks={weeks}
-                data-fg="--post-tone"
-                width={weeks === 53 ? 792 : 327}
-                height="102"
-                tabindex="0"
-                aria-label={`${github.login}'s public GitHub contributions over ${weeks} weeks. Use arrow keys to explore days; Home and End move to the first and last day.`}
-                aria-describedby="contribution-readout"
-              >
-                {github.total.toLocaleString("en-GB")} public contributions in the past year.
-                Current streak: {github.currentStreak} days.
-              </canvas>
-            </div>
+                {weeks === 53 && (
+                  <div class="heat-weekdays" aria-hidden="true">
+                    <span style="top:13px">Mon</span>
+                    <span style="top:43px">Wed</span>
+                    <span style="top:73px">Fri</span>
+                  </div>
+                )}
+                <canvas
+                  data-zc="heat"
+                  data-days={daysJson}
+                  data-weeks={weeks}
+                  data-fg="--post-tone"
+                  width={weeks === 53 ? 792 : 327}
+                  height="102"
+                  tabindex="0"
+                  aria-label={`${github.login}'s public GitHub contributions over ${weeks} weeks. Use arrow keys to explore days; Home and End move to the first and last day.`}
+                  aria-describedby="contribution-readout"
+                >
+                  {github.total.toLocaleString("en-GB")} public contributions in the past year.
+                  Current streak: {github.currentStreak} days.
+                </canvas>
+              </div>
+            </OverlayScroll>
           </div>
         ))}
         <div class="heat-details">
-          <p
-            id="contribution-readout"
-            class="heat-readout"
-            data-heat-readout
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <span class="desktop-only">Hover a day.</span>
-            <span class="mobile-only">Tap a day.</span>
-          </p>
+          <div class="heat-readout-frame">
+            <OverlayScroll
+              axis="y"
+              tone="paper"
+              id="contribution-readout"
+              class="heat-readout"
+              data-heat-readout
+              role="status"
+              label="Contribution details"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <div data-heat-readout-content>
+                <span class="desktop-only">Hover a day.</span>
+                <span class="mobile-only">Tap a day.</span>
+              </div>
+            </OverlayScroll>
+          </div>
           <div
             class="heat-legend"
             aria-label="Contribution intensity from less to more; a central square marks a published session."
@@ -305,8 +315,11 @@ const timelineHref = `/timeline?${timelineParams}`;
     border-top: 1px solid var(--rule);
     margin-top: auto;
   }
-  .heat-readout {
+  .heat-readout-frame {
     flex: 1 1 360px;
+    min-width: 0;
+  }
+  .heat-readout {
     height: 3em;
     overflow-y: auto;
     font-variant-numeric: tabular-nums;
@@ -441,8 +454,10 @@ const timelineHref = `/timeline?${timelineParams}`;
       gap: 8px;
       padding: 6px 10px 10px;
     }
-    .heat-readout {
+    .heat-readout-frame {
       flex-basis: 100%;
+    }
+    .heat-readout {
       min-height: 3em;
     }
     .heat-legend {

@@ -52,6 +52,21 @@
 .thoughts-section__swipe {
   display: none;
 }
+.thought-board-scroll,
+.thought-board-content {
+  display: contents;
+}
+@media (min-width: 721px) {
+  .thought-board-scroll > [data-ov] {
+    display: contents;
+  }
+  .thought-board-scroll > [data-ov] > .thought-board {
+    overflow: visible;
+  }
+  .thought-board-scroll > [data-ov] > [data-ov-thumb] {
+    display: none;
+  }
+}
 .thought-board {
   position: relative;
   display: grid;
@@ -208,22 +223,31 @@
       10px var(--font-ibm-plex-mono),
       monospace;
   }
+  .thought-board-scroll {
+    display: block;
+    margin: 0 -16px 16px;
+  }
   .thought-board,
   .thought-board[data-interactive] {
-    display: grid;
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: min(272px, calc(100vw - 64px));
-    gap: 18px;
+    display: block;
+    isolation: isolate;
     min-height: 0;
     height: auto !important;
-    margin: 0 -16px 16px;
-    padding: 30px 24px;
+    margin: 0;
+    padding: 0;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 24px;
     overscroll-behavior-x: contain;
-    scrollbar-width: thin;
+  }
+  .thought-board-content {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(272px, calc(100vw - 64px));
+    gap: 18px;
+    width: max-content;
+    min-width: 100%;
+    padding: 30px 24px;
   }
   .thought-card,
   [data-interactive] .thought-card {
