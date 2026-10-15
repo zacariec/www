@@ -49,6 +49,14 @@ export default defineConfig({
                 : [],
             }),
           }),
+          roll: defineLocations({
+            select: { title: "title", slug: "slug.current" },
+            resolve: (document) => ({
+              locations: document?.slug
+                ? [{ title: document.title || "Roll", href: `/preview/rolls/${document.slug}` }]
+                : [],
+            }),
+          }),
           siteConfig: defineLocations({ locations: [{ title: "Index", href: "/preview" }] }),
           timelineEntry: defineLocations({
             locations: [{ title: "Thoughts board", href: "/preview" }],

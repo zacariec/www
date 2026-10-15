@@ -3,10 +3,10 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import Terminal from "@/components/astro/Terminal.astro";
 import Blot from "@/components/astro/Blot.astro";
 import Cortex from "@/components/astro/Cortex.astro";
-import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getSiteConfig } from "@/lib/sanity/fetch";
 import { getGitHubSnapshot } from "@/lib/github";
 import { generatedOgImage } from "@/lib/seo/og-image";
-const [config, sessions] = await Promise.all([getSiteConfig(), getAllSessions()]);
+const [config, sessions] = await Promise.all([getSiteConfig(), getAllPosts()]);
 const path = Astro.locals.notFoundPath ?? Astro.url.pathname;
 const pushes = getGitHubSnapshot()?.pushes ?? [];
 Astro.response.status = 404;
@@ -27,8 +27,8 @@ Astro.response.status = 404;
     </div>
     <div class="lost-cortex">
       <Cortex
-        sessions={sessions}
-        highlight={sessions.length}
+        sessions={sessions.filter((post) => post.kind !== "roll")}
+        highlight={sessions.filter((post) => post.kind !== "roll").length}
         ox={0.72}
         fade={0.62}
         fadeBottom={0.34}

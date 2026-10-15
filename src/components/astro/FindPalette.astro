@@ -1,11 +1,12 @@
 ---
 import { navigation } from "@/lib/navigation";
 import OverlayScroll from "@/components/OverlayScroll.astro";
-import { resolveTone, sessionId } from "@/lib/session";
+import { resolveTone } from "@/lib/session";
+import { postHref, postId } from "@/lib/post";
 import { sessionLinkAttributes } from "@/lib/session-link";
-import type { SanitySessionTape } from "@/lib/sanity/types";
+import type { SanityPost } from "@/lib/sanity/types";
 interface Props {
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   toneShift?: number;
 }
 const { sessions, toneShift = 1 } = Astro.props;
@@ -75,8 +76,8 @@ const commands = [
           SESSIONS
         </div>
         {sessions.map((session) => {
-          const id = sessionId(session.number);
-          const hint = `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
+          const id = postId(session);
+          const hint = session.kind === "roll" ? `roll · ${session.frameCount} frames` : `${session.kind === "tape" ? "tape · " : ""}${session.readTime} min`;
           const tone = resolveTone(
             session.number,
             toneShift,
@@ -85,12 +86,12 @@ const commands = [
           );
           return (
             <a
-              id={`find-session-${session.number}`}
+              id={`find-post-${session.kind}-${session.number}`}
               class="find-row"
               role="option"
               aria-selected="false"
               tabindex="-1"
-              href={`/sessions/${session.slug}`}
+              href={postHref(session)}
               {...sessionLinkAttributes(session, tone)}
               data-find-row
               data-find-search={`${id} ${session.title} ${hint} sessions`.toLowerCase()}

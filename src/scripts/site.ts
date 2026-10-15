@@ -286,8 +286,8 @@ document.addEventListener("keydown", (event) => {
     (event.key !== "[" && event.key !== "]")
   )
     return;
-  const article = document.querySelector<HTMLElement>(".article-template");
-  const href = event.key === "[" ? article?.dataset.sessionPrev : article?.dataset.sessionNext;
+  const neighbors = document.querySelector<HTMLElement>("[data-post-neighbors]");
+  const href = event.key === "[" ? neighbors?.dataset.postPrev : neighbors?.dataset.postNext;
   if (!href) return;
   event.preventDefault();
   navigateSite(href);

@@ -11,6 +11,7 @@ export function publicPathname(pathname: string) {
 
 export function currentNavigation(pathname: string) {
   const path = publicPathname(pathname);
+  if (path.startsWith("/rolls/")) return navigation[1];
   return (
     navigation.find((item) => item.href !== "/" && path.startsWith(item.href)) ?? navigation[0]
   );

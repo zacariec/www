@@ -2,13 +2,13 @@
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PageHero from "@/components/astro/PageHero.astro";
 import TimelineItem from "@/components/astro/TimelineItem.astro";
-import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import { getGitHubSnapshot } from "@/lib/github";
 import { resolveTone } from "@/lib/session";
 import { timelineJsonLd } from "@/lib/seo/jsonld";
 import { generatedOgImage } from "@/lib/seo/og-image";
 const [sessions, timeline, config] = await Promise.all([
-  getAllSessions(),
+  getAllPosts(),
   getAllTimelineEntries(),
   getSiteConfig(),
 ]);

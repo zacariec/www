@@ -1,0 +1,73 @@
+---
+import type { SanityPost } from "@/lib/sanity/types";
+import { postHref, postId, postNeighbors } from "@/lib/post";
+import { resolveTone } from "@/lib/session";
+import { sessionLinkAttributes } from "@/lib/session-link";
+import Chip from "./Chip.astro";
+
+interface Props {
+  post: SanityPost;
+  posts: SanityPost[];
+  toneShift: number;
+  allPosts?: boolean;
+}
+const { post, posts, toneShift, allPosts = false } = Astro.props;
+const { previous, next } = postNeighbors(post, posts);
+const links = [
+  ...(previous ? [{ post: previous, next: false }] : []),
+  ...(next ? [{ post: next, next: true }] : []),
+];
+---
+
+<nav
+  class="article-neighbors"
+  aria-label="Previous and next posts"
+  data-post-neighbors
+  data-post-prev={previous ? postHref(previous) : ""}
+  data-post-next={next ? postHref(next) : ""}
+>
+  <div class="article-neighbors__grid">
+    {links.map(({ post: neighbor, next: isNext }) => (
+      <a
+        class:list={["article-neighbor", { "article-neighbor--next": isNext }]}
+        href={postHref(neighbor)}
+        {...sessionLinkAttributes(
+          neighbor,
+          resolveTone(neighbor.number, toneShift, Astro.url.searchParams, neighbor.toneOverride),
+        )}
+      >
+        <span class="article-neighbor__label">
+          {isNext && <kbd aria-hidden="true">]</kbd>}
+          <span>
+            {isNext ? `Next · ${postId(neighbor)} →` : `← Previous · ${postId(neighbor)}`}
+          </span>
+          {!isNext && <kbd aria-hidden="true">[</kbd>}
+        </span>
+        <span class="article-neighbor__title">{neighbor.title}</span>
+        {neighbor.kind === "roll" ? (
+          <Chip kind="frames" frames={neighbor.frameCount} />
+        ) : (
+          <Chip kind="read" minutes={neighbor.readTime} />
+        )}
+      </a>
+    ))}
+    {!next && !allPosts && (
+      <div class="article-neighbor article-neighbor--next article-neighbor--unwritten">
+        <span class="article-neighbor__label">Next</span>
+        <span class="article-neighbor__title">Still being written.</span>
+        <a href="#updates">get it by email ↓</a>
+      </div>
+    )}
+    {allPosts && (
+      <a class="article-neighbor article-neighbor--all" href="/sessions" data-sessions-back>
+        <span class="article-neighbor__label">All posts →</span>
+        <span class="article-neighbor__title">Sessions.</span>
+      </a>
+    )}
+  </div>
+  {(previous || next) && (
+    <p class="article-neighbors__hint">
+      <kbd>[</kbd> and <kbd>]</kbd> step between posts
+    </p>
+  )}
+</nav>

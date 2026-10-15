@@ -5,7 +5,9 @@ import Cover from "./Cover.astro";
 import Lava from "./Lava.astro";
 import Logo from "./Logo.astro";
 import { formatWritten, resolveTone, sessionId } from "@/lib/session";
-import type { SanitySessionTape, SanitySiteConfig, SanityTimelineEntry } from "@/lib/sanity/types";
+import type { SanityPost, SanitySessionTape, SanitySiteConfig, SanityTimelineEntry } from "@/lib/sanity/types";
+import { postId } from "@/lib/post";
+import { rollImageUrl } from "@/lib/roll";
 import "@/styles/fonts.css";
 import "@/styles/tokens.css";
 import "@/styles/og-image.css";
@@ -13,18 +15,18 @@ import "@/styles/og-image.css";
 interface Props {
   kind: "default" | "session" | "tape" | "sessions" | "timeline" | "404";
   config: SanitySiteConfig;
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   timeline: SanityTimelineEntry[];
   session?: SanitySessionTape;
 }
 
 const { kind, config, sessions, timeline, session } = Astro.props;
 const canonicalParams = new URLSearchParams();
-const toneFor = (entry: SanitySessionTape) =>
+const toneFor = (entry: SanityPost) =>
   resolveTone(entry.number, config.toneShift, canonicalParams, entry.toneOverride);
-const chronology = [...sessions].sort((a, b) => a.number - b.number);
+const chronology = sessions.filter((entry) => entry.kind !== "roll").sort((a, b) => a.number - b.number);
 const latest = [...sessions].sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number)[0];
-const strip = chronology.slice(-11);
+const strip = [...sessions].sort((a, b) => a.date.localeCompare(b.date) || a._id.localeCompare(b._id)).slice(-11);
 const tone = session ? toneFor(session) : "pink";
 const id = session ? sessionId(session.number) : "";
 const sectionCount = String(session?.sections.length ?? 0).padStart(2, "0");
@@ -189,7 +191,7 @@ const entries = [
             <aside class="og-window og-latest" style={`--post:var(--${toneFor(latest)})`}>
               <header class="og-window-bar">
                 <span>Latest</span>
-                <span class="og-id">{sessionId(latest.number)}</span>
+                <span class="og-id">{postId(latest)}</span>
               </header>
               <p class="og-latest-title" data-og-fit data-max-lines="3" data-min-size="22">
                 {latest.title}
@@ -267,8 +269,8 @@ const entries = [
             <div class="og-cover-strip">
               {strip.map((entry) => (
                 <figure>
-                  <Cover seed={entry.coverSeed} tone={toneFor(entry)} />
-                  <figcaption>{sessionId(entry.number)}</figcaption>
+                  <Cover seed={entry.coverSeed} tone={toneFor(entry)} imageUrl={entry.kind === "roll" && entry.groups[0]?.frames[0] ? rollImageUrl(entry.groups[0].frames[0], 320, 1) : undefined} />
+                  <figcaption>{postId(entry)}</figcaption>
                 </figure>
               ))}
             </div>
@@ -301,7 +303,7 @@ const entries = [
               >
                 <time datetime={entry.date}>{isoDate(entry.date)}</time>
                 {entry.session ? (
-                  <span class="og-id">{sessionId(entry.session.number)}</span>
+                  <span class="og-id">{postId(entry.session)}</span>
                 ) : (
                   <span class="og-thought-label">[thought]</span>
                 )}

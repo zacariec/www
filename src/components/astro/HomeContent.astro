@@ -8,14 +8,14 @@ import ThoughtBoard from "./ThoughtBoard.astro";
 import CommitsSection from "./CommitsSection.astro";
 import GlossaryText from "./GlossaryText.astro";
 import { resolveTone } from "@/lib/session";
-import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanityPost, SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   timeline: SanityTimelineEntry[];
   config: SanitySiteConfig;
 }
 const { sessions, timeline, config } = Astro.props;
-const tapes = sessions.filter((session) => session.kind === "tape");
+const tapes = sessions.filter((session): session is SanitySessionTape => session.kind === "tape");
 const params = new URLSearchParams(Astro.url.search);
 params.delete("tone");
 ---

@@ -3,38 +3,42 @@ import Cover from "./Cover.astro";
 import Chip from "./Chip.astro";
 import { formatWritten, postToneStyle } from "@/lib/session";
 import { sessionLinkAttributes } from "@/lib/session-link";
-import type { SanitySessionTape } from "@/lib/sanity/types";
+import type { SanityPost } from "@/lib/sanity/types";
+import { postHref } from "@/lib/post";
+import { rollImageUrl } from "@/lib/roll";
 interface Props {
-  session: SanitySessionTape;
+  session: SanityPost;
   tone: string;
 }
 const { session, tone } = Astro.props;
+const firstFrame = session.kind === "roll" ? session.groups[0]?.frames[0] : undefined;
 ---
 
 <a
   class="session-card"
-  href={`/sessions/${session.slug}`}
+  href={postHref(session)}
   {...sessionLinkAttributes(session, tone)}
   style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}
 >
   <div class="card-bar mono">
-    <span>{session.kind === "tape" ? "Tape" : "Session"}</span>
-    <Chip kind="id" number={session.number} tone={tone} />
+    <span>{session.kind === "roll" ? "Roll" : session.kind === "tape" ? "Tape" : "Session"}</span>
+    <Chip kind="id" number={session.number} postKind={session.kind} tone={tone} />
     <span class="card-read">
-      <Chip minutes={session.readTime} />
+      {session.kind === "roll" ? <Chip kind="frames" frames={session.frameCount} /> : <Chip minutes={session.readTime} />}
     </span>
   </div>
   <Cover
     seed={session.coverSeed}
     tone="--post-tone"
     animated={session.kind === "tape"}
+    imageUrl={firstFrame ? rollImageUrl(firstFrame, 800, 16 / 9) : undefined}
     class="card-cover"
   />
   <div class="card-copy">
     <h3>{session.title}</h3>
     <p>{session.subtitle}</p>
     <time class="mono" datetime={session.date}>
-      Written {formatWritten(session.date, true)}
+      {session.kind === "roll" ? "Published" : "Written"} {formatWritten(session.date, true)}
     </time>
   </div>
 </a>

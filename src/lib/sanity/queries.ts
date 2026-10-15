@@ -37,6 +37,26 @@ export const allSessionSlugsQuery = `*[${published}] { "slug": slug.current }`;
 export const allSessionsPreviewQuery = `*[_type == "sessionTape"] | order(publishedAt desc, _id desc) { ${SESSION_PROJECTION} }`;
 export const sessionChronologyQuery = `*[${published}] | order(publishedAt asc, _id asc) { _id, "date": publishedAt }`;
 
+const rollImageProjection = `asset, hotspot, crop, "url": asset->url, "width": asset->metadata.dimensions.width,
+  "height": asset->metadata.dimensions.height, "mimeType": asset->mimeType, "size": asset->size`;
+const rollProjection = `
+  _id, title, "slug": slug.current, "date": publishedAt, "dateModified": coalesce(dateModified, publishedAt),
+  "number": count(*[_type == "roll" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) &&
+    (publishedAt < ^.publishedAt || (publishedAt == ^.publishedAt && _id < ^._id))]) + 1,
+  dek, meta, groupLabel, layout, tone,
+  groups[] { _key, title, date, frames[] {
+    _key, alt, caption, size, aspect, image { ${rollImageProjection} }
+  }},
+  seo { title, description, image { ${rollImageProjection} } }
+`;
+const publishedRoll = `_type == "roll" && !(_id in path("drafts.**")) &&
+  !(_id in path("versions.**")) && publishedAt <= now()`;
+export const allRollsQuery = `*[${publishedRoll}] | order(publishedAt desc, _id desc) { ${rollProjection} }`;
+export const rollBySlugQuery = `*[${publishedRoll} && slug.current == $slug][0] { ${rollProjection} }`;
+export const allRollsPreviewQuery = `*[_type == "roll"] | order(publishedAt desc, _id desc) { ${rollProjection} }`;
+export const rollBySlugPreviewQuery = `*[_type == "roll" && slug.current == $slug][0] { ${rollProjection} }`;
+export const rollChronologyQuery = `*[${publishedRoll}] | order(publishedAt asc, _id asc) { _id, "date": publishedAt }`;
+
 const timelineProjection = `_id, text, "date": publishedAt, type, "likes": coalesce(likes, 0), "comments": coalesce(comments, 0), url, board { visible, x, y, rotation, z }`;
 export const allTimelineEntriesQuery = `*[_type == "timelineEntry" && publishedAt <= now()] | order(publishedAt desc, _id desc) { ${timelineProjection} }`;
 export const latestTimelineQuery = `*[_type == "timelineEntry" && publishedAt <= now() && board.visible == true] | order(board.z asc, publishedAt desc)[0...4] { ${timelineProjection} }`;

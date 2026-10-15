@@ -1,0 +1,217 @@
+.zc-roll-authoring,
+.zc-roll-picker,
+.zc-roll-number {
+  color: var(--ink);
+  font-family: var(--font-host-grotesk);
+}
+.zc-roll-authoring *,
+.zc-roll-picker * {
+  box-sizing: border-box;
+}
+.zc-roll-upload {
+  padding: 20px;
+  border: 2px dashed var(--ink);
+  background: var(--paper);
+}
+.zc-roll-upload.is-over {
+  background: var(--sand);
+  border-style: solid;
+}
+.zc-roll-upload p,
+.zc-roll-organizer > p {
+  margin: 8px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.zc-roll-tools {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.zc-roll-authoring button,
+.zc-roll-authoring select {
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 11px/1.4 var(--font-ibm-plex-mono);
+}
+.zc-roll-authoring button {
+  cursor: pointer;
+}
+.zc-roll-authoring button:hover:not(:disabled) {
+  background: var(--sand);
+}
+.zc-roll-authoring :disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.zc-roll-authoring label {
+  display: grid;
+  gap: 4px;
+  font: 400 11px/1.5 var(--font-ibm-plex-mono);
+}
+.zc-roll-organizer {
+  margin: 20px 0;
+}
+.zc-roll-organizer summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 0;
+}
+.zc-roll-group {
+  margin: 16px 0;
+  border: 1px solid var(--ink);
+}
+.zc-roll-group > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--ink);
+  background: var(--panel);
+  font-size: 14px;
+}
+.zc-roll-frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  list-style: none;
+}
+.zc-roll-frames > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  font-size: 13px;
+}
+.zc-roll-frames > li[draggable="true"] {
+  cursor: grab;
+}
+.zc-roll-frames > li > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: var(--panel);
+}
+.zc-roll-frames > li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zc-roll-frames select {
+  width: 100%;
+  min-width: 0;
+}
+.zc-roll-required,
+.zc-roll-errors {
+  color: #9d2238;
+  font: 400 12px/1.5 var(--font-ibm-plex-mono);
+}
+.zc-roll-drop-end {
+  padding: 16px 12px;
+  border-top: 1px dashed var(--ink);
+  font: 400 11px/1.5 var(--font-ibm-plex-mono);
+  color: var(--mute);
+}
+.zc-roll-drop-end:hover {
+  background: var(--sand);
+  color: var(--ink);
+}
+.zc-roll-fields {
+  margin-top: 20px;
+}
+.zc-roll-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.zc-roll-picker > label {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 8px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  cursor: pointer;
+  font: 400 11px/1.4 var(--font-ibm-plex-mono);
+}
+.zc-roll-picker > label.is-selected {
+  background: var(--sand);
+  border-color: var(--ink);
+}
+.zc-roll-picker > label:has(:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.zc-roll-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.zc-roll-picker > label:has(:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.zc-roll-picker-visual {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 46px;
+}
+.zc-roll-picker-visual > span {
+  display: block;
+  background: var(--ink);
+  min-width: 8px;
+}
+.zc-roll-picker-visual.is-size {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent calc(100% / 12 - 1px),
+    var(--rule) calc(100% / 12 - 1px),
+    var(--rule) calc(100% / 12)
+  );
+}
+.zc-roll-picker-visual.is-size > span {
+  height: 28px;
+}
+.zc-roll-picker-visual.is-aspect {
+  justify-content: center;
+}
+.zc-roll-picker-visual.is-aspect > span {
+  width: auto !important;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 3 / 2;
+}
+.zc-roll-number output {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid var(--ink);
+  background: var(--sand);
+  font: 400 14px/1.5 var(--font-ibm-plex-mono);
+}
+@media (max-width: 480px) {
+  .zc-roll-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .zc-roll-upload {
+    padding: 12px;
+  }
+}

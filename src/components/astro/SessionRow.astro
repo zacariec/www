@@ -3,41 +3,61 @@ import Cover from "./Cover.astro";
 import Chip from "./Chip.astro";
 import { formatWritten, postToneStyle } from "@/lib/session";
 import { sessionLinkAttributes } from "@/lib/session-link";
-import type { SanitySessionTape } from "@/lib/sanity/types";
+import type { SanityPost } from "@/lib/sanity/types";
+import { postHref } from "@/lib/post";
+import { rollImageUrl } from "@/lib/roll";
 interface Props {
-  session: SanitySessionTape;
+  session: SanityPost;
   tone: string;
 }
 const { session, tone } = Astro.props;
+const frames = session.kind === "roll" ? session.groups.flatMap((group) => group.frames).slice(0, 4) : [];
 ---
 
 <a
   class="session-row"
-  href={`/sessions/${session.slug}`}
+  href={postHref(session)}
   {...sessionLinkAttributes(session, tone)}
   style={postToneStyle(session.number, tone, Boolean(session.toneOverride))}
   data-session-kind={session.kind}
 >
-  <div class="row-cover">
-    <Cover seed={session.coverSeed} tone="--post-tone" animated={session.kind === "tape"} />
+  <div class:list={["row-cover", { "row-cover--roll": session.kind === "roll" }]}>
+    {session.kind === "roll" ? frames.map((frame, index) => (
+      <Cover seed={session.coverSeed + index} tone="--post-tone" imageUrl={rollImageUrl(frame, 320, 1)} />
+    )) : <Cover seed={session.coverSeed} tone="--post-tone" animated={session.kind === "tape"} />}
   </div>
   <div class="row-copy">
     <div class="row-meta mono">
-      <Chip kind="id" number={session.number} tone={tone} />
+      <Chip kind="id" number={session.number} postKind={session.kind} tone={tone} />
       <span>
-        · {session.kind === "tape" ? "Tape" : "Session"} · Written{" "}
-        <time datetime={session.date}>{formatWritten(session.date, true)}</time>
+        {session.kind === "roll" ? `· Roll${session.meta[0] ? ` · ${session.meta[0]}` : ""}` : (
+          <>· {session.kind === "tape" ? "Tape" : "Session"} · Written{" "}
+            <time datetime={session.date}>{formatWritten(session.date, true)}</time></>
+        )}
       </span>
     </div>
     <h2>{session.title}</h2>
     <p>{session.subtitle}</p>
   </div>
   <div class="row-read mono">
-    <Chip minutes={session.readTime} />
-    <span>read →</span>
+    {session.kind === "roll" ? <Chip kind="frames" frames={session.frameCount} /> : <Chip minutes={session.readTime} />}
+    <span>{session.kind === "roll" ? "view →" : "read →"}</span>
   </div>
 </a>
 <style>
+  .row-cover--roll {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+    padding: 2px;
+    background: var(--ink);
+  }
+  .row-cover--roll :global(.zc-cover) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
   .session-row {
     display: grid;
     grid-template-columns: 112px minmax(0, 1fr) auto;

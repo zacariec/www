@@ -1,10 +1,10 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import HomeContent from "@/components/astro/HomeContent.astro";
-import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 import { homeJsonLd } from "@/lib/seo/jsonld";
 const [sessions, timeline, config] = await Promise.all([
-  getAllSessions(),
+  getAllPosts(),
   getAllTimelineEntries(),
   getSiteConfig(),
 ]);

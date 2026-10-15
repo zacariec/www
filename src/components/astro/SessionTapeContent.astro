@@ -11,18 +11,16 @@ import {
   TONES,
   type Tone,
 } from "@/lib/session";
-import { sessionNeighbors } from "@/lib/related-sessions";
-import { sessionLinkAttributes } from "@/lib/session-link";
-import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanityPost, SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 import Blot from "./Blot.astro";
 import Cortex from "./Cortex.astro";
 import Cover from "./Cover.astro";
-import Chip from "./Chip.astro";
 import Window from "./Window.astro";
 import GlyphDivider from "./GlyphDivider.astro";
 import MetaStrip from "./MetaStrip.astro";
 import ReadingPanel from "./ReadingPanel.astro";
 import RelatedSessions from "./RelatedSessions.astro";
+import PostNeighbors from "./PostNeighbors.astro";
 import OverlayScroll from "@/components/OverlayScroll.astro";
 import "@/styles/reading.css";
 
@@ -38,11 +36,12 @@ const PortableTextBlockquote = (await import("./PortableTextBlockquote.astro")).
 
 interface Props {
   session: SanitySessionTape;
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   config: SanitySiteConfig;
 }
 
 const { session, sessions, config } = Astro.props;
+const readingSessions = sessions.filter((post): post is SanitySessionTape => post.kind !== "roll");
 const id = sessionId(session.number);
 const tone = resolveTone(
   session.number,
@@ -54,7 +53,6 @@ const fixedTone =
   TONES.includes(Astro.url.searchParams.get("tone") as Tone) || Boolean(session.toneOverride);
 const isTape = session.kind === "tape";
 const comments = session.comments.filter((comment) => comment.status === "approved");
-const { previous, next } = sessionNeighbors(session, sessions);
 const sections = new Map(session.sections.map((section) => [section.key, section.id]));
 let paragraphCount = 0;
 let figureCount = session.featuredImage?.url ? 1 : 0;
@@ -91,8 +89,6 @@ const ptComponents = {
 
 <div
   class="article-template"
-  data-session-prev={previous ? `/sessions/${previous.slug}` : ""}
-  data-session-next={next ? `/sessions/${next.slug}` : ""}
   data-reading-root
   data-slug={session.slug}
   data-read-time={session.readTime}
@@ -103,7 +99,7 @@ const ptComponents = {
     <header class:list={["page-hero", "article-hero", { "article-hero--tape": isTape }]}>
       <Blot tone="--post-tone" seed={session.coverSeed + 33} class="article-hero__blot" />
       <Cortex
-        sessions={sessions.map(({ number, readTime, kind }) => ({ number, readTime, kind }))}
+        sessions={readingSessions.map(({ number, readTime, kind }) => ({ number, readTime, kind }))}
         highlight={session.number - 1}
         class="article-hero__cortex"
         ox={0.76}
@@ -203,63 +199,7 @@ const ptComponents = {
         <div class="article-eof">
           <GlyphDivider />
         </div>
-        <nav class="article-neighbors" aria-label="Previous and next sessions">
-          <div class="article-neighbors__grid">
-            {previous && (
-              <a
-                class="article-neighbor"
-                href={`/sessions/${previous.slug}`}
-                {...sessionLinkAttributes(
-                  previous,
-                  resolveTone(
-                    previous.number,
-                    config.toneShift,
-                    Astro.url.searchParams,
-                    previous.toneOverride,
-                  ),
-                )}
-              >
-                <span class="article-neighbor__label">
-                  <span>← Previous · {sessionId(previous.number)}</span>
-                  <kbd aria-hidden="true">[</kbd>
-                </span>
-                <span class="article-neighbor__title">{previous.title}</span>
-                <Chip kind="read" minutes={previous.readTime} />
-              </a>
-            )}
-            {next ? (
-              <a
-                class="article-neighbor article-neighbor--next"
-                href={`/sessions/${next.slug}`}
-                {...sessionLinkAttributes(
-                  next,
-                  resolveTone(
-                    next.number,
-                    config.toneShift,
-                    Astro.url.searchParams,
-                    next.toneOverride,
-                  ),
-                )}
-              >
-                <span class="article-neighbor__label">
-                  <kbd aria-hidden="true">]</kbd>
-                  <span>Next · {sessionId(next.number)} →</span>
-                </span>
-                <span class="article-neighbor__title">{next.title}</span>
-                <Chip kind="read" minutes={next.readTime} />
-              </a>
-            ) : (
-              <div class="article-neighbor article-neighbor--next article-neighbor--unwritten">
-                <span class="article-neighbor__label">Next · {sessionId(session.number + 1)}</span>
-                <span class="article-neighbor__title">Still being written.</span>
-                <a href="#updates">get it by email ↓</a>
-              </div>
-            )}
-          </div>
-          <p class="article-neighbors__hint">
-            <kbd>[</kbd> and <kbd>]</kbd> step between sessions
-          </p>
-        </nav>
+        <PostNeighbors post={session} posts={sessions} toneShift={config.toneShift} />
       </article>
       <aside class="reading-sidebar" aria-label="Reading tools">
         <div class="reading-sidebar__sticky">
@@ -293,7 +233,7 @@ const ptComponents = {
         </div>
       </aside>
     </section>
-    <RelatedSessions session={session} sessions={sessions} toneShift={config.toneShift} />
+    <RelatedSessions session={session} sessions={readingSessions} toneShift={config.toneShift} />
   </div>
 
   <dialog

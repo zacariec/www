@@ -24,6 +24,7 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, { schemaType
 
 const types = [
   { name: "sessionTape", title: "Sessions", tone: "sand" },
+  { name: "roll", title: "Rolls", tone: "lilac" },
   { name: "timelineEntry", title: "Timeline", tone: "blue" },
   { name: "comment", title: "Comments", tone: "pink" },
   { name: "siteConfig", title: "Site Config", tone: "paper" },

@@ -1,6 +1,6 @@
 # zcarr.dev
 
-Sessions, tapes and thoughts. An Astro multi-page site with an embedded Sanity Studio.
+Sessions, tapes, photo rolls and thoughts. An Astro site with an embedded Sanity Studio.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Sessions, tapes and thoughts. An Astro multi-page site with an embedded Sanity S
 - Better Auth and Cloudflare D1 for reader sessions; Resend for newsletters
 - bun for dependency management and commands
 
-Public routes are `/`, `/sessions`, `/sessions/[slug]`, `/timeline`, `/preferences` and `/rss.xml`. Legacy `/blog` URLs redirect to `/sessions`; `/about` permanently redirects to `/`, preserving query parameters. Unmatched routes return a real 404 with the interactive terminal, including `/untitled-draft`.
+Public routes are `/`, `/sessions`, `/sessions/[slug]`, `/rolls/[slug]`, `/timeline`, `/preferences` and `/rss.xml`. Rolls appear inside Sessions, not a separate `/rolls` index. Legacy `/blog` URLs redirect to `/sessions`; `/about` permanently redirects to `/`, preserving query parameters. Unmatched routes return a real 404 with the interactive terminal, including `/untitled-draft`.
 
 ## Development
 
@@ -112,6 +112,19 @@ Site Config controls the headline, README copy, ticker, socials, display version
 - Optional `writtenTo` holds `{track, artist, spotifyUrl}`. The Studio input resolves a Spotify track URL through the rate-limited `/api/spotify-track` endpoint using server-only client credentials.
 - Optional `tags` use the fixed vocabulary `code`, `systems`, `ai`, `work`, `design`; `related` holds up to three non-self session/tape references. Related cards prefer authored picks, then shared-tag overlap and recency, excluding the current document and its numbered neighbors. Empty metadata never generates invented picks, tags or songs.
 
+### Photo rolls
+
+Create a **Roll** in Studio → Rolls. Drop image files or a folder into Groups & frames, or use the file/folder picker. Each image becomes one frame, initially half-width at 3:2. Add descriptive alt text to every frame before publishing; images, alt text, nonempty groups and at least one group are required. A single untitled group is ungrouped. Otherwise use any singular group label (Day, Set, Stop, Part); dates and captions are optional.
+
+The organizer supports dragging frames within or between groups, Earlier/Later buttons, a destination-group selector, and group ordering. Size/aspect visual pickers and Sanity's hotspot editor remain available in each frame. Camera, lens, ISO and original capture time are extracted into hidden EXIF fields; public queries omit this metadata.
+
+Choose contact **sheet**, **stream**, film **strip**, or **route** under Appearance. The layout is editorial, not a reader preference. Rolls have their own chronology-derived `R.001` sequence, while Previous/Next and bracket shortcuts follow publication dates across sessions, tapes and rolls. Ungrouped route layouts generate approximately four numbered sets without changing CMS groups.
+
+Rolls interleave by date in Sessions, Home, Timeline and search; the Sessions page has a Rolls filter. Only listing covers/thumbnails are dithered. Photo pages use responsive Sanity crops, while the modal viewer uses uncropped originals, wraps arrow navigation, supports mobile swipes, traps/restores focus, and suspends post shortcuts. Desktop strip wheel scrolling hands back to the page at either end.
+
+SEO uses the first frame unless overridden; RSS includes the first original image as its enclosure and the dek/captions as its description. Draft previews use `/preview/rolls/[slug]`. No content migration or sample publication is required. Roll publication does not trigger the existing session/tape newsletter webhook.
+
+
 ## Activity and v3 interactions
 
 Home's Commits window reads the bundled public-only GitHub snapshot: 53 Sunday-first weeks on desktop, 22 on mobile, with Sanity publication marks and keyboard/tap day readouts. The static 2D Bayer renderer follows the latest session tone and reader palette precedence without joining the animation loop. Current streaks allow an unfinished zero-contribution today; future days do not count as activity.
@@ -120,7 +133,7 @@ The build fetches public events and complete compare-backed commit lists for the
 
 Spotify authorization requires the Authorization Code flow with `user-read-currently-playing` and `user-read-recently-played`. Store the resulting refresh token locally and as a Worker secret; revoked grants require reconnection. `/api/now-playing` shares a 30-second edge cache with SSR. It exposes music only, falls back to recently played music, and returns `null` on failure. One visible-tab polling loop updates both header and footer, advances progress locally, and suspends timers/requests while hidden. Real album artwork uses the shared cover renderer with plain-image fallback; idle, reduced-motion and Still states freeze it. The mobile bars disclose a compact strip with `aria-expanded`.
 
-Desktop `/` and `Ctrl+K`/`⌘K` open the accessible find palette. Commands navigate to pushes/the terminal, shuffle the Home board and update the existing motion preference. `[` and `]` navigate numbered session/tape neighbors; editing fields and incompatible open dialogs suppress global shortcuts. New page navigation resets document scroll while preserving hash destinations and browser history restoration. The terminal renders text only, keeps bounded in-memory history/output, and reads actual session, README and public-push data.
+Desktop `/` and `Ctrl+K`/`⌘K` open the accessible find palette. Commands navigate to pushes/the terminal, shuffle the Home board and update the existing motion preference. `[` and `]` navigate chronological session/tape/roll neighbors; editing fields and incompatible open dialogs suppress global shortcuts. New page navigation resets document scroll while preserving hash destinations and browser history restoration. The terminal renders text only, keeps bounded in-memory history/output, and reads actual post, README and public-push data.
 
 The footer contains the colophon, Preferences link and discoverable terminal link. Home glossary triggers support keyboard focus and Escape dismissal. Mobile navigation has three tabs; Preferences remains reachable from the footer.
 

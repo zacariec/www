@@ -2,12 +2,13 @@
 import { formatDistanceToNow } from "date-fns";
 import OverlayScroll from "@/components/OverlayScroll.astro";
 import { getGitHubSnapshot, type ContributionDay } from "@/lib/github";
-import { postToneStyle, resolveTone, sessionId, TONES, type Tone } from "@/lib/session";
-import type { SanitySessionTape } from "@/lib/sanity/types";
+import { postToneStyle, resolveTone, TONES, type Tone } from "@/lib/session";
+import { postId } from "@/lib/post";
+import type { SanityPost } from "@/lib/sanity/types";
 import SectionHead from "./SectionHead.astro";
 
 interface Props {
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   toneShift: number;
 }
 
@@ -26,7 +27,7 @@ const sessionsByDay = new Map<string, string[]>();
 for (const session of sessions) {
   const day = session.date.slice(0, 10);
   const ids = sessionsByDay.get(day) ?? [];
-  ids.push(sessionId(session.number));
+  ids.push(postId(session));
   sessionsByDay.set(day, ids);
 }
 const days =

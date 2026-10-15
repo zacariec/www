@@ -7,10 +7,10 @@ import NowPlayingCard from "./NowPlayingCard.astro";
 import { resolveTone, postToneStyle } from "@/lib/session";
 import type { NowPlayingData } from "@/lib/schemas/spotify";
 import { NewsletterForm } from "@/components/molecules/newsletter-form";
-import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanityPost, SanitySiteConfig } from "@/lib/sanity/types";
 interface Props {
   config: SanitySiteConfig;
-  latest?: SanitySessionTape;
+  latest?: SanityPost;
   nowPlaying?: NowPlayingData | null;
 }
 const { config, latest, nowPlaying = null } = Astro.props;

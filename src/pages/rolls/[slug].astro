@@ -1,0 +1,43 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import RollContent from "@/components/astro/RollContent.astro";
+import { getAllPosts, getRollBySlug, getSiteConfig } from "@/lib/sanity/fetch";
+import { rollId } from "@/lib/roll";
+import { rollOgImage } from "@/lib/seo/og-image";
+import { rollJsonLd } from "@/lib/seo/jsonld";
+
+const { slug } = Astro.params;
+const [roll, sessions, config] = await Promise.all([
+  getRollBySlug(slug!),
+  getAllPosts(),
+  getSiteConfig(),
+]);
+if (!roll) {
+  Astro.locals.notFoundPath = Astro.url.pathname;
+  return Astro.rewrite(new URL(`/404${Astro.url.search}`, Astro.url));
+}
+const writtenDate = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date(roll.date));
+---
+
+<SiteLayout
+  config={config}
+  sessions={sessions}
+  articleAuthor={config.author}
+  articleModifiedTime={roll.dateModified ?? roll.date}
+  articlePublishedTime={roll.date}
+  articleSection="Roll"
+  articleWrittenDate={writtenDate}
+  canonicalUrl={`/rolls/${slug}`}
+  description={roll.seo?.description || roll.dek || roll.title}
+  jsonLd={rollJsonLd(roll, config)}
+  ogImage={rollOgImage(roll)}
+  ogType="article"
+  title={`${roll.seo?.title || roll.title} — ${rollId(roll.number)} · ${config.siteName}`}
+>
+  <RollContent roll={roll} sessions={sessions} config={config} />
+</SiteLayout>

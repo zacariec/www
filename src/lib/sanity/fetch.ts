@@ -2,10 +2,13 @@ import { env } from "cloudflare:workers";
 
 import { navItems, siteConfig } from "@/lib/constants";
 import { sessionTapes, timelineEntries } from "@/lib/fallback-data";
+import { deriveRoll, deriveRolls } from "@/lib/roll";
 import { canonicalSessionId, deriveSession, deriveSessions } from "@/lib/session";
 
 import { client, createPreviewClient } from "./client";
 import {
+  allRollsPreviewQuery,
+  allRollsQuery,
   allSessionSlugsQuery,
   allSessionsPreviewQuery,
   allSessionsQuery,
@@ -13,15 +16,25 @@ import {
   allTimelineEntriesQuery,
   latestSessionsQuery,
   latestTimelineQuery,
+  rollBySlugPreviewQuery,
+  rollBySlugQuery,
+  rollChronologyQuery,
   sessionBySlugPreviewQuery,
   sessionBySlugQuery,
   sessionChronologyQuery,
   siteConfigQuery,
 } from "./queries";
 
+import type { RollSource } from "@/lib/roll";
 import type { SessionSource } from "@/lib/session";
 
-import type { SanitySessionTape, SanitySiteConfig, SanityTimelineEntry } from "./types";
+import type {
+  SanityPost,
+  SanityRoll,
+  SanitySessionTape,
+  SanitySiteConfig,
+  SanityTimelineEntry,
+} from "./types";
 
 interface FetchOptions {
   preview?: boolean;
@@ -108,6 +121,50 @@ export async function getAllSessionSlugs(): Promise<{ slug: string }[]> {
   return client
     ? client.fetch<{ slug: string }[]>(allSessionSlugsQuery)
     : sessionTapes.map(({ slug }) => ({ slug }));
+}
+
+function derivePreviewRolls(sources: RollSource[], published: RollSource[]): SanityRoll[] {
+  return deriveRolls([
+    ...published,
+    ...sources.map((source) => ({ ...source, _id: `drafts.${canonicalSessionId(source._id)}` })),
+  ]).slice(published.length);
+}
+
+export async function getAllRolls(opts: FetchOptions = {}): Promise<SanityRoll[]> {
+  if (!client) return [];
+  const preview = opts.preview ? createPreviewClient(env.SANITY_API_TOKEN) : null;
+  if (preview) {
+    const [sources, chronology] = await Promise.all([
+      preview.fetch<RollSource[]>(allRollsPreviewQuery),
+      client.fetch<RollSource[]>(rollChronologyQuery),
+    ]);
+    return derivePreviewRolls(sources, chronology);
+  }
+  return (await client.fetch<RollSource[]>(allRollsQuery)).map((source) => deriveRoll(source));
+}
+
+export async function getRollBySlug(
+  slug: string,
+  opts: FetchOptions = {},
+): Promise<SanityRoll | null> {
+  if (!client) return null;
+  const preview = opts.preview ? createPreviewClient(env.SANITY_API_TOKEN) : null;
+  if (preview) {
+    const [source, chronology] = await Promise.all([
+      preview.fetch<RollSource | null>(rollBySlugPreviewQuery, { slug }),
+      client.fetch<RollSource[]>(rollChronologyQuery),
+    ]);
+    return source ? derivePreviewRolls([source], chronology)[0] : null;
+  }
+  const source = await client.fetch<RollSource | null>(rollBySlugQuery, { slug });
+  return source ? deriveRoll(source) : null;
+}
+
+export async function getAllPosts(opts: FetchOptions = {}): Promise<SanityPost[]> {
+  const [sessions, rolls] = await Promise.all([getAllSessions(opts), getAllRolls(opts)]);
+  return [...sessions, ...rolls].sort(
+    (a, b) => b.date.localeCompare(a.date) || b._id.localeCompare(a._id),
+  );
 }
 
 const defaultSiteConfig: SanitySiteConfig = {

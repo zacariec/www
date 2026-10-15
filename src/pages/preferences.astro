@@ -6,9 +6,10 @@ import Blot from "@/components/astro/Blot.astro";
 import Cortex from "@/components/astro/Cortex.astro";
 import { PreferencesPanel } from "@/components/organisms/preferences-panel";
 import { configuredProviders } from "@/lib/auth/auth";
-import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getSiteConfig } from "@/lib/sanity/fetch";
 import "@/styles/preferences.css";
-const [config, sessions] = await Promise.all([getSiteConfig(), getAllSessions()]);
+const [config, posts] = await Promise.all([getSiteConfig(), getAllPosts()]);
+const sessions = posts.filter((post) => post.kind !== "roll");
 const sampleText = sessions[0]?.content.find(
   (block) => block._type === "block" && block.style === "normal",
 );
@@ -18,7 +19,7 @@ const sample =
     : (sessions[0]?.excerpt ?? config.readme);
 ---
 
-<SiteLayout config={config} sessions={sessions} title={`Preferences — ${config.siteName}`} noindex>
+<SiteLayout config={config} sessions={posts} title={`Preferences — ${config.siteName}`} noindex>
   <section class="preferences-hero zc-container">
     <div class="preferences-hero__blot">
       <Blot seed={120} tone="sage" />

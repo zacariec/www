@@ -1,13 +1,13 @@
 ---
 import { navigation } from "@/lib/navigation";
 import OverlayScroll from "@/components/OverlayScroll.astro";
-import { sessionId } from "@/lib/session";
+import { postHref, postId } from "@/lib/post";
 import type { GitHubPush } from "@/lib/github";
-import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanityPost, SanitySiteConfig } from "@/lib/sanity/types";
 import type { TerminalData } from "@/scripts/terminal";
 interface Props {
   path: string;
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   config: SanitySiteConfig;
   pushes: GitHubPush[];
 }
@@ -15,9 +15,9 @@ const { path, sessions, config, pushes } = Astro.props;
 const data: TerminalData = {
   pages: navigation.map(({ label, href }) => ({ label, href })),
   sessions: sessions.map((session) => ({
-    id: sessionId(session.number),
+    id: postId(session),
     title: session.title,
-    slug: session.slug,
+    href: postHref(session),
   })),
   readme: config.readme,
   identity: config.author,

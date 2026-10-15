@@ -1,6 +1,6 @@
 ---
 import OgImage from "@/components/astro/OgImage.astro";
-import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
 
 export const prerender = false;
 
@@ -19,11 +19,11 @@ if (!pages.includes(path as Page) && !isSession) {
 }
 
 const [sessions, timeline, config] = await Promise.all([
-  getAllSessions(),
+  getAllPosts(),
   path === "timeline" ? getAllTimelineEntries() : Promise.resolve([]),
   getSiteConfig(),
 ]);
-const session = isSession ? sessions.find((entry) => entry.slug === parts[1]) : undefined;
+const session = isSession ? sessions.filter((entry) => entry.kind !== "roll").find((entry) => entry.slug === parts[1]) : undefined;
 if (isSession && !session) {
   return new Response("Not found", { status: 404, headers });
 }

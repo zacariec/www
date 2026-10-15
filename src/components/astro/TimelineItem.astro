@@ -4,10 +4,11 @@ import Window from "./Window.astro";
 import Chip from "./Chip.astro";
 import { postToneStyle } from "@/lib/session";
 import { sessionLinkAttributes } from "@/lib/session-link";
-import type { SanitySessionTape, SanityTimelineEntry } from "@/lib/sanity/types";
+import type { SanityPost, SanityTimelineEntry } from "@/lib/sanity/types";
+import { postHref } from "@/lib/post";
 import type { GitHubPush } from "@/lib/github";
 type Props =
-  | { session: SanitySessionTape; tone: string; thought?: never; push?: never }
+  | { session: SanityPost; tone: string; thought?: never; push?: never }
   | { thought: SanityTimelineEntry; session?: never; tone?: never; push?: never }
   | { push: GitHubPush; session?: never; thought?: never; tone?: never };
 const { session, thought, push, tone } = Astro.props;
@@ -31,7 +32,7 @@ const source =
   <div class="item-meta mono">
     <time datetime={activity.date}>{date}</time>
     {session ? (
-      <Chip kind="id" number={session.number} tone={tone} />
+      <Chip kind="id" number={session.number} postKind={session.kind} tone={tone} />
     ) : push ? (
       <span class="push-label">push</span>
     ) : (
@@ -41,16 +42,16 @@ const source =
   {session ? (
     <a
       class="timeline-session"
-      href={`/sessions/${session.slug}`}
+      href={postHref(session)}
       {...sessionLinkAttributes(session, tone)}
     >
       <div>
         <h2>{session.title}</h2>
         <p>
-          {session.kind === "tape" ? "Tape" : "Session"} · {session.subtitle}
+          {[session.kind === "roll" ? "Roll" : session.kind === "tape" ? "Tape" : "Session", session.subtitle].filter(Boolean).join(" · ")}
         </p>
       </div>
-      <Chip minutes={session.readTime} />
+      {session.kind === "roll" ? <Chip kind="frames" frames={session.frameCount} /> : <Chip minutes={session.readTime} />}
     </a>
   ) : push ? (
     <Window title={`${push.repo} · ${push.branch}`}>

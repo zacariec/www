@@ -1,0 +1,286 @@
+---
+import type {
+  SanityPost,
+  SanityRoll,
+  SanitySessionTape,
+  SanitySiteConfig,
+} from "@/lib/sanity/types";
+import { rollId, rollImageSrcSet, rollImageUrl, rollView } from "@/lib/roll";
+import { formatWritten, postToneStyle, resolveTone, TONES, type Tone } from "@/lib/session";
+import Blot from "./Blot.astro";
+import Cortex from "./Cortex.astro";
+import RollFrame from "./RollFrame.astro";
+import RollGroupHead from "./RollGroupHead.astro";
+import PostNeighbors from "./PostNeighbors.astro";
+import OverlayScroll from "@/components/OverlayScroll.astro";
+import "@/styles/reading.css";
+import "@/styles/rolls.css";
+
+interface Props {
+  roll: SanityRoll;
+  sessions: SanityPost[];
+  config: SanitySiteConfig;
+}
+const { roll, sessions, config } = Astro.props;
+const view = rollView(roll);
+const tone = resolveTone(roll.number, config.toneShift, Astro.url.searchParams, roll.toneOverride);
+const fixedTone =
+  TONES.includes(Astro.url.searchParams.get("tone") as Tone) || Boolean(roll.toneOverride);
+const readingSessions = sessions.filter((post): post is SanitySessionTape => post.kind !== "roll");
+const details = [
+  `Roll ${rollId(roll.number)}`,
+  `${view.frames.length} ${view.frames.length === 1 ? "frame" : "frames"}`,
+  ...(view.grouped
+    ? [`${view.groups.length} ${view.label}${view.groups.length === 1 ? "" : "s"}`]
+    : []),
+  ...roll.meta.filter(Boolean),
+];
+const viewerFrames = view.frames.map((frame) => ({
+  number: frame.number,
+  src: rollImageUrl(frame, 2400),
+  srcset: rollImageSrcSet(frame, 2400),
+  alt: frame.alt,
+  caption: [frame.groupTitle, frame.caption, formatWritten(frame.groupDate)]
+    .filter(Boolean)
+    .join(" · "),
+}));
+const groupName = (group: (typeof view.groups)[number]) =>
+  [`${view.label} ${group.number}`, group.title].filter(Boolean).join(" · ");
+const firstGroup = view.groups[0];
+const lastGroup = view.groups.at(-1);
+const indexSpan = view.grouped
+  ? [
+      firstGroup?.title ||
+        formatWritten(firstGroup?.date ?? "") ||
+        (firstGroup ? groupName(firstGroup) : ""),
+      lastGroup?.title ||
+        formatWritten(lastGroup?.date ?? "") ||
+        (lastGroup ? groupName(lastGroup) : ""),
+    ]
+      .filter(Boolean)
+      .filter((name, index, names) => index === 0 || name !== names[0])
+      .join(" → ")
+  : `${view.frames.length} ${view.frames.length === 1 ? "frame" : "frames"}`;
+---
+
+<div
+  class:list={["roll-template", `roll-template--${roll.layout}`]}
+  data-roll-root
+  style={postToneStyle(roll.number, tone, fixedTone)}
+>
+  <div class="article-shell">
+    <header class="page-hero article-hero roll-hero">
+      <Blot tone="--post-tone" seed={roll.coverSeed + 33} class="article-hero__blot" />
+      <Cortex
+        sessions={readingSessions.map(({ number, readTime, kind }) => ({ number, readTime, kind }))}
+        class="article-hero__cortex"
+        ox={0.76}
+        scale={0.8}
+        fade={0.85}
+        fadeBottom={0.45}
+        drift
+      />
+      <a class="article-back" href="/sessions" data-sessions-back>
+        ← cd ../sessions
+      </a>
+      <h1>
+        <span>{roll.title}</span>
+      </h1>
+      <div class="article-hero__meta roll-hero__meta">
+        {details.map((detail) => (
+          <span>{detail}</span>
+        ))}
+      </div>
+      {roll.dek && <p class="roll-hero__dek">{roll.dek}</p>}
+    </header>
+
+    <div class="roll-content">
+      {(roll.layout === "sheet" || roll.layout === "stream") &&
+        view.groups.map((group) => (
+          <section
+            class:list={[
+              "roll-group",
+              `roll-group--${roll.layout}`,
+              { "roll-group--grouped": view.grouped },
+            ]}
+            aria-label={view.grouped ? groupName(group) : "Frames"}
+          >
+            {view.grouped && <RollGroupHead group={group} label={view.label} />}
+            <div class="roll-group__frames">
+              {group.frames.map((frame) => (
+                <RollFrame frame={frame} layout={roll.layout} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+      {roll.layout === "strip" && (
+        <>
+          <div class="roll-strip">
+            <OverlayScroll
+              axis="x"
+              tone="ink"
+              label="Photo film strip"
+              class="roll-strip__scroll"
+              data-roll-strip
+            >
+              <div class="roll-strip__groups">
+                {view.groups.map((group) => (
+                  <section
+                    class="roll-strip__group"
+                    aria-label={view.grouped ? groupName(group) : "Frames"}
+                  >
+                    <div class="roll-strip__sprockets" aria-hidden="true"></div>
+                    <div class="roll-strip__frames">
+                      {group.frames.map((frame) => (
+                        <RollFrame frame={frame} layout="strip" />
+                      ))}
+                    </div>
+                    <div class="roll-strip__print">
+                      {view.grouped ? (
+                        <>
+                          <span>▸ {group.number}</span>
+                          {group.title && <span>{group.title}</span>}
+                          {group.date && <span>{formatWritten(group.date)}</span>}
+                          <span>
+                            {group.start}
+                            {group.start !== group.end && `–${group.end}`}
+                          </span>
+                        </>
+                      ) : (
+                        <span>
+                          FRAMES {group.start}
+                          {group.start !== group.end && `–${group.end}`}
+                        </span>
+                      )}
+                    </div>
+                    <div class="roll-strip__sprockets" aria-hidden="true"></div>
+                  </section>
+                ))}
+              </div>
+            </OverlayScroll>
+          </div>
+          <p class="roll-strip__hint">
+            <span>Scroll sideways · ⤢ opens a frame</span>
+            <span>{view.frames.length} frames</span>
+          </p>
+        </>
+      )}
+
+      {roll.layout === "route" && (
+        <div class="roll-route">
+          <nav class="roll-route__index" aria-label="Roll index" data-roll-index>
+            <div class="roll-route__summary">
+              <span>
+                Index · {view.groups.length} {view.label}
+                {view.groups.length === 1 ? "" : "s"}
+              </span>
+              <span>{indexSpan}</span>
+            </div>
+            <div class="roll-route__stops">
+              {view.groups.map((group, index) => (
+                <a
+                  class="roll-route__stop"
+                  href={`#roll-group-${group.number}`}
+                  data-roll-stop={group.number}
+                  data-roll-stop-label={groupName(group)}
+                  aria-current={index === 0 ? "location" : undefined}
+                  aria-label={groupName(group)}
+                >
+                  <span class="roll-route__track">
+                    <span class="roll-route__dot" aria-hidden="true"></span>
+                  </span>
+                  <span class="roll-route__stop-meta">
+                    {group.number}
+                    <span class="roll-route__stop-date">
+                      {group.date && ` · ${formatWritten(group.date)}`}
+                    </span>
+                  </span>
+                  {group.title && <span class="roll-route__stop-title">{group.title}</span>}
+                </a>
+              ))}
+            </div>
+            <p class="roll-route__current" data-roll-current>
+              {firstGroup && groupName(firstGroup)}
+            </p>
+          </nav>
+          {view.groups.map((group, index) => (
+            <section
+              class="roll-route__section"
+              id={`roll-group-${group.number}`}
+              data-roll-section={group.number}
+              data-active={index === 0 ? "true" : undefined}
+              aria-label={groupName(group)}
+            >
+              <div class="roll-route__rail" aria-hidden="true">
+                <span class="roll-route__dot"></span>
+              </div>
+              <div class="roll-route__body">
+                <RollGroupHead group={group} label={view.label} />
+                <div class="roll-route__frames">
+                  {group.frames.map((frame) => (
+                    <RollFrame frame={frame} layout="route" />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+      <PostNeighbors post={roll} posts={sessions} toneShift={config.toneShift} allPosts />
+    </div>
+  </div>
+
+  <dialog
+    class="roll-viewer"
+    data-roll-viewer
+    data-roll-frames={JSON.stringify(viewerFrames)}
+    role="dialog"
+    aria-modal="true"
+    aria-label={`Photo viewer — ${roll.title}`}
+  >
+    <header class="roll-viewer__header">
+      <span class="roll-viewer__title">
+        {rollId(roll.number)} · {roll.title}
+      </span>
+      <span class="roll-viewer__count" data-roll-count aria-live="polite" aria-atomic="true"></span>
+      <button
+        type="button"
+        class="roll-viewer__close"
+        data-roll-close
+        aria-label="Close photo viewer"
+      >
+        <span>esc </span>✕
+      </button>
+    </header>
+    <div class="roll-viewer__stage" data-roll-stage>
+      <button
+        type="button"
+        class="roll-viewer__previous"
+        data-roll-previous
+        aria-label="Previous photo"
+      >
+        ←<span class="roll-viewer__button-label"> prev</span>
+      </button>
+      <div class="roll-viewer__image">
+        <img
+          data-roll-image
+          alt=""
+          decoding="async"
+          sizes="(max-width: 720px) 100vw, calc(100vw - 144px)"
+        />
+      </div>
+      <button type="button" class="roll-viewer__next" data-roll-next aria-label="Next photo">
+        <span class="roll-viewer__button-label">next </span>→
+      </button>
+    </div>
+    <footer class="roll-viewer__footer">
+      <span data-roll-caption></span>
+      <span class="roll-viewer__keys">← → move · esc close</span>
+    </footer>
+  </dialog>
+</div>
+
+<script>
+  import "@/scripts/rolls";
+</script>

@@ -1,6 +1,8 @@
-import { sessionOgImage, siteOrigin } from "./og-image";
+import { postHref } from "@/lib/post";
 
-import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import { rollOgImage, sessionOgImage, siteOrigin } from "./og-image";
+
+import type { SanityRoll, SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
 
 const personId = (siteUrl: string) => `${siteUrl}/#person`;
 const websiteId = (siteUrl: string) => `${siteUrl}/#website`;
@@ -134,6 +136,39 @@ export function sessionTapeJsonLd(session: SanitySessionTape, config: SanitySite
         { name: "Home", url: siteUrl },
         { name: "Sessions", url: `${siteUrl}/sessions` },
         { name: session.title, url: `${siteUrl}/sessions/${session.slug}` },
+      ]),
+    ],
+  };
+}
+
+export function rollJsonLd(roll: SanityRoll, config: SanitySiteConfig) {
+  const siteUrl = siteOrigin(config);
+  const url = new URL(postHref(roll), siteUrl).href;
+  const image = rollOgImage(roll);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${url}#blogposting`,
+        headline: roll.title,
+        description: roll.dek,
+        ...(image && { image: image.url }),
+        datePublished: roll.date,
+        dateModified: roll.dateModified ?? roll.date,
+        author: { "@id": personId(siteUrl) },
+        publisher: { "@id": personId(siteUrl) },
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        url,
+        inLanguage: "en",
+        articleSection: "Roll",
+        isPartOf: { "@id": sessionsId(siteUrl) },
+      },
+      person(config),
+      breadcrumbs([
+        { name: "Home", url: siteUrl },
+        { name: "Sessions", url: `${siteUrl}/sessions` },
+        { name: roll.title, url },
       ]),
     ],
   };

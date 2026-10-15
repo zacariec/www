@@ -56,6 +56,57 @@ export interface SanitySessionTape {
   commentCount: number;
 }
 
+export interface RollImage {
+  asset: { _ref: string };
+  hotspot?: { x: number; y: number; width: number; height: number };
+  crop?: { top: number; bottom: number; left: number; right: number };
+  width?: number;
+  height?: number;
+  mimeType?: string;
+  url?: string;
+  size?: number;
+}
+
+export interface RollFrame {
+  _key: string;
+  image: RollImage;
+  alt: string;
+  caption?: string;
+  size: "full" | "wide" | "half" | "third";
+  aspect: "21:9" | "3:2" | "4:5" | "auto";
+  exif?: { camera?: string; lens?: string; iso?: number; dateTaken?: string };
+}
+
+export interface RollGroup {
+  _key: string;
+  title?: string;
+  date?: string;
+  frames: RollFrame[];
+}
+
+export interface SanityRoll {
+  _id: string;
+  title: string;
+  slug: string;
+  kind: "roll";
+  number: number;
+  date: string;
+  dateModified?: string;
+  dek: string;
+  subtitle: string;
+  excerpt: string;
+  meta: string[];
+  groupLabel: string;
+  groups: RollGroup[];
+  layout: "sheet" | "stream" | "strip" | "route";
+  toneOverride?: Tone;
+  coverSeed: number;
+  frameCount: number;
+  seo?: { title?: string; description?: string; image?: RollImage };
+}
+
+export type SanityPost = SanitySessionTape | SanityRoll;
+
 export interface SanityComment {
   _id: string;
   session: string;

@@ -1,13 +1,13 @@
 ---
 import Cortex from "./Cortex.astro";
 import Blot from "./Blot.astro";
-import type { SanitySessionTape } from "@/lib/sanity/types";
+import type { SanityPost } from "@/lib/sanity/types";
 interface Props {
   title: string | string[];
   eyebrow?: string;
   description?: string;
   tone?: string;
-  sessions: SanitySessionTape[];
+  sessions: SanityPost[];
   home?: boolean;
 }
 const { title, eyebrow, description, tone = "blue", sessions, home = false } = Astro.props;
@@ -20,7 +20,7 @@ const lines = Array.isArray(title) ? title : [title];
   </div>
   <div class="hero-cortex">
     <Cortex
-      sessions={sessions}
+      sessions={sessions.filter((post) => post.kind !== "roll")}
       drift
       ox={0.63}
       scale={home ? 1.05 : 0.9}
@@ -51,7 +51,7 @@ const lines = Array.isArray(title) ? title : [title];
       <p class="hero-caption mono">
         <span>Fig 01 — Cortex</span>
         <span>
-          One branch per session · {sessions.length} nodes ·{" "}
+          One branch per session · {sessions.filter((post) => post.kind !== "roll").length} nodes ·{" "}
           {sessions.filter((s) => s.kind === "tape").length} tapes ■
         </span>
       </p>

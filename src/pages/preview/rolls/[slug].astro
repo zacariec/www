@@ -1,0 +1,47 @@
+---
+import { VisualEditing } from "@sanity/astro/visual-editing";
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import RollContent from "@/components/astro/RollContent.astro";
+import {
+  getAllPosts,
+  getAllTimelineEntries,
+  getRollBySlug,
+  getSiteConfig,
+} from "@/lib/sanity/fetch";
+import { isPreviewRequest } from "@/lib/sanity/preview";
+import PreviewLinks from "@/sanity/PreviewLinks.astro";
+
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "private, no-store");
+Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+const { slug } = Astro.params;
+if (!(await isPreviewRequest(Astro.cookies))) {
+  return new Response("Open this draft from Studio Presentation to authorize preview.", {
+    status: 401,
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+const [roll, sessions, timeline, config] = await Promise.all([
+  getRollBySlug(slug!, { preview: true }),
+  getAllPosts({ preview: true }),
+  getAllTimelineEntries({ preview: true }),
+  getSiteConfig({ preview: true }),
+]);
+if (!roll) return new Response("Draft not found", { status: 404 });
+---
+
+<SiteLayout
+  config={config}
+  sessions={sessions}
+  timeline={timeline}
+  canonicalUrl={`/rolls/${slug}`}
+  description={roll.seo?.description || roll.dek || roll.title}
+  ogType="article"
+  title={`[Preview] ${roll.title} — ${config.siteName}`}
+  noindex
+  ogImage={null}
+>
+  <RollContent roll={roll} sessions={sessions} config={config} />
+  <VisualEditing enabled />
+  <PreviewLinks />
+</SiteLayout>

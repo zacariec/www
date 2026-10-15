@@ -1,0 +1,79 @@
+---
+import { rollImageRatio, rollImageSrcSet, rollImageUrl, type RollViewFrame } from "@/lib/roll";
+import type { SanityRoll } from "@/lib/sanity/types";
+
+interface Props {
+  frame: RollViewFrame;
+  layout: SanityRoll["layout"];
+}
+const { frame, layout } = Astro.props;
+const strip = layout === "strip";
+const ratio = layout === "route" ? 4 / 3 : rollImageRatio(frame, strip);
+const mobileRatio =
+  layout === "sheet" ? (frame.size === "full" ? 16 / 9 : 4 / 5) : layout === "route" ? 1 : ratio;
+const maxWidth = frame.size === "full" ? 1600 : 1200;
+const spans = { full: 12, wide: 8, half: 6, third: 4 };
+const desktopSizes = strip
+  ? `${Math.round(360 * ratio)}px`
+  : layout === "stream"
+    ? "(max-width: 1320px) 85vw, 1008px"
+    : layout === "route"
+      ? "(max-width: 1100px) 45vw, 400px"
+      : `(max-width: 1320px) ${Math.round((spans[frame.size] / 12) * 100)}vw, ${Math.round((1256 * spans[frame.size]) / 12)}px`;
+const mobileSizes = strip
+  ? `${Math.round(260 * ratio)}px`
+  : layout === "stream" || (layout === "sheet" && frame.size === "full")
+    ? "100vw"
+    : "50vw";
+const caption = [frame.groupTitle, frame.caption].filter(Boolean).join(" · ");
+---
+
+<figure
+  class:list={["roll-frame", `roll-frame--${layout}`, `roll-frame--${frame.size}`]}
+  style={`--frame-ratio:${ratio};--frame-mobile-ratio:${mobileRatio};--frame-span:${spans[frame.size]}`}
+>
+  <div class="roll-frame__image">
+    <picture>
+      <source
+        media="(max-width: 720px)"
+        srcset={rollImageSrcSet(frame, maxWidth, mobileRatio)}
+        sizes={mobileSizes}
+      />
+      <img
+        src={rollImageUrl(frame, Math.min(maxWidth, 960), ratio)}
+        srcset={rollImageSrcSet(frame, maxWidth, ratio)}
+        sizes={desktopSizes}
+        width={maxWidth}
+        height={Math.round(maxWidth / ratio)}
+        alt={frame.alt}
+        loading={frame.index === 0 ? "eager" : "lazy"}
+        fetchpriority={frame.index === 0 ? "high" : "auto"}
+        decoding="async"
+      />
+    </picture>
+  </div>
+  <figcaption>
+    <button
+      type="button"
+      class="roll-frame__open"
+      data-roll-open={frame.index}
+      aria-label={`Open frame ${frame.number}${frame.caption ? `, ${frame.caption}` : ""}`}
+      aria-haspopup="dialog"
+    >
+      {strip ? (
+        <>
+          <span aria-hidden="true">⤢</span> {frame.number}
+        </>
+      ) : (
+        <>
+          <span class="roll-frame__number">{frame.number}</span>
+          <span class="roll-frame__caption roll-frame__caption--desktop">
+            {layout === "route" ? frame.caption : caption}
+          </span>
+          <span class="roll-frame__caption roll-frame__caption--mobile">{frame.caption}</span>
+          <span aria-hidden="true">⤢</span>
+        </>
+      )}
+    </button>
+  </figcaption>
+</figure>

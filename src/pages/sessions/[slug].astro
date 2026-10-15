@@ -1,14 +1,14 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import SessionTapeContent from "@/components/astro/SessionTapeContent.astro";
-import { getSessionBySlug, getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { getSessionBySlug, getAllPosts, getSiteConfig } from "@/lib/sanity/fetch";
 import { sessionTapeJsonLd } from "@/lib/seo/jsonld";
 import { sessionOgImage } from "@/lib/seo/og-image";
 import { sessionId } from "@/lib/session";
 const { slug } = Astro.params;
 const [session, sessions, config] = await Promise.all([
   getSessionBySlug(slug!),
-  getAllSessions(),
+  getAllPosts(),
   getSiteConfig(),
 ]);
 if (!session) {

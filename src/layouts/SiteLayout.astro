@@ -5,15 +5,15 @@ import IndexTool from "@/components/astro/IndexTool.astro";
 import NavPill from "@/components/astro/NavPill.astro";
 import BottomTabs from "@/components/astro/BottomTabs.astro";
 import EndSection from "@/components/astro/EndSection.astro";
-import { getAllSessions, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
-import type { SanitySessionTape, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
+import { getAllPosts, getAllTimelineEntries, getSiteConfig } from "@/lib/sanity/fetch";
+import type { SanityPost, SanityTimelineEntry, SanitySiteConfig } from "@/lib/sanity/types";
 import { defaultOgImage, type OgImage } from "@/lib/seo/og-image";
 import FindPalette from "@/components/astro/FindPalette.astro";
 import { getGitHubSnapshot } from "@/lib/github";
 import { getNowPlaying } from "@/lib/spotify";
 interface Props {
   config?: SanitySiteConfig;
-  sessions?: SanitySessionTape[];
+  sessions?: SanityPost[];
   timeline?: SanityTimelineEntry[];
   title?: string;
   description?: string;
@@ -24,7 +24,7 @@ interface Props {
   articlePublishedTime?: string;
   articleModifiedTime?: string;
   articleAuthor?: string;
-  articleSection?: "Session" | "Tape";
+  articleSection?: "Session" | "Tape" | "Roll";
   articleReadTime?: number;
   articleWrittenDate?: string;
   noindex?: boolean;
@@ -37,7 +37,7 @@ const {
 } = Astro.props;
 const [config, sessions, timeline, nowPlaying] = await Promise.all([
   givenConfig ?? getSiteConfig(),
-  givenSessions ?? getAllSessions(),
+  givenSessions ?? getAllPosts(),
   givenTimeline ?? getAllTimelineEntries(),
   getNowPlaying(),
 ]);

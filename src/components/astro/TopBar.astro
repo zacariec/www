@@ -2,14 +2,15 @@
 import Logo from "./Logo.astro";
 import SocialFlip from "./SocialFlip.astro";
 import NowPlayingBar from "./NowPlayingBar.astro";
-import { resolveTone, postToneStyle, sessionId, formatWritten } from "@/lib/session";
+import { resolveTone, postToneStyle, formatWritten } from "@/lib/session";
+import { postHref, postId } from "@/lib/post";
 import { sessionLinkAttributes } from "@/lib/session-link";
 import { publicPathname } from "@/lib/navigation";
-import type { SanitySessionTape, SanitySiteConfig } from "@/lib/sanity/types";
+import type { SanityPost, SanitySiteConfig } from "@/lib/sanity/types";
 import type { NowPlayingData } from "@/lib/schemas/spotify";
 interface Props {
   config: SanitySiteConfig;
-  latest?: SanitySessionTape;
+  latest?: SanityPost;
   nowPlaying?: NowPlayingData | null;
 }
 const { config, latest, nowPlaying = null } = Astro.props;
@@ -23,9 +24,11 @@ const toneStyle = latest
   : undefined;
 const now = new Date();
 const timezone = config.timezone ?? "Australia/Sydney";
+const postPage = /^\/(?:sessions|rolls)\/[^/]+\/?$/.test(publicPathname(Astro.url.pathname));
 ---
 
 <header class="top-bar zc-container mono">
+  {postPage && <a class="mobile-back" href="/sessions" data-sessions-back aria-label="Back to Sessions">←</a>}
   <a
     href="/"
     class="site-mark header-reveal"
@@ -39,16 +42,16 @@ const timezone = config.timezone ?? "Australia/Sydney";
     {config.tickerEnabled && latest && (
       <a
         class="latest-ticker header-reveal"
-        href={`/sessions/${latest.slug}`}
+        href={postHref(latest)}
         {...sessionLinkAttributes(latest, tone)}
         style={toneStyle}
-        aria-label={`Latest ${sessionId(latest.number)} · ${latest.title} · ${formatWritten(latest.date)}`}
+        aria-label={`Latest ${postId(latest)} · ${latest.title} · ${formatWritten(latest.date)}`}
       >
         <span class="ticker-square" aria-hidden="true"></span>
         <span>Latest</span>
         <span class="reveal latest-detail">
           <span>
-            {sessionId(latest.number)} · {latest.title}
+            {postId(latest)} · {latest.title}
           </span>
           <time datetime={latest.date}>{formatWritten(latest.date)} →</time>
         </span>
@@ -192,6 +195,7 @@ const timezone = config.timezone ?? "Australia/Sydney";
     display: inline-block;
     width: 12px;
   }
+  .mobile-back,
   .mobile-path {
     display: none;
   }
@@ -233,6 +237,13 @@ const timezone = config.timezone ?? "Australia/Sydney";
     .site-mark {
       height: 44px;
       min-width: 32px;
+    }
+    .mobile-back {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
     }
     .site-mark .reveal,
     .latest-slot,

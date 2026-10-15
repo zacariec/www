@@ -33,7 +33,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
 
   const destination = new URL(redirectTo, request.url);
   if (destination.pathname === "/") destination.pathname = "/preview";
-  else if (destination.pathname.startsWith("/sessions/"))
+  else if (
+    destination.pathname.startsWith("/sessions/") ||
+    destination.pathname.startsWith("/rolls/")
+  )
     destination.pathname = `/preview${destination.pathname}`;
   if (
     destination.origin !== new URL(request.url).origin ||

@@ -1,0 +1,21 @@
+---
+import type { RollViewGroup } from "@/lib/roll";
+import { formatWritten } from "@/lib/session";
+
+interface Props {
+  group: RollViewGroup;
+  label: string;
+}
+const { group, label } = Astro.props;
+const range =
+  group.start === group.end ? `frame ${group.start}` : `frames ${group.start}–${group.end}`;
+const details = [formatWritten(group.date), range].filter(Boolean).join(" · ");
+---
+
+<header class="roll-group__head">
+  <span class="roll-group__tag">
+    {label} {group.number}
+  </span>
+  {group.title && <h2>{group.title}</h2>}
+  <span class="roll-group__details">{details}</span>
+</header>

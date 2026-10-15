@@ -2,11 +2,11 @@
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import PageHero from "@/components/astro/PageHero.astro";
 import SessionRow from "@/components/astro/SessionRow.astro";
-import { getAllSessions, getSiteConfig } from "@/lib/sanity/fetch";
+import { getAllPosts, getSiteConfig } from "@/lib/sanity/fetch";
 import { resolveTone } from "@/lib/session";
 import { sessionsIndexJsonLd } from "@/lib/seo/jsonld";
 import { generatedOgImage } from "@/lib/seo/og-image";
-const [sessions, config] = await Promise.all([getAllSessions(), getSiteConfig()]);
+const [sessions, config] = await Promise.all([getAllPosts(), getSiteConfig()]);
 const groups: { month: string; sessions: typeof sessions }[] = [];
 for (const session of sessions) {
   const month = new Date(session.date).toLocaleDateString("en-US", {
@@ -55,6 +55,9 @@ const og = generatedOgImage(
       <button type="button" data-filter="tape" aria-pressed="false">
         Tapes
       </button>
+      <button type="button" data-filter="roll" aria-pressed="false">
+        Rolls
+      </button>
     </div>
     <p class="sr-only" role="status" data-filter-status></p>
     {groups.map((group) => (
@@ -101,7 +104,23 @@ const og = generatedOgImage(
     min-width: 0;
   }
   .session-filters {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--ink);
+    margin-bottom: 28px;
+  }
+  .session-filters button {
+    border: 0;
+    border-right: 1px solid var(--ink);
+    background: var(--paper);
+    min-height: 44px;
+  }
+  .session-filters button:last-child {
+    border-right: 0;
+  }
+  .session-filters button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
   }
   @media (max-width: 924px) {
     .month-group {
@@ -114,23 +133,7 @@ const og = generatedOgImage(
       padding-bottom: 100px;
     }
     .session-filters {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      border: 1px solid var(--ink);
-      margin-bottom: 28px;
-    }
-    .session-filters button {
-      border: 0;
-      border-right: 1px solid var(--ink);
-      background: var(--paper);
-      min-height: 44px;
-    }
-    .session-filters button:last-child {
-      border-right: 0;
-    }
-    .session-filters button[aria-pressed="true"] {
-      background: var(--ink);
-      color: var(--paper);
+      grid-template-columns: repeat(4, 1fr);
     }
     .month-group {
       display: block;
@@ -148,20 +151,39 @@ const og = generatedOgImage(
   }
 </style>
 <script>
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
-  for (const button of buttons)
-    button.addEventListener("click", () => {
-      let shown = 0;
-      for (const peer of buttons) peer.setAttribute("aria-pressed", String(peer === button));
-      for (const row of document.querySelectorAll<HTMLElement>("[data-session-kind]")) {
-        row.hidden =
-          button.dataset.filter !== "all" && row.dataset.sessionKind !== button.dataset.filter;
-        if (!row.hidden) shown++;
-      }
-      for (const group of document.querySelectorAll<HTMLElement>("[data-month-group]"))
-        group.hidden = !group.querySelector("[data-session-kind]:not([hidden])");
-      const status = document.querySelector("[data-filter-status]");
-      if (status)
-        status.textContent = `${shown} ${button.dataset.filter === "tape" ? "tapes" : "sessions"}`;
-    });
+  let filterController: AbortController | undefined;
+  function initializeFilters() {
+    filterController?.abort();
+    filterController = new AbortController();
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-filter]")];
+    function applyFilter(button: HTMLButtonElement) {
+        let shown = 0;
+        for (const peer of buttons) peer.setAttribute("aria-pressed", String(peer === button));
+        for (const row of document.querySelectorAll<HTMLElement>("[data-session-kind]")) {
+          row.hidden =
+            button.dataset.filter !== "all" && row.dataset.sessionKind !== button.dataset.filter;
+          if (!row.hidden) shown++;
+        }
+        for (const group of document.querySelectorAll<HTMLElement>("[data-month-group]"))
+          group.hidden = !group.querySelector("[data-session-kind]:not([hidden])");
+        const status = document.querySelector("[data-filter-status]");
+        if (status) {
+          const label = button.dataset.filter === "roll" ? "rolls" : button.dataset.filter === "tape" ? "tapes" : button.dataset.filter === "session" ? "sessions" : "posts";
+          status.textContent = `${shown} ${label}`;
+        }
+    }
+    for (const button of buttons)
+      button.addEventListener("click", () => {
+        applyFilter(button);
+        const url = new URL(window.location.href);
+        if (button.dataset.filter === "all") url.searchParams.delete("filter");
+        else url.searchParams.set("filter", button.dataset.filter!);
+        window.history.replaceState(window.history.state, "", url);
+      }, { signal: filterController.signal });
+    const selected = new URL(window.location.href).searchParams.get("filter") ?? "all";
+    const active = buttons.find((button) => button.dataset.filter === selected) ?? buttons[0];
+    if (active) applyFilter(active);
+  }
+  document.addEventListener("astro:page-load", initializeFilters);
+  initializeFilters();
 </script>

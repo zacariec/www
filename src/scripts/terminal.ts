@@ -6,7 +6,7 @@ import type { GitHubPush } from "@/lib/github";
 
 export interface TerminalData {
   pages: { label: string; href: string }[];
-  sessions: { id: string; title: string; slug: string }[];
+  sessions: { id: string; title: string; href: string }[];
   readme: string;
   identity: string;
   pushes: Pick<GitHubPush, "repo" | "date" | "branch" | "commits">[];
@@ -53,9 +53,9 @@ function initializeTerminal(terminal: HTMLElement) {
     );
     if (page) return page.href;
     const session = data.sessions.find(
-      (item) => path === `sessions/${item.slug.toLowerCase()}` || path === item.id.toLowerCase(),
+      (item) => path === item.href.slice(1).toLowerCase() || path === item.id.toLowerCase(),
     );
-    return session ? `/sessions/${session.slug}` : undefined;
+    return session?.href;
   }
 
   function run(raw: string): void {
